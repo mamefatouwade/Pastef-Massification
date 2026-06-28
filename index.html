@@ -418,12 +418,36 @@
   <script src="js/app.js"></script>
 
   <script>
-    // Enregistrement du Service Worker pour le mode hors-ligne
+    // Enregistrement du Service Worker + mise à jour automatique
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('[PWA] Service Worker enregistré', reg.scope))
-          .catch(err => console.warn('[PWA] Échec enregistrement SW', err));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('[PWA] Service Worker enregistré', reg.scope);
+
+          // Vérifier une mise à jour toutes les 60 secondes
+          setInterval(() => reg.update(), 60 * 1000);
+
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            newSW.addEventListener('statechange', () => {
+              // Nouveau SW prêt + un ancien SW actif = mise à jour disponible
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] Nouvelle version disponible — rechargement...');
+                // On envoie SKIP_WAITING pour activer immédiatement sans attendre
+                newSW.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        }).catch(err => console.warn('[PWA] Échec enregistrement SW', err));
+
+        // Quand le nouveau SW prend le contrôle, recharger la page
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
       });
     }
   </script>
