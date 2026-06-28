@@ -4,6 +4,7 @@
    - Validation
    - Stockage hors-ligne (LocalStorage)
    - Synchronisation Supabase
+   - Validation téléphone par pays
    ============================================ */
 
 (function() {
@@ -19,11 +20,53 @@
   let isSubmitting = false;
 
   // ============================================
+  // FORMATS TÉLÉPHONE PAR PAYS
+  // Pour les indicatifs non listés ici, la validation
+  // se fait uniquement sur la longueur minimale (7 chiffres).
+  // ============================================
+  const phoneFormats = {
+    '+221': { country: 'Sénégal',           pattern: /^(77|78|70|76|75)\d{7}$/,  format: '77 000 00 00' },
+    '+33':  { country: 'France',            pattern: /^[1-9]\d{8}$/,             format: '6 12 34 56 78' },
+    '+39':  { country: 'Italie',            pattern: /^[3]\d{8,9}$/,             format: '3 12 345 678' },
+    '+34':  { country: 'Espagne',           pattern: /^[6-9]\d{8}$/,             format: '6 12 345 678' },
+    '+1':   { country: 'USA/Canada',        pattern: /^\d{10}$/,                 format: '202 555 0173' },
+    '+32':  { country: 'Belgique',          pattern: /^[4]\d{8}$/,               format: '470 12 34 56' },
+    '+49':  { country: 'Allemagne',         pattern: /^[1]\d{10,11}$/,           format: '151 23456789' },
+    '+44':  { country: 'Royaume-Uni',       pattern: /^[7]\d{9}$/,               format: '7700 900123' },
+    '+41':  { country: 'Suisse',            pattern: /^[7][5-9]\d{7}$/,          format: '78 123 45 67' },
+    '+31':  { country: 'Pays-Bas',          pattern: /^[6]\d{8}$/,               format: '6 12345678' },
+    '+351': { country: 'Portugal',          pattern: /^9[1236]\d{7}$/,           format: '91 234 5678' },
+    '+212': { country: 'Maroc',             pattern: /^(6|7)\d{8}$/,             format: '6 12 345 678' },
+    '+222': { country: 'Mauritanie',        pattern: /^[2-4]\d{7}$/,             format: '2 2 12 34 56' },
+    '+223': { country: 'Mali',              pattern: /^[267]\d{7}$/,             format: '6 70 12 34 56' },
+    '+225': { country: "Côte d'Ivoire",     pattern: /^(0?[578])\d{7}$/,         format: '07 12 34 56' },
+    '+220': { country: 'Gambie',            pattern: /^[3679]\d{6}$/,            format: '7 123456' },
+    '+224': { country: 'Guinée',            pattern: /^[6]\d{8}$/,               format: '6 20 12 34 56' },
+    '+245': { country: 'Guinée-Bissau',     pattern: /^[5-9]\d{6}$/,             format: '9 555123' },
+    '+226': { country: 'Burkina Faso',      pattern: /^[567]\d{7}$/,             format: '70 123456' },
+    '+229': { country: 'Bénin',             pattern: /^[4-9]\d{7}$/,             format: '90 123456' },
+    '+237': { country: 'Cameroun',          pattern: /^[6]\d{8}$/,               format: '6 70 123456' },
+    '+241': { country: 'Gabon',             pattern: /^[0-9]\d{6}$/,             format: '0 74 12 34' },
+    '+227': { country: 'Niger',             pattern: /^[89]\d{7}$/,              format: '90 123456' },
+    '+234': { country: 'Nigéria',           pattern: /^[789]\d{9}$/,             format: '801 234 5678' },
+    '+233': { country: 'Ghana',             pattern: /^[235]\d{8}$/,             format: '20 123 4567' },
+    '+238': { country: 'Cap-Vert',          pattern: /^[59]\d{6}$/,              format: '9 91 12 34' },
+    '+213': { country: 'Algérie',           pattern: /^[567]\d{8}$/,             format: '5 55 12 34 56' },
+    '+216': { country: 'Tunisie',           pattern: /^[2-9]\d{7}$/,             format: '20 123 456' },
+    '+966': { country: 'Arabie Saoudite',   pattern: /^5\d{8}$/,                 format: '50 123 4567' },
+    '+971': { country: 'Émirats Arabes Unis', pattern: /^5[0-9]\d{7}$/,          format: '50 123 4567' },
+    '+90':  { country: 'Turquie',           pattern: /^[5]\d{9}$/,               format: '501 234 56 78' },
+    '+86':  { country: 'Chine',             pattern: /^1[3-9]\d{9}$/,            format: '131 2345 6789' }
+  };
+
+  // ============================================
   // UTILITAIRES
   // ============================================
   function $(selector) { return document.querySelector(selector); }
   function $$(selector) { return document.querySelectorAll(selector); }
 
+  // getClientId est défini dans audio.js — on utilise la même clé LocalStorage
+  // pour partager le même identifiant entre les deux modules.
   function getClientId() {
     let id = localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
@@ -44,6 +87,114 @@
   }
 
   // ============================================
+  // VALIDATION TÉLÉPHONE
+  // ============================================
+  function validatePhoneNumber(dialCode, phoneNumber) {
+    const cleanedNumber = phoneNumber.replace(/[\s\-()+]/g, '');
+
+    const config = phoneFormats[dialCode];
+
+    // Indicatif non répertorié → on accepte si le numéro a au moins 7 chiffres
+    if (!config) {
+      if (/^\d{7,15}$/.test(cleanedNumber)) {
+        return { valid: true, error: null };
+      }
+      return { valid: false, error: 'Numéro invalide (7 à 15 chiffres attendus)' };
+    }
+
+    if (!config.pattern.test(cleanedNumber)) {
+      return {
+        valid: false,
+        error: `Format invalide pour ${config.country}. Exemple : ${config.format}`
+      };
+    }
+
+    return { valid: true, error: null };
+  }
+
+  function showPhoneError(fieldId, message) {
+    let errorElement = document.querySelector(`#${fieldId}-error`);
+
+    if (!errorElement) {
+      errorElement = document.createElement('span');
+      errorElement.id = `${fieldId}-error`;
+      errorElement.className = 'error-message';
+      errorElement.style.color = '#e74c3c';
+      errorElement.style.fontSize = '12px';
+      errorElement.style.marginTop = '4px';
+      errorElement.style.display = 'block';
+
+      const phoneInput = document.getElementById(fieldId);
+      if (phoneInput && phoneInput.parentNode) {
+        phoneInput.parentNode.insertBefore(errorElement, phoneInput.nextSibling);
+      }
+    }
+
+    errorElement.textContent = message;
+    const input = document.getElementById(fieldId);
+    if (input) input.classList.add('error-input');
+  }
+
+  function clearPhoneError(fieldId) {
+    const errorElement = document.querySelector(`#${fieldId}-error`);
+    if (errorElement) errorElement.textContent = '';
+    const input = document.getElementById(fieldId);
+    if (input) input.classList.remove('error-input');
+  }
+
+  function setupPhoneValidation() {
+    // Formulaire principal
+    const dialCodeMain = $('#dialCode');
+    const telMain = $('#telephone');
+
+    if (dialCodeMain) {
+      dialCodeMain.addEventListener('change', () => {
+        if (telMain && telMain.value) {
+          const v = validatePhoneNumber(dialCodeMain.value, telMain.value);
+          v.valid ? clearPhoneError('telephone') : showPhoneError('telephone', v.error);
+        }
+      });
+    }
+
+    if (telMain) {
+      ['blur', 'change'].forEach(evt => {
+        telMain.addEventListener(evt, () => {
+          const dialCode = dialCodeMain ? dialCodeMain.value : '+221';
+          if (telMain.value && dialCode) {
+            const v = validatePhoneNumber(dialCode, telMain.value);
+            v.valid ? clearPhoneError('telephone') : showPhoneError('telephone', v.error);
+          }
+        });
+      });
+    }
+
+    // Formulaire vocal
+    const voiceDialCode = $('#voiceDialCode');
+    const voiceTel = $('#voiceTel');
+
+    if (voiceDialCode) {
+      voiceDialCode.addEventListener('change', () => {
+        if (voiceTel && voiceTel.value) {
+          const v = validatePhoneNumber(voiceDialCode.value, voiceTel.value);
+          v.valid ? clearPhoneError('voiceTel') : showPhoneError('voiceTel', v.error);
+        }
+      });
+    }
+
+    if (voiceTel) {
+      ['blur', 'change'].forEach(evt => {
+        voiceTel.addEventListener(evt, () => {
+          const dialCode = voiceDialCode ? voiceDialCode.value : '+221';
+          if (voiceTel.value && dialCode) {
+            const v = validatePhoneNumber(dialCode, voiceTel.value);
+            v.valid ? clearPhoneError('voiceTel') : showPhoneError('voiceTel', v.error);
+          }
+        });
+      });
+    }
+  }
+
+  // ============================================
   // REMPLISSAGE DES SELECTS
   // ============================================
   function fillSelect(selectEl, items, placeholder) {
@@ -51,7 +202,6 @@
     selectEl.innerHTML = `<option value="">${placeholder}</option>`;
     items.forEach(item => {
       const opt = document.createElement('option');
-      // Les séparateurs visuels (commencent par —) sont désactivés
       if (item.startsWith('—')) {
         opt.disabled = true;
         opt.textContent = item;
@@ -83,7 +233,6 @@
       opt.setAttribute('data-country', dc.name);
       sel.appendChild(opt);
     });
-    // Sénégal par défaut
     sel.value = '+221';
   }
 
@@ -127,23 +276,17 @@
       const celluleSel = $('#cellule');
       const dialSel = $('#dialCode');
 
-      // Auto-update de l'indicatif téléphonique si correspondance trouvée
       const dialCode = PASTEF_DATA.paysToDialCode[pays];
       if (dialCode && dialSel) {
-        // On vérifie que ce code existe dans les options
         const exists = Array.from(dialSel.options).some(o => o.value === dialCode);
-        if (exists) {
-          dialSel.value = dialCode;
-        }
+        if (exists) dialSel.value = dialCode;
       }
 
-      // Régions
       const regions = PASTEF_DATA.regions[pays];
       if (regions && regions.length) {
         fillSelect(regionSel, regions, 'Sélectionnez votre région');
         regionSel.disabled = false;
       } else if (pays && pays !== '— Diaspora —') {
-        // Pays sans liste de régions précise → champ libre
         regionSel.innerHTML = '<option value="Autre">Préciser dans le quartier</option>';
         regionSel.value = 'Autre';
         regionSel.disabled = false;
@@ -152,7 +295,6 @@
         regionSel.disabled = true;
       }
 
-      // Cellules
       const cellules = PASTEF_DATA.cellules[pays] || PASTEF_DATA.cellulesDefaut;
       fillSelect(celluleSel, cellules, 'Sélectionnez votre cellule');
     });
@@ -265,14 +407,18 @@
       }
     }
 
-    // Validation téléphone (format de base)
+    // Validation téléphone avec indicatif
+    const dialCode = $('#dialCode').value;
     const tel = $('#telephone').value.trim();
-    if (tel && tel.replace(/\D/g, '').length < 7) {
-      const field = $('#telephone').closest('.field');
-      field.classList.add('has-error');
-      showFieldError($('#telephone'), 'Numéro de téléphone invalide');
-      valid = false;
-      if (!firstError) firstError = $('#telephone');
+    if (tel && dialCode) {
+      const v = validatePhoneNumber(dialCode, tel);
+      if (!v.valid) {
+        const field = $('#telephone').closest('.field');
+        if (field) field.classList.add('has-error');
+        showPhoneError('telephone', v.error);
+        valid = false;
+        if (!firstError) firstError = $('#telephone');
+      }
     }
 
     if (firstError) {
@@ -286,7 +432,6 @@
   function showFieldError(input, message) {
     const field = input.closest('.field');
     if (!field) return;
-    // Évite les doublons
     if (field.querySelector('.error-message')) return;
     const err = document.createElement('span');
     err.className = 'error-message';
@@ -301,7 +446,6 @@
     const form = $('#enrolmentForm');
     const fd = new FormData(form);
 
-    // Recomposition du numéro complet : indicatif + numéro
     const dialCode = fd.get('dialCode') || '+221';
     const telLocal = (fd.get('telephone') || '').replace(/\s+/g, ' ').trim();
     const telephoneComplet = `${dialCode} ${telLocal}`.trim();
@@ -370,7 +514,6 @@
   }
 
   async function updatePendingBadge() {
-    // Le badge a été supprimé — on passe par la bannière réseau qui affiche le compteur
     await updateNetworkBanner();
   }
 
@@ -387,7 +530,6 @@
       throw new Error('⚠️ Configurez Supabase dans js/supabase-config.js avant utilisation');
     }
 
-    // On retire le local_id et saved_at avant envoi
     const { local_id, saved_at, ...payload } = data;
 
     const response = await fetch(`${cfg.url}/rest/v1/${cfg.table}`, {
@@ -426,7 +568,6 @@
     let sent = 0;
     let failed = 0;
 
-    // 1) Synchronisation des formulaires texte
     const remaining = [];
     for (const entry of pending) {
       try {
@@ -440,7 +581,6 @@
     }
     savePending(remaining);
 
-    // 2) Synchronisation des enregistrements audio
     try {
       const audioResult = await PASTEF_AUDIO.syncAll();
       sent += audioResult.sent;
@@ -451,12 +591,8 @@
 
     await updatePendingBadge();
 
-    if (sent > 0) {
-      showToast(`${sent} enrôlement(s) synchronisé(s)`, 'success');
-    }
-    if (failed > 0) {
-      showToast(`${failed} échec(s) — réessayez plus tard`, 'warning');
-    }
+    if (sent > 0) showToast(`${sent} enrôlement(s) synchronisé(s)`, 'success');
+    if (failed > 0) showToast(`${failed} échec(s) — réessayez plus tard`, 'warning');
 
     return { sent, failed };
   }
@@ -486,12 +622,11 @@
         showSuccessModal('Enrôlement enregistré !', 'Bienvenue parmi les Patriotes du Sénégal. Vos informations ont été transmises.');
       } else {
         addToPending(data);
-        showSuccessModal('Enregistré hors-ligne', `Vos données sont sauvegardées sur cet appareil. Elles seront envoyées dès le retour du réseau.`);
+        showSuccessModal('Enregistré hors-ligne', 'Vos données sont sauvegardées sur cet appareil. Elles seront envoyées dès le retour du réseau.');
       }
       resetForm();
     } catch (err) {
       console.error(err);
-      // Fallback : si l'envoi échoue, on sauvegarde quand même en local
       addToPending(data);
       showSuccessModal(
         'Sauvegardé localement',
@@ -516,6 +651,7 @@
     $('#region').disabled = true;
     $('#region').innerHTML = '<option value="">Sélectionnez d\'abord le pays</option>';
     $('#dialCode').value = '+221';
+    clearPhoneError('telephone');
   }
 
   // ============================================
@@ -533,7 +669,6 @@
   }
 
   function showToast(message, type) {
-    // Toast simple : on met à jour le bandeau réseau temporairement
     const banner = $('#networkBanner');
     const text = $('#networkBannerText');
     const originalText = text.textContent;
@@ -558,7 +693,6 @@
     const text = $('#networkBannerText');
     if (!banner || !text) return;
 
-    // Compte total (texte + audio)
     const pendingText = getPending().length;
     const pendingAudio = await PASTEF_AUDIO.countRecordings().catch(() => 0);
     const total = pendingText + pendingAudio;
@@ -587,13 +721,10 @@
   function handleOnline() {
     isOnline = true;
     updateNetworkBanner();
-    // Auto-sync au retour du réseau (texte + audio)
     setTimeout(async () => {
       const pendingText = getPending().length;
       const pendingAudio = await PASTEF_AUDIO.countRecordings().catch(() => 0);
-      if (pendingText + pendingAudio > 0) {
-        syncPending();
-      }
+      if (pendingText + pendingAudio > 0) syncPending();
     }, 1000);
   }
 
@@ -630,7 +761,6 @@
       $('#voiceRecorder').style.display = '';
     }
 
-    // Reset état
     $('#voicePreview').classList.remove('active');
     $('#voiceRecorder').classList.remove('hidden-during-preview');
     $('#voiceTimer').textContent = '00:00';
@@ -641,7 +771,6 @@
     $('#voiceNom').value = '';
     $('#voiceTel').value = '';
 
-    // Remplit le sélecteur d'indicatif dans la modale
     const voiceDial = $('#voiceDialCode');
     if (voiceDial && voiceDial.options.length === 0) {
       PASTEF_DATA.dialCodes.forEach(dc => {
@@ -657,10 +786,7 @@
   }
 
   function closeVoiceModal() {
-    // Arrêt propre si enregistrement en cours
-    if (PASTEF_AUDIO.getState() === 'recording') {
-      PASTEF_AUDIO.cancelRecording();
-    }
+    if (PASTEF_AUDIO.getState() === 'recording') PASTEF_AUDIO.cancelRecording();
     stopVoiceTimer();
     if (voiceAudioElement) {
       voiceAudioElement.pause();
@@ -674,11 +800,7 @@
     voiceTimerInterval = setInterval(() => {
       const elapsed = PASTEF_AUDIO.getElapsedSeconds();
       $('#voiceTimer').textContent = formatTime(elapsed);
-
-      // Limite à 5 minutes pour éviter les fichiers trop lourds
-      if (elapsed >= 300) {
-        handleStopRecording();
-      }
+      if (elapsed >= 300) handleStopRecording();
     }, 250);
   }
 
@@ -694,23 +816,17 @@
       $('#voiceStatus').textContent = 'Demande d\'accès au microphone...';
       const recordingPromise = PASTEF_AUDIO.startRecording();
 
-      // L'état devient 'recording' immédiatement après getUserMedia
-      // mais startRecording ne résout que sur stop. On laisse en arrière-plan.
-
-      // On attend que la state devienne 'recording'
       await new Promise(r => setTimeout(r, 100));
 
       $('#voiceStatus').textContent = '🔴 Enregistrement en cours…';
       $('#voiceStatus').classList.add('recording');
       $('#voiceTimer').classList.add('recording');
       $('#recordBtn').classList.add('recording');
-      // L'icône devient "stop"
       $('#recordIcon').innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2" ry="2" fill="currentColor"/>';
       $('#recordHint').textContent = 'Appuyez à nouveau pour arrêter';
 
       startVoiceTimer();
 
-      // Quand la promesse se résout (après stopRecording appelé), on passe en preview
       const result = await recordingPromise;
       stopVoiceTimer();
       showPreview(result);
@@ -727,7 +843,6 @@
 
   function handleStopRecording() {
     PASTEF_AUDIO.stopRecording();
-    // La promesse de startRecording va résoudre et déclencher showPreview
   }
 
   function resetVoiceUI() {
@@ -752,7 +867,6 @@
     $('#previewDuration').textContent = formatTime(duration);
     $('#previewSize').textContent = formatSize(blob.size);
 
-    // Préparer le player
     if (voiceAudioElement) {
       voiceAudioElement.pause();
       URL.revokeObjectURL(voiceAudioElement.src);
@@ -796,7 +910,6 @@
       closeVoiceModal();
       showToast('Enregistrement vocal sauvegardé ✓', 'success');
 
-      // Si en ligne, on tente la sync immédiate (sauf si Supabase pas configuré)
       if (navigator.onLine && !window.SUPABASE_CONFIG.url.includes('VOTRE-PROJET')) {
         setTimeout(() => syncPending(), 500);
       }
@@ -817,11 +930,8 @@
 
     $('#recordBtn').addEventListener('click', () => {
       const state = PASTEF_AUDIO.getState();
-      if (state === 'recording') {
-        handleStopRecording();
-      } else {
-        handleStartRecording();
-      }
+      if (state === 'recording') handleStopRecording();
+      else handleStartRecording();
     });
 
     $('#voiceRedoBtn').addEventListener('click', () => {
@@ -844,13 +954,13 @@
   function init() {
     initSelects();
     setupConditionalFields();
+    setupPhoneValidation();
     setupVoiceModal();
     updatePendingBadge();
     updateNetworkBanner();
 
     $('#enrolmentForm').addEventListener('submit', handleSubmit);
     $('#networkBanner').addEventListener('click', () => {
-      // Sync manuelle au clic — uniquement si en ligne et qu'il y a des choses en attente
       if (navigator.onLine) syncPending();
     });
     $('#modalCloseBtn').addEventListener('click', closeSuccessModal);
@@ -858,18 +968,16 @@
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Définir date max (aujourd'hui) sur l'input date
     const today = new Date().toISOString().split('T')[0];
     $('#dateNaissance').setAttribute('max', today);
     $('#dateNaissance').setAttribute('min', '1900-01-01');
 
-    console.log('[PASTEF] Formulaire initialisé');
+    console.log('[PASTEF] Formulaire initialisé — v5');
     console.log('[PASTEF] Mode :', navigator.onLine ? 'En ligne' : 'Hors-ligne');
     console.log('[PASTEF] En attente texte :', getPending().length);
     PASTEF_AUDIO.countRecordings().then(n => console.log('[PASTEF] En attente audio :', n));
   }
 
-  // Démarrage
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

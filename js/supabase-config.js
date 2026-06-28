@@ -7,12 +7,12 @@ const SUPABASE_CONFIG = {
 
   // 🔧 À MODIFIER : URL de votre projet Supabase
   // Trouvez-la dans : Supabase Dashboard > Settings > API > Project URL
-  url: 'https://VOTRE-PROJET.supabase.co',
+  url: 'https://hdydydlumhywaaiiklxb.supabase.co',
 
   // 🔧 À MODIFIER : Clé publique (anon key) de votre projet
   // Trouvez-la dans : Supabase Dashboard > Settings > API > Project API keys > anon public
   // ⚠️ N'utilisez JAMAIS la "service_role" key ici, elle est dangereuse côté client
-  anonKey: 'VOTRE_ANON_KEY',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkeWR5ZGx1bWh5d2FhaWlrbHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjQzODIsImV4cCI6MjA5ODI0MDM4Mn0.byxtIjrjNX0mSC26zMUbXz0hmNMeFsg7FE3H1cITjYk',
 
   // Nom de la table dans Supabase
   table: 'enrolments',
