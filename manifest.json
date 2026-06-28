@@ -1,0 +1,28 @@
+{
+  "name": "Enrôlement Patriote — PASTEF",
+  "short_name": "PASTEF",
+  "description": "Formulaire officiel d'enrôlement des Patriotes du Sénégal",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#DCEDE5",
+  "theme_color": "#1B7C3D",
+  "scope": "./",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "assets/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["politics", "social"],
+  "prefer_related_applications": false
+}

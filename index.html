@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1B7C3D">
+  <meta name="description" content="Formulaire d'enrôlement officiel des Patriotes du Sénégal (PASTEF)">
+
+  <title>Enrôlement Patriote — PASTEF</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/jpeg" href="assets/logo.jpg">
+  <link rel="apple-touch-icon" href="assets/logo.jpg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Bandeau de statut réseau -->
+  <div id="networkBanner" class="network-banner" hidden>
+    <span id="networkBannerText">Hors-ligne — vos données sont sauvegardées localement</span>
+  </div>
+
+  <main class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <img src="assets/logo.jpg" alt="Logo PASTEF" class="logo">
+      <h1 class="title">
+        <span class="title-line-1">FORMULAIRE D'ENRÔLEMENT</span>
+        <span class="title-line-2">DE PATRIOTE</span>
+      </h1>
+      <p class="subtitle">
+        Rejoignez le mouvement des Patriotes du Sénégal<br>
+        et participons ensemble au changement.
+      </p>
+    </header>
+
+    <!-- FORMULAIRE -->
+    <form id="enrolmentForm" class="form" novalidate>
+
+      <!-- SECTION 1 : INFORMATIONS PERSONNELLES -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Informations personnelles</h2>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="prenom">Prénom(s) <span class="req">*</span></label>
+            <input type="text" id="prenom" name="prenom" required placeholder="Entrez votre prénom" autocomplete="given-name">
+          </div>
+
+          <div class="field">
+            <label for="nom">Nom <span class="req">*</span></label>
+            <input type="text" id="nom" name="nom" required placeholder="Entrez votre nom" autocomplete="family-name">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="dateNaissance">Date de naissance <span class="req">*</span></label>
+            <input type="date" id="dateNaissance" name="dateNaissance" required>
+            <span class="hint" id="ageHint"></span>
+          </div>
+
+          <div class="field">
+            <label for="sexe">Sexe <span class="req">*</span></label>
+            <select id="sexe" name="sexe" required>
+              <option value="">Sélectionnez</option>
+              <option value="Homme">Homme</option>
+              <option value="Femme">Femme</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="lieuNaissance">Lieu de naissance <span class="req">*</span></label>
+          <input type="text" id="lieuNaissance" name="lieuNaissance" required placeholder="Ville, pays de naissance">
+        </div>
+
+        <div class="field">
+          <label for="telephone">Numéro de téléphone <span class="req">*</span></label>
+          <div class="phone-group">
+            <select id="dialCode" name="dialCode" class="dial-code" aria-label="Indicatif pays">
+              <!-- Rempli par JS -->
+            </select>
+            <input type="tel" id="telephone" name="telephone" required placeholder="77 000 00 00" autocomplete="tel-national">
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2 : PROFESSION & DOMAINE -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Activité professionnelle</h2>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="profession">Profession <span class="req">*</span></label>
+            <select id="profession" name="profession" required>
+              <option value="">Sélectionnez votre profession</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="domaine">Domaine d'activité <span class="req">*</span></label>
+            <select id="domaine" name="domaine" required>
+              <option value="">Sélectionnez votre domaine</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="professionAutreWrap" hidden>
+          <label for="professionAutre">Précisez votre profession <span class="req">*</span></label>
+          <input type="text" id="professionAutre" name="professionAutre" placeholder="Indiquez votre profession">
+        </div>
+
+        <div class="field" id="domaineAutreWrap" hidden>
+          <label for="domaineAutre">Précisez votre domaine <span class="req">*</span></label>
+          <input type="text" id="domaineAutre" name="domaineAutre" placeholder="Indiquez votre domaine">
+        </div>
+      </section>
+
+      <!-- SECTION 3 : ZONE DE RÉSIDENCE -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Zone de résidence actuelle</h2>
+        </div>
+
+        <div class="field">
+          <label for="pays">Pays <span class="req">*</span></label>
+          <select id="pays" name="pays" required>
+            <option value="">Sélectionnez votre pays</option>
+          </select>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="region">Région <span class="req">*</span></label>
+            <select id="region" name="region" required disabled>
+              <option value="">Sélectionnez d'abord le pays</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="quartier">Quartier / Localité <span class="req">*</span></label>
+            <input type="text" id="quartier" name="quartier" required placeholder="Ex : Sacré-Cœur, Médina...">
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 : CELLULE PASTEF -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Cellule PASTEF</h2>
+        </div>
+
+        <div class="field">
+          <p class="field-question">Faites-vous déjà partie d'une cellule PASTEF ? <span class="req">*</span></p>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="appartientCellule" value="oui" required>
+              <span>Oui, je suis déjà membre d'une cellule</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="appartientCellule" value="non" required>
+              <span>Non, je souhaite être affecté à une cellule</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Si OUI -->
+        <div id="celluleOuiBlock" hidden>
+          <div class="grid grid-2">
+            <div class="field">
+              <label for="cellule">Cellule d'appartenance <span class="req">*</span></label>
+              <select id="cellule" name="cellule">
+                <option value="">Sélectionnez votre cellule</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="fonctionCellule">Fonction dans la cellule <span class="req">*</span></label>
+              <select id="fonctionCellule" name="fonctionCellule">
+                <option value="">Sélectionnez votre fonction</option>
+                <option value="Coordinateur">Coordinateur / Coordinatrice</option>
+                <option value="Coordinateur Adjoint">Coordinateur Adjoint</option>
+                <option value="Secrétaire Général">Secrétaire Général</option>
+                <option value="Trésorier">Trésorier</option>
+                <option value="Chargé Communication">Chargé de Communication</option>
+                <option value="Chargé Mobilisation">Chargé de Mobilisation</option>
+                <option value="Chargé Jeunesse">Chargé de la Jeunesse</option>
+                <option value="Chargé Femmes">Chargée des Femmes</option>
+                <option value="Membre">Membre simple</option>
+                <option value="Sympathisant">Sympathisant</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" id="celluleAutreWrap" hidden>
+            <label for="celluleAutre">Nom de votre cellule <span class="req">*</span></label>
+            <input type="text" id="celluleAutre" name="celluleAutre" placeholder="Indiquez le nom de votre cellule">
+          </div>
+        </div>
+
+        <!-- Si NON -->
+        <div id="celluleNonBlock" hidden>
+          <div class="info-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <p>Votre demande sera transmise à la coordination locale qui vous affectera à la cellule la plus proche de votre zone de résidence.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5 : ENGAGEMENT -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Engagement</h2>
+        </div>
+
+        <p class="engagement-intro">En m'enrôlant, je m'engage à :</p>
+
+        <label class="check-label">
+          <input type="checkbox" name="engagement1" required>
+          <span>Soutenir les idéaux et le programme de PASTEF</span>
+        </label>
+
+        <label class="check-label">
+          <input type="checkbox" name="engagement2" required>
+          <span>Participer activement aux activités du mouvement</span>
+        </label>
+
+        <label class="check-label">
+          <input type="checkbox" name="engagement3" required>
+          <span>Œuvrer pour un Sénégal souverain, juste et prospère</span>
+        </label>
+
+        <hr class="divider">
+
+        <label class="check-label">
+          <input type="checkbox" name="certification" required>
+          <span>Je certifie que les informations fournies sont exactes</span>
+        </label>
+      </section>
+
+      <!-- SECTION SOUMISSION -->
+      <section class="card submit-card">
+        <div class="submit-content">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </div>
+          <div class="submit-text">
+            <h3>Prêt à rejoindre le mouvement ?</h3>
+            <p>Ensemble, construisons le Sénégal que nous méritons !</p>
+          </div>
+        </div>
+        <button type="submit" id="submitBtn" class="btn-submit">
+          <span class="btn-label">SOUMETTRE MA DEMANDE</span>
+        </button>
+      </section>
+
+      <p class="security-notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Vos informations sont sécurisées et utilisées uniquement à des fins d'enrôlement.
+      </p>
+
+    </form>
+
+  </main>
+
+  <!-- MODALE DE SUCCÈS -->
+  <div id="successModal" class="modal" hidden>
+    <div class="modal-content">
+      <div class="modal-icon success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 id="modalTitle">Enrôlement enregistré !</h2>
+      <p id="modalMessage">Bienvenue parmi les Patriotes du Sénégal.</p>
+      <button type="button" id="modalCloseBtn" class="btn-modal">Nouveau formulaire</button>
+    </div>
+  </div>
+
+  <!-- Pattern décoratif (background) -->
+  <div class="decorative-pattern" aria-hidden="true"></div>
+
+  <!-- BOUTON FLOTTANT VOCAL (style WhatsApp) -->
+  <button type="button" id="voiceFab" class="voice-fab" aria-label="Enregistrer un message vocal" title="Enregistrement vocal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="8" y1="23" x2="16" y2="23"/>
+    </svg>
+  </button>
+
+  <!-- MODALE D'ENREGISTREMENT VOCAL -->
+  <div id="voiceModal" class="voice-modal" hidden>
+    <div class="voice-modal-content">
+      <button type="button" id="voiceModalClose" class="voice-modal-close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <h2>Enregistrement vocal</h2>
+      <p class="subtitle-small">
+        Pour les patriotes analphabètes : enregistrez leurs informations à voix haute (nom, âge, profession, zone, etc.).
+        L'audio sera transcrit automatiquement après synchronisation.
+      </p>
+
+      <!-- Zone d'enregistrement -->
+      <div id="voiceRecorder" class="voice-recorder">
+        <div id="voiceStatus" class="voice-status">Appuyez sur le micro pour démarrer</div>
+        <div id="voiceTimer" class="voice-timer">00:00</div>
+        <button type="button" id="recordBtn" class="record-btn" aria-label="Démarrer / arrêter l'enregistrement">
+          <svg id="recordIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+        <p class="record-hint" id="recordHint">Durée recommandée : 1 à 3 minutes</p>
+      </div>
+
+      <!-- Prévisualisation après enregistrement -->
+      <div id="voicePreview" class="voice-preview">
+        <div class="audio-player">
+          <button type="button" id="playBtn" class="play-btn" aria-label="Lire / Pause">
+            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+          <div class="audio-info">
+            <div class="duration" id="previewDuration">00:00</div>
+            <div class="size" id="previewSize">— Ko</div>
+          </div>
+        </div>
+
+        <div class="voice-extra-fields">
+          <div class="field">
+            <label for="voiceNom">Nom du patriote (optionnel)</label>
+            <input type="text" id="voiceNom" placeholder="Pour faciliter le suivi">
+          </div>
+          <div class="field">
+            <label for="voiceTel">Téléphone (optionnel)</label>
+            <div class="phone-group">
+              <select id="voiceDialCode" class="dial-code" aria-label="Indicatif"></select>
+              <input type="tel" id="voiceTel" placeholder="77 000 00 00">
+            </div>
+          </div>
+        </div>
+
+        <div class="voice-actions">
+          <button type="button" id="voiceRedoBtn" class="btn-secondary">Recommencer</button>
+          <button type="button" id="voiceSaveBtn" class="btn-primary">Sauvegarder</button>
+        </div>
+      </div>
+
+      <!-- Erreur (micro non disponible) -->
+      <div id="voiceError" class="voice-error" hidden></div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Enregistrement du Service Worker pour le mode hors-ligne
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[PWA] Service Worker enregistré', reg.scope))
+          .catch(err => console.warn('[PWA] Échec enregistrement SW', err));
+      });
+    }
+  </script>
+
+</body>
+</html>
