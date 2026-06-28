@@ -1,11 +1,12 @@
 /* ============================================
    PASTEF — Service Worker
-   Permet le fonctionnement hors-ligne complet
+   Compatible : Chrome, Safari iOS 16+, Firefox, Samsung Browser
    ============================================ */
 
-const CACHE_VERSION = 'pastef-v4';
-const CACHE_FILES = [
-  './',
+const CACHE_VERSION = 'pastef-v6';
+
+// Fichiers critiques — mis en cache obligatoirement
+const CACHE_CORE = [
   './index.html',
   './styles.css',
   './js/data.js',
@@ -14,92 +15,128 @@ const CACHE_FILES = [
   './js/supabase-config.js',
   './manifest.json',
   './assets/logo.jpg',
+  './assets/logo-192.png',
+  './assets/logo-512.png',
   './assets/couverture.png',
-  './assets/pattern.png',
+  './assets/pattern.png'
+];
+
+// Fichiers optionnels — on essaie, mais l'échec ne bloque pas l'install
+// (ex: Google Fonts peut échouer si l'utilisateur est hors-ligne au 1er chargement)
+const CACHE_OPTIONAL = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
 ];
 
-// INSTALL — Mise en cache des fichiers
+// ============================================
+// INSTALL
+// ============================================
 self.addEventListener('install', event => {
-  console.log('[SW] Installation');
+  console.log('[SW] Installation v6');
   event.waitUntil(
-    caches.open(CACHE_VERSION)
-      .then(cache => {
-        console.log('[SW] Mise en cache des fichiers');
-        return cache.addAll(CACHE_FILES.map(url => new Request(url, { cache: 'reload' })));
-      })
-      .then(() => self.skipWaiting())
-      .catch(err => console.error('[SW] Échec mise en cache', err))
+    caches.open(CACHE_VERSION).then(async cache => {
+
+      // 1) Fichiers critiques — SANS cache:'reload' (incompatible Safari)
+      await cache.addAll(CACHE_CORE);
+      console.log('[SW] Fichiers core mis en cache');
+
+      // 2) Fichiers optionnels — on ignore les erreurs
+      for (const url of CACHE_OPTIONAL) {
+        try {
+          await cache.add(new Request(url, { mode: 'no-cors' }));
+        } catch (e) {
+          console.warn('[SW] Optionnel non mis en cache (ignoré) :', url);
+        }
+      }
+
+    })
+    // Sur Safari, skipWaiting() ici peut causer des problèmes
+    // On laisse le contrôleur gérer via le message SKIP_WAITING
   );
 });
 
+// ============================================
 // ACTIVATE — Nettoyage des anciens caches
+// ============================================
 self.addEventListener('activate', event => {
-  console.log('[SW] Activation');
+  console.log('[SW] Activation v6');
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_VERSION).map(key => {
-          console.log('[SW] Suppression ancien cache', key);
-          return caches.delete(key);
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key !== CACHE_VERSION)
+          .map(key => {
+            console.log('[SW] Suppression ancien cache :', key);
+            return caches.delete(key);
+          })
+      ))
+      .then(() => {
+        // clients.claim() : prendre le contrôle immédiatement
+        // Compatible tous navigateurs y compris Safari iOS 16.4+
+        return self.clients.claim();
+      })
   );
 });
 
-// FETCH — Stratégie de mise en cache
+// ============================================
+// FETCH — Stratégie cache-first avec fallback réseau
+// ============================================
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Ne jamais mettre en cache les appels à Supabase (toujours réseau)
-  if (url.hostname.endsWith('.supabase.co')) {
-    return; // Laisse passer la requête réseau normale
-  }
+  // 1) Appels Supabase → toujours réseau, jamais en cache
+  if (url.hostname.endsWith('.supabase.co')) return;
 
-  // Méthode non-GET → réseau direct
-  if (event.request.method !== 'GET') {
+  // 2) Requêtes non-GET → réseau direct
+  if (event.request.method !== 'GET') return;
+
+  // 3) Requêtes de navigation (chargement de page)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match('./index.html'))
+    );
     return;
   }
 
-  // Stratégie : Cache d'abord, réseau en repli
+  // 4) Tout le reste → cache d'abord, réseau en repli
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) {
-        // Mise à jour en arrière-plan
+        // Mise à jour en arrière-plan (stale-while-revalidate)
         fetch(event.request)
           .then(fresh => {
             if (fresh && fresh.ok) {
-              caches.open(CACHE_VERSION).then(cache => cache.put(event.request, fresh));
+              caches.open(CACHE_VERSION)
+                .then(cache => cache.put(event.request, fresh));
             }
           })
           .catch(() => {});
         return cached;
       }
 
-      // Pas en cache → fetch et cache
-      return fetch(event.request)
-        .then(response => {
-          if (!response || response.status !== 200 || response.type === 'opaque') {
-            return response;
-          }
-          const clone = response.clone();
-          caches.open(CACHE_VERSION).then(cache => cache.put(event.request, clone));
+      // Pas en cache → fetch et mise en cache si succès
+      return fetch(event.request).then(response => {
+        if (!response || response.status !== 200 || response.type === 'opaque') {
           return response;
-        })
-        .catch(() => {
-          // Hors-ligne et pas en cache → on retourne la page d'accueil pour les navigations
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-        });
+        }
+        const clone = response.clone();
+        caches.open(CACHE_VERSION)
+          .then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => {
+        // Hors-ligne et pas en cache → rien à faire
+        console.warn('[SW] Ressource non disponible hors-ligne :', event.request.url);
+      });
     })
   );
 });
 
-// MESSAGE — Permet de forcer une mise à jour depuis l'app
+// ============================================
+// MESSAGE — Mise à jour forcée depuis l'app
+// ============================================
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] SKIP_WAITING reçu → activation immédiate');
     self.skipWaiting();
   }
 });
