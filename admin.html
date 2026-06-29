@@ -551,15 +551,160 @@ html, body {
 .badge-pending { color: var(--or); background: #FFF8E1; }
 
 /* RESPONSIVE */
-@media (max-width: 900px) {
-  .sidebar { width: 64px; }
-  .sidebar .nav-label,
-  .sidebar .sidebar-logo-text,
-  .sidebar .sidebar-footer,
-  .sidebar .logout-btn-label { display: none; }
-  .sidebar .nav-btn { justify-content: center; padding: 10px 12px; }
-  .sidebar .sidebar-logo { padding: 20px 14px; }
-  .card-grid.cols-2, .card-grid.cols-2-1 { grid-template-columns: 1fr; }
+/* ==========================================
+   TABLETTE
+   ========================================== */
+@media (max-width: 1024px){
+
+  .content{
+    padding:16px;
+  }
+
+  .kpi-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .card-grid.cols-2,
+  .card-grid.cols-2-1{
+    grid-template-columns:1fr;
+  }
+
+  .audio-layout{
+    grid-template-columns:1fr;
+    height:auto;
+  }
+
+  .audio-list-panel{
+    max-height:300px;
+  }
+
+  .topbar{
+    padding:0 16px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+   ========================================== */
+/* ── TOPBAR (Desktop) ── */
+.topbar {
+  height: 60px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+}
+
+.topbar-title { 
+  font-size: 18px; 
+  font-weight: 800; 
+  letter-spacing: -0.3px; 
+}
+
+.topbar-right { 
+  display: flex; 
+  align-items: center; 
+  gap: 16px; 
+}
+
+.topbar-date { 
+  font-size: 12px; 
+  color: var(--text-muted); 
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ── RESPONSIVE: TABLETTE ── */
+@media (max-width: 1024px) {
+  .topbar {
+    padding: 0 16px;
+  }
+}
+
+/* ── RESPONSIVE: MOBILE ── */
+@media (max-width: 768px) {
+  .topbar {
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 0;
+  }
+
+  .topbar-title {
+    font-size: 16px;
+    flex: 1;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .topbar-date {
+    display: none;
+  }
+
+  .user-info {
+    gap: 10px;
+  }
+
+  .user-email {
+    display: none;
+  }
+
+  .topbar-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+}
+
+/* ── RESPONSIVE: PETIT TÉLÉPHONE ── */
+@media (max-width: 480px) {
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+  }
+
+  .topbar-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
 }
 
 .loader {
@@ -791,10 +936,14 @@ html, body {
 'use strict';
 
 // ── Supabase Config ──
-const SUPABASE_URL = 'https://hdydydlumhywaaiiklxb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkeWR5ZGx1bWh5d2FhaWlrbHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjQzODIsImV4cCI6MjA5ODI0MDM4Mn0.byxtIjrjNX0mSC26zMUbXz0hmNMeFsg7FE3H1cITjYk';
+// ✅ APRÈS
+// Les clés viennent maintenant du fichier .env (pour le développement local)
+// Sur GitHub, laisse ces variables vides et configure les secrets sur ton serveur
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://hdhydlumhywaaiiklxb.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
+const GEMINI_KEY = process.env.GEMINI_KEY || '';
 const TABLE = 'enrolments';
-const GEMINI_KEY = 'AQ.Ab8RN6KrkvX_0GvLfasDEmKdf48vGkFD5x4toV125f5JcrXTKg';
+
 
 let supabase = null;
 let currentUser = null;
