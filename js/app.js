@@ -859,6 +859,11 @@
     $('#recordHint').textContent = 'Durée recommandée : 1 à 3 minutes';
     $('#voicePreview').classList.remove('active');
     $('#voiceRecorder').classList.remove('hidden-during-preview');
+    $('#audioProgressBar').style.width = '0%';
+    $('#audioCurrentTime').textContent = '00:00';
+    const saveBtn = $('#voiceSaveBtn');
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Envoyer';
   }
 
   function showPreview({ blob, duration, extension }) {
@@ -866,14 +871,35 @@
     $('#voicePreview').classList.add('active');
     $('#previewDuration').textContent = formatTime(duration);
     $('#previewSize').textContent = formatSize(blob.size);
+    $('#audioCurrentTime').textContent = '00:00';
+    $('#audioProgressBar').style.width = '0%';
 
     if (voiceAudioElement) {
       voiceAudioElement.pause();
       URL.revokeObjectURL(voiceAudioElement.src);
     }
     voiceAudioElement = new Audio(URL.createObjectURL(blob));
+
+    voiceAudioElement.addEventListener('timeupdate', () => {
+      if (!voiceAudioElement || !voiceAudioElement.duration) return;
+      const pct = (voiceAudioElement.currentTime / voiceAudioElement.duration) * 100;
+      $('#audioProgressBar').style.width = pct + '%';
+      $('#audioCurrentTime').textContent = formatTime(Math.floor(voiceAudioElement.currentTime));
+    });
+
     voiceAudioElement.addEventListener('ended', () => {
       $('#playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+      $('#audioProgressBar').style.width = '0%';
+      $('#audioCurrentTime').textContent = '00:00';
+    });
+
+    // Seek en cliquant sur la barre de progression
+    $('#audioProgressWrap').addEventListener('click', function(e) {
+      if (!voiceAudioElement || !voiceAudioElement.duration) return;
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, x / rect.width));
+      voiceAudioElement.currentTime = pct * voiceAudioElement.duration;
     });
   }
 
@@ -894,7 +920,7 @@
 
     const saveBtn = $('#voiceSaveBtn');
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Sauvegarde...';
+    saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Envoi...';
 
     try {
       await PASTEF_AUDIO.saveRecording({
@@ -917,7 +943,7 @@
       console.error(err);
       showToast('Erreur sauvegarde : ' + err.message, 'warning');
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Sauvegarder';
+      saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Envoyer';
     }
   }
 

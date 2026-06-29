@@ -373,18 +373,30 @@
         <p class="record-hint" id="recordHint">Durée recommandée : 1 à 3 minutes</p>
       </div>
 
-      <!-- Prévisualisation après enregistrement -->
+      <!-- Prévisualisation après enregistrement (style WhatsApp) -->
       <div id="voicePreview" class="voice-preview">
         <div class="audio-player">
+          <button type="button" id="voiceRedoBtn" class="audio-delete-btn" aria-label="Supprimer et recommencer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
           <button type="button" id="playBtn" class="play-btn" aria-label="Lire / Pause">
             <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           </button>
-          <div class="audio-info">
-            <div class="duration" id="previewDuration">00:00</div>
-            <div class="size" id="previewSize">— Ko</div>
+          <div class="audio-track">
+            <div class="audio-progress-wrap" id="audioProgressWrap">
+              <div class="audio-progress-bar" id="audioProgressBar"></div>
+            </div>
+            <div class="audio-meta">
+              <span class="audio-current-time" id="audioCurrentTime">00:00</span>
+              <span class="audio-total-time" id="previewDuration">00:00</span>
+            </div>
           </div>
+          <span class="audio-size-tag" id="previewSize">— Ko</span>
         </div>
 
         <div class="voice-extra-fields">
@@ -402,8 +414,12 @@
         </div>
 
         <div class="voice-actions">
-          <button type="button" id="voiceRedoBtn" class="btn-secondary">Recommencer</button>
-          <button type="button" id="voiceSaveBtn" class="btn-primary">Sauvegarder</button>
+          <button type="button" id="voiceSaveBtn" class="btn-primary btn-send-voice">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+            Envoyer
+          </button>
         </div>
       </div>
 
