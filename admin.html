@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
-<script src="supabase-config.js"></script>
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="js/supabase-config.js"></script>
 <title>Admin — PASTEF Enrôlement</title>
 <link rel="icon" type="image/jpeg" href="../assets/logo.jpg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -1088,7 +1088,7 @@ html, body {
 // ── Supabase Config ──
 const SUPABASE_URL = window.SUPABASE_CONFIG?.url || '';
 const SUPABASE_KEY = window.SUPABASE_CONFIG?.anonKey || '';
-const GEMINI_KEY = ''; // À configurer à part
+const GEMINI_KEY = window.SUPABASE_CONFIG?.geminiKey || '';
 const TABLE = window.SUPABASE_CONFIG?.table || 'enrolments';
 
 
