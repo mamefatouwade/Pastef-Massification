@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — PASTEF Enrôlement</title>
+<link rel="icon" type="image/jpeg" href="../assets/logo.jpg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+/* ============================================
+   PASTEF ADMIN — Styles
+   ============================================ */
+:root {
+  --green: #1B7C3D;
+  --green-dark: #135A2C;
+  --green-light: #2E9B52;
+  --red: #C42528;
+  --red-light: #DC3A3D;
+  --or: #D4900A;
+  --or-light: #E8B847;
+  --noir: #111;
+  --blanc: #fff;
+  --bg: #F4F5F7;
+  --card: #FFFFFF;
+  --border: #E8E8E8;
+  --border-light: #F0F0F0;
+  --text: #1A2E22;
+  --text-muted: #6B7B72;
+  --text-soft: #9CA8A2;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LOGIN PAGE ── */
+.login-container {
+  display: flex;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--blanc);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 24px;
+  margin: 0 auto 20px;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+  transition: all 0.15s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(27,124,61,0.1);
+}
+
+.form-input::placeholder {
+  color: var(--text-soft);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--green);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  margin-top: 8px;
+}
+
+.login-btn:hover:not(:disabled) {
+  background: var(--green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(27,124,61,0.3);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-error {
+  background: #FFEBEE;
+  border: 1px solid #FFCDD2;
+  color: var(--red);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: none;
+}
+
+.login-error.show {
+  display: block;
+}
+
+.login-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.login-btn.loading .login-loading {
+  opacity: 1;
+}
+
+.spinner-mini {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── APPLICATION ── */
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--noir);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.sidebar.collapsed { width: 64px; }
+
+.sidebar-logo {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sidebar-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: #fff;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-text { transition: opacity 0.2s; }
+.sidebar-logo-name { color: #fff; font-weight: 800; font-size: 15px; letter-spacing: -0.3px; }
+.sidebar-logo-sub { color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 500; letter-spacing: 0.04em; }
+.sidebar.collapsed .sidebar-logo-text { opacity: 0; width: 0; }
+.sidebar.collapsed .sidebar-logo { padding: 20px 14px; }
+
+.sidebar-nav { padding: 16px 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  white-space: nowrap;
+}
+
+.nav-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.05); }
+.nav-btn.active { background: var(--green); color: #fff; font-weight: 700; }
+.nav-btn svg { flex-shrink: 0; }
+.nav-btn .nav-label { transition: opacity 0.2s; }
+.sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
+.sidebar.collapsed .nav-btn { justify-content: center; padding: 10px 12px; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.3);
+  font-size: 10px;
+}
+
+.sidebar.collapsed .sidebar-footer { display: none; }
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  margin-top: auto;
+}
+
+.logout-btn:hover {
+  background: rgba(196,37,40,0.1);
+  color: var(--red-light);
+  border-color: var(--red-light);
+}
+
+.sidebar.collapsed .logout-btn-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.topbar {
+  height: 60px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+}
+
+.topbar-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-date { font-size: 12px; color: var(--text-muted); }
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.content { flex: 1; overflow: auto; padding: 24px; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* KPI CARDS */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+.kpi-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--noir);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.kpi-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* CARDS */
+.card-grid { display: grid; gap: 16px; margin-bottom: 24px; }
+.card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.card-grid.cols-2-1 { grid-template-columns: 2fr 1fr; }
+
+.chart-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+.chart-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.chart-card-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+.chart-wrap { position: relative; height: 240px; }
+
+/* TABLE */
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 14px;
+  height: 42px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 13px;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text);
+}
+
+.search-box input::placeholder { color: var(--text-soft); }
+
+.filter-select {
+  height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.result-count { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+.data-table-wrap {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.data-table-scroll { overflow-x: auto; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table thead tr { border-bottom: 2px solid var(--border-light); }
+
+.data-table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.data-table td { padding: 12px 14px; }
+
+.data-table tbody tr {
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.data-table tbody tr:hover { background: #FAFBFC; }
+
+.table-name { font-weight: 600; }
+.table-phone { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+
+.table-footer {
+  padding: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+}
+
+/* BADGES */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-h { color: var(--green); background: #E8F5E9; }
+.badge-f { color: var(--or); background: #FFF8E1; }
+.badge-done { color: var(--green); background: #E8F5E9; }
+.badge-pending { color: var(--or); background: #FFF8E1; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .sidebar { width: 64px; }
+  .sidebar .nav-label,
+  .sidebar .sidebar-logo-text,
+  .sidebar .sidebar-footer,
+  .sidebar .logout-btn-label { display: none; }
+  .sidebar .nav-btn { justify-content: center; padding: 10px 12px; }
+  .sidebar .sidebar-logo { padding: 20px 14px; }
+  .card-grid.cols-2, .card-grid.cols-2-1 { grid-template-columns: 1fr; }
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 12px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.15s;
+}
+
+.export-btn:hover { border-color: var(--green); color: var(--green); }
+
+.dots { display: flex; gap: 4px; }
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dot.on { background: var(--green); }
+.dot.off { background: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN PAGE ═══ -->
+<div id="loginPage" class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">P</div>
+      <h1 class="login-title">PASTEF Admin</h1>
+      <p class="login-sub">Accédez au tableau de bord</p>
+    </div>
+
+    <div id="loginError" class="login-error"></div>
+
+    <form id="loginForm" onsubmit="APP.handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input 
+          type="email" 
+          id="loginEmail" 
+          class="form-input" 
+          placeholder="admin@pastef.sn"
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input 
+          type="password" 
+          id="loginPassword" 
+          class="form-input" 
+          placeholder="••••••••"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="login-btn" id="loginBtn">
+        Se connecter
+        <span class="login-loading">
+          <span class="spinner-mini"></span>
+          Connexion en cours...
+        </span>
+      </button>
+
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:20px">
+        Compte de démo : admin@pastef.sn / password123
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ APP (Dashboard) ═══ -->
+<div id="appPage" class="app" hidden>
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" onclick="APP.toggleSidebar()">
+      <div class="sidebar-logo-icon">P</div>
+      <div class="sidebar-logo-text">
+        <div class="sidebar-logo-name">PASTEF</div>
+        <div class="sidebar-logo-sub">ADMIN PANEL</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    
+    <button class="logout-btn" onclick="APP.handleLogout()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      <span class="logout-btn-label">Déconnexion</span>
+    </button>
+
+    <div class="sidebar-footer">
+      Plateforme PASTEF v1.0<br>© 2026 — Patriotes du Sénégal
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topDate"></span>
+        <div class="user-info">
+          <div class="user-email" id="userEmail"></div>
+          <div class="topbar-avatar" id="userAvatar">A</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <div class="page active" id="page-dashboard"></div>
+      <div class="page" id="page-members"></div>
+      <div class="page" id="page-map"></div>
+      <div class="page" id="page-stats"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================
+   PASTEF ADMIN — Application avec Auth
+   ============================================ */
+(function() {
+'use strict';
+
+// ── Supabase Config ──
+const SUPABASE_URL = 'https://hdhydlumhywaaiiklxb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkeWR5ZGx1bWh5d2FhaWlrbHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjQzODIsImV4cCI6MjA5ODI0MDM4Mn0.byxtIjrjNX0mSC26zMUbXz0hmNMeFsg7FE3H1cITjYk';
+const TABLE = 'enrolments';
+
+let supabase = null;
+let currentUser = null;
+let allMembers = [];
+let currentPage = 'dashboard';
+let charts = {};
+
+// ── Init Supabase ──
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  console.log('✓ Supabase initialisé');
+} catch(e) {
+  console.error('✗ Erreur Supabase:', e);
+}
+
+// ── Check Auth on Load ──
+async function checkAuth() {
+  if (!supabase) return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      showApp();
+      await loadData();
+    } else {
+      showLogin();
+    }
+  } catch(e) {
+    console.error('Auth check error:', e);
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById('loginPage').hidden = false;
+  document.getElementById('appPage').hidden = true;
+}
+
+function showApp() {
+  document.getElementById('loginPage').hidden = true;
+  document.getElementById('appPage').hidden = false;
+  document.getElementById('userEmail').textContent = currentUser.email;
+  document.getElementById('userAvatar').textContent = currentUser.email.charAt(0).toUpperCase();
+  buildNav();
+}
+
+// ── NAV ──
+const NAV = [
+  { id:'dashboard', label:'Dashboard',    icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="4" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/></svg>' },
+  { id:'members',   label:'Inscriptions', icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id:'stats',     label:'Statistiques', icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>' },
+];
+const TITLES = { dashboard:'Dashboard', members:'Inscriptions', stats:'Statistiques' };
+
+function buildNav() {
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = NAV.map(n =>
+    `<button class="nav-btn${n.id === currentPage ? ' active' : ''}" data-page="${n.id}" onclick="APP.goTo('${n.id}')">
+      ${n.icon}
+      <span class="nav-label">${n.label}</span>
+    </button>`
+  ).join('');
+}
+
+function goTo(pageId) {
+  currentPage = pageId;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  document.getElementById('pageTitle').textContent = TITLES[pageId];
+  buildNav();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ── Date ──
+document.getElementById('topDate').textContent =
+  new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+// ══════════════════════════════════════
+// AUTH HANDLERS
+// ══════════════════════════════════════
+async function handleLogin(event) {
+  event.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+
+  try {
+    if (!supabase) {
+      // Mode démo : accepter les IDs de test
+      if (email === 'mamefatouwade@esp.sn' && password === 'password123') {
+        currentUser = { email, id: 'demo-user' };
+        showApp();
+        await loadData();
+        return;
+      } else {
+        throw new Error('Identifiants incorrects (mode démo)');
+      }
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    
+    currentUser = data.user;
+    showApp();
+    await loadData();
+
+  } catch(err) {
+    console.error('Login error:', err);
+    const msg = err.message || 'Erreur de connexion';
+    errEl.textContent = msg.includes('Invalid login') ? 'Email ou mot de passe incorrect' : msg;
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+}
+
+async function handleLogout() {
+  if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) return;
+  
+  try {
+    if (supabase) await supabase.auth.signOut();
+  } catch(e) {
+    console.error('Logout error:', e);
+  }
+  
+  currentUser = null;
+  allMembers = [];
+  showLogin();
+  document.getElementById('loginForm').reset();
+}
+
+// ══════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════
+async function loadData() {
+  const contentEl = document.getElementById('page-dashboard');
+  contentEl.innerHTML = '<div class="loader"><div class="spinner"></div>Chargement des données...</div>';
+
+  try {
+    // Tentative Supabase
+    if (supabase) {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(2000);
+      
+      if (!error && data && data.length > 0) {
+        allMembers = data;
+        onDataReady();
+        return;
+      }
+    }
+    
+    // Fallback données de démo
+    allMembers = generateDemoData();
+    onDataReady();
+
+  } catch(err) {
+    console.error('Data load error:', err);
+    allMembers = generateDemoData();
+    onDataReady();
+  }
+}
+
+function generateDemoData() {
+  const paysOptions = ['Sénégal','Sénégal','Sénégal','Sénégal','France','Italie','Espagne','États-Unis'];
+  const regSenegal = ['Dakar','Thiès','Saint-Louis','Diourbel','Kaolack','Ziguinchor','Fatick','Louga','Kolda','Kédougou','Matam','Tambacounda','Sédhiou'];
+  const professions = ['Étudiant(e)','Enseignant(e)','Commerçant(e)','Ingénieur(e)','Médecin','Entrepreneur(e)','Fonctionnaire','Informaticien(ne)','Développeur'];
+  const domaines = ['Éducation','Commerce','Santé','Informatique','Agriculture','Construction'];
+  const rand = arr => arr[Math.floor(Math.random()*arr.length)];
+  
+  const members = [];
+  for (let i = 0; i < 200; i++) {
+    const sexe = Math.random() > 0.42 ? 'Homme' : 'Femme';
+    const year = 1960 + Math.floor(Math.random()*45);
+    const month = String(Math.floor(Math.random()*12)+1).padStart(2,'0');
+    const day = String(Math.floor(Math.random()*28)+1).padStart(2,'0');
+    const createdDays = Math.floor(Math.random()*30);
+    const created = new Date(Date.now() - createdDays*86400000);
+    const pays = rand(paysOptions);
+    const region = pays === 'Sénégal' ? rand(regSenegal) : 'Autre';
+    
+    members.push({
+      id: `demo-${i}`,
+      prenom: ['Ousmane','Mamadou','Fatou','Aminata'][Math.floor(Math.random()*4)],
+      nom: ['Diop','Ndiaye','Fall','Sow','Ba'][Math.floor(Math.random()*5)],
+      sexe,
+      date_naissance: `${year}-${month}-${day}`,
+      lieu_naissance: region,
+      telephone: `+221 7${Math.floor(Math.random()*9)} ${String(Math.floor(Math.random()*999)).padStart(3,'0')} ${String(Math.floor(Math.random()*9999)).padStart(4,'0')}`,
+      profession: rand(professions),
+      domaine: rand(domaines),
+      pays, region,
+      quartier: 'Médina',
+      appartient_cellule: Math.random() > 0.3 ? 'Oui' : 'Non',
+      engagement_soutenir: Math.random() > 0.12,
+      engagement_participer: Math.random() > 0.18,
+      engagement_oeuvrer: Math.random() > 0.22,
+      certification: Math.random() > 0.1,
+      created_at: created.toISOString(),
+    });
+  }
+  return members;
+}
+
+function onDataReady() {
+  const s = computeStats(allMembers);
+  renderDashboard(s);
+  renderMembers();
+  renderStats(s);
+}
+
+// ══════════════════════════════════════
+// COMPUTE STATS
+// ══════════════════════════════════════
+function computeStats(data) {
+  const total = data.length;
+  const hommes = data.filter(m => m.sexe === 'Homme').length;
+  const femmes = total - hommes;
+  const senegal = data.filter(m => m.pays === 'Sénégal').length;
+  const diaspora = total - senegal;
+  const certified = data.filter(m => m.certification).length;
+  const inCellule = data.filter(m => m.appartient_cellule === 'Oui').length;
+  const engS = data.filter(m => m.engagement_soutenir).length;
+  const engP = data.filter(m => m.engagement_participer).length;
+  const engO = data.filter(m => m.engagement_oeuvrer).length;
+
+  const countBy = (key) => {
+    const map = {};
+    data.forEach(m => { const v = m[key] || 'Autre'; map[v] = (map[v]||0)+1; });
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value}));
+  };
+
+  const timeline = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() - i*86400000);
+    const key = d.toISOString().split('T')[0];
+    const label = `${d.getDate()}/${d.getMonth()+1}`;
+    const count = data.filter(m => m.created_at.split('T')[0] === key).length;
+    timeline.push({ label, count });
+  }
+
+  return {
+    total, hommes, femmes, senegal, diaspora, certified, inCellule,
+    engS: Math.round(engS/total*100),
+    engP: Math.round(engP/total*100),
+    engO: Math.round(engO/total*100),
+    certPct: Math.round(certified/total*100),
+    byPays: countBy('pays'),
+    byRegion: countBy('region'),
+    byProfession: countBy('profession'),
+    timeline,
+  };
+}
+
+// ══════════════════════════════════════
+// RENDER PAGES
+// ══════════════════════════════════════
+function renderDashboard(s) {
+  const el = document.getElementById('page-dashboard');
+  el.innerHTML = `
+    <div class="kpi-grid">
+      ${kpiCard('Total inscriptions', s.total, 'depuis le lancement')}
+      ${kpiCard('Hommes', s.hommes, `${Math.round(s.hommes/s.total*100)}% du total`)}
+      ${kpiCard('Femmes', s.femmes, `${Math.round(s.femmes/s.total*100)}% du total`)}
+      ${kpiCard('Sénégal', s.senegal, `${Math.round(s.senegal/s.total*100)}% du total`)}
+    </div>
+
+    <div class="card-grid cols-2-1">
+      <div class="chart-card">
+        <div class="chart-card-title">Inscriptions · 30 derniers jours</div>
+        <div class="chart-card-sub">Évolution quotidienne</div>
+        <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Genre</div>
+        <div class="chart-card-sub">${s.hommes} H · ${s.femmes} F</div>
+        <div class="chart-wrap"><canvas id="chartGenre"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card-grid cols-2">
+      <div class="chart-card">
+        <div class="chart-card-title">Top pays</div>
+        <div class="chart-wrap"><canvas id="chartPays"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Top régions</div>
+        <div class="chart-wrap"><canvas id="chartRegions"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  createTimelineChart(s.timeline);
+  createGenreChart(s.hommes, s.femmes);
+  createBarChart('chartPays', s.byPays.slice(0,6));
+  createBarChart('chartRegions', s.byRegion.slice(0,8));
+}
+
+function kpiCard(label, value, sub) {
+  return `<div class="kpi-card">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value.toLocaleString('fr-FR')}</div>
+    <div class="kpi-sub">${sub}</div>
+  </div>`;
+}
+
+// Chart.js helpers
+const CHART_COLORS = ['#1B7C3D','#D4900A','#C42528','#2E9B52','#E8B847','#6366F1'];
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function createTimelineChart(data) {
+  destroyChart('chartTimeline');
+  const ctx = document.getElementById('chartTimeline');
+  if (!ctx) return;
+  charts.chartTimeline = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [{
+        data: data.map(d => d.count),
+        borderColor: '#1B7C3D',
+        backgroundColor: 'rgba(27,124,61,0.08)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2.5,
+        pointRadius: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#9CA8A2' } },
+        y: { grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 }, color: '#9CA8A2' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function createGenreChart(h, f) {
+  destroyChart('chartGenre');
+  const ctx = document.getElementById('chartGenre');
+  if (!ctx) return;
+  charts.chartGenre = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Homme','Femme'],
+      datasets: [{ data: [h, f], backgroundColor: ['#1B7C3D','#D4900A'], borderWidth: 0, cutout: '65%' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: 600 }, padding: 16 } } }
+    }
+  });
+}
+
+function createBarChart(id, data) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.name.length > 14 ? d.name.slice(0,14)+'…' : d.name),
+      datasets: [{
+        data: data.map(d => d.value),
+        backgroundColor: data.map((_,i) => CHART_COLORS[i % CHART_COLORS.length]),
+        borderRadius: 6,
+        barThickness: 22,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 }, color: '#9CA8A2' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11, weight: 500 }, color: '#1A2E22' } }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// PAGE: INSCRIPTIONS
+// ══════════════════════════════════════
+function renderMembers() {
+  const el = document.getElementById('page-members');
+  const paysSet = ['Tous', ...new Set(allMembers.map(m => m.pays))].sort();
+
+  el.innerHTML = `
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="18" height="18" fill="none" stroke="#9CA8A2" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="memberSearch" placeholder="Chercher par nom..." oninput="APP.filterMembers()"/>
+      </div>
+      <select class="filter-select" id="filterPays" onchange="APP.filterMembers()">${paysSet.map(p=>`<option>${p}</option>`).join('')}</select>
+      <span class="result-count" id="resultCount"></span>
+      <button class="export-btn" onclick="APP.exportCSV()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        CSV
+      </button>
+    </div>
+    <div class="data-table-wrap">
+      <div class="data-table-scroll">
+        <table class="data-table">
+          <thead><tr>
+            <th>Nom complet</th><th>Genre</th><th>Téléphone</th><th>Pays</th><th>Région</th><th>Profession</th><th>Engagement</th><th>Date</th>
+          </tr></thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="memberTableFooter"></div>
+    </div>
+  `;
+  filterMembers();
+}
+
+function filterMembers() {
+  const search = (document.getElementById('memberSearch')?.value || '').toLowerCase();
+  const pays = document.getElementById('filterPays')?.value || 'Tous';
+
+  const filtered = allMembers.filter(m => {
+    if (search && !`${m.prenom} ${m.nom}`.toLowerCase().includes(search)) return false;
+    if (pays !== 'Tous' && m.pays !== pays) return false;
+    return true;
+  });
+
+  document.getElementById('resultCount').textContent = `${filtered.length} résultat${filtered.length>1?'s':''}`;
+
+  const tbody = document.getElementById('memberTableBody');
+  const limit = 50;
+  tbody.innerHTML = filtered.slice(0, limit).map(m => `
+    <tr>
+      <td class="table-name">${m.prenom} ${m.nom}</td>
+      <td><span class="badge badge-${m.sexe==='Homme'?'h':'f'}">${m.sexe==='Homme'?'H':'F'}</span></td>
+      <td class="table-phone">${m.telephone}</td>
+      <td>${m.pays}</td>
+      <td>${m.region}</td>
+      <td>${m.profession}</td>
+      <td><div class="dots"><span class="dot ${m.engagement_soutenir?'on':'off'}"></span><span class="dot ${m.engagement_participer?'on':'off'}"></span><span class="dot ${m.engagement_oeuvrer?'on':'off'}"></span></div></td>
+      <td style="font-size:12px;color:var(--text-muted)">${new Date(m.created_at).toLocaleDateString('fr-FR')}</td>
+    </tr>
+  `).join('');
+
+  const footer = document.getElementById('memberTableFooter');
+  footer.textContent = filtered.length > limit ? `Affichage des ${limit} premiers sur ${filtered.length}` : `${filtered.length} inscription${filtered.length>1?'s':''}`;
+}
+
+function exportCSV() {
+  const headers = ['Prénom','Nom','Sexe','Téléphone','Pays','Région','Profession','Domaine','Engagement Soutenir','Engagement Participer','Engagement Oeuvrer','Certification'];
+  const rows = allMembers.map(m => [
+    m.prenom, m.nom, m.sexe, m.telephone, m.pays, m.region, m.profession, m.domaine,
+    m.engagement_soutenir?'Oui':'Non', m.engagement_participer?'Oui':'Non', m.engagement_oeuvrer?'Oui':'Non', m.certification?'Oui':'Non'
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `inscriptions_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════
+// PAGE: STATISTIQUES
+// ══════════════════════════════════════
+function renderStats(s) {
+  const el = document.getElementById('page-stats');
+  el.innerHTML = `
+    <div class="card-grid cols-2">
+      <div class="chart-card">
+        <div class="chart-card-title">Top professions</div>
+        <div class="chart-wrap"><canvas id="chartProf"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Domaines d'activité</div>
+        <div class="chart-wrap"><canvas id="chartDomaine"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  createBarChart('chartProf', s.byProfession.slice(0, 8));
+  createBarChart('chartDomaine', s.byDomaine ? s.byDomaine.slice(0, 6) : []);
+}
+
+// ══════════════════════════════════════
+// EXPOSE & INIT
+// ══════════════════════════════════════
+window.APP = {
+  handleLogin,
+  handleLogout,
+  goTo,
+  toggleSidebar,
+  filterMembers,
+  exportCSV,
+};
+
+checkAuth();
+
+})();
+</script>
+</body>
+</html>
