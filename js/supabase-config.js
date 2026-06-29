@@ -13,7 +13,8 @@ const SUPABASE_CONFIG = {
   // Trouvez-la dans : Supabase Dashboard > Settings > API > Project API keys > anon public
   // ⚠️ N'utilisez JAMAIS la "service_role" key ici, elle est dangereuse côté client
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkeWR5ZGx1bWh5d2FhaWlrbHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NjQzODIsImV4cCI6MjA5ODI0MDM4Mn0.byxtIjrjNX0mSC26zMUbXz0hmNMeFsg7FE3H1cITjYk',
-
+// Clé API Gemini pour la transcription IA
+  geminiKey: 'AQ.Ab8RN6KrkvX_0GvLfasDEmKdf48vGkFD5x4toV125f5JcrXTKg',
   // Nom de la table dans Supabase
   table: 'enrolments',
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+<script src="supabase-config.js"></script>
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -939,10 +940,11 @@ html, body {
 // ✅ APRÈS
 // Les clés viennent maintenant du fichier .env (pour le développement local)
 // Sur GitHub, laisse ces variables vides et configure les secrets sur ton serveur
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://hdhydlumhywaaiiklxb.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
-const GEMINI_KEY = process.env.GEMINI_KEY || '';
-const TABLE = 'enrolments';
+// ── Supabase Config ──
+const SUPABASE_URL = window.SUPABASE_CONFIG?.url || '';
+const SUPABASE_KEY = window.SUPABASE_CONFIG?.anonKey || '';
+const GEMINI_KEY = ''; // À configurer à part
+const TABLE = window.SUPABASE_CONFIG?.table || 'enrolments';
 
 
 let supabase = null;
