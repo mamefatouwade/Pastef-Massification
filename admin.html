@@ -607,6 +607,75 @@ html, body {
 }
 .dot.on { background: var(--green); }
 .dot.off { background: var(--border); }
+
+/* ── MAP PAGE ── */
+#page-map .map-container { height: calc(100vh - 180px); min-height: 450px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.map-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.map-legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.map-stats-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.map-stat-pill { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 12px; }
+.map-stat-pill strong { font-weight: 800; color: var(--green); margin-right: 4px; }
+.leaflet-tooltip.map-tip { background: var(--noir) !important; border: none !important; color: #fff !important; font-family: 'Inter', sans-serif !important; font-size: 12px !important; line-height: 1.6 !important; padding: 10px 14px !important; border-radius: 10px !important; box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important; max-width: 260px !important; }
+.leaflet-tooltip.map-tip::before { display: none !important; }
+.map-tip b { color: var(--or-light); }
+.map-tip .tip-row { display: flex; justify-content: space-between; gap: 12px; }
+.map-tip .tip-label { color: rgba(255,255,255,0.55); }
+.map-tip .tip-val { font-weight: 600; }
+.map-tip hr { border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 5px 0; }
+
+/* ── AUDIO PAGE ── */
+.audio-layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; height: calc(100vh - 160px); min-height: 500px; }
+.audio-list-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
+.audio-list-header { padding: 16px; border-bottom: 1px solid var(--border-light); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.audio-list-count { font-size: 11px; font-weight: 500; color: var(--text-muted); background: var(--bg); border-radius: 10px; padding: 2px 10px; }
+.audio-list-scroll { flex: 1; overflow-y: auto; }
+.audio-item { padding: 12px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.15s; }
+.audio-item:hover { background: #FAFBFC; }
+.audio-item.active { background: rgba(27,124,61,0.06); border-left: 3px solid var(--green); }
+.audio-item-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+.audio-item-meta { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+.audio-item-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+.audio-item-status.pending { background: #FFF8E1; color: var(--or); }
+.audio-item-status.done { background: #E8F5E9; color: var(--green); }
+.audio-item-status.failed { background: #FFEBEE; color: var(--red); }
+
+.audio-work-panel { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.audio-player-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.audio-player-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.audio-play-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--green); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
+.audio-play-btn:hover { background: var(--green-dark); }
+.audio-play-btn svg { width: 22px; height: 22px; }
+.audio-progress-track { flex: 1; }
+.audio-progress-outer { height: 6px; background: var(--border); border-radius: 3px; cursor: pointer; position: relative; }
+.audio-progress-inner { height: 100%; background: var(--green); border-radius: 3px; width: 0%; transition: width 0.15s linear; position: relative; }
+.audio-progress-inner::after { content: ''; position: absolute; right: -6px; top: -3px; width: 12px; height: 12px; background: var(--green); border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+.audio-time-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+.transcription-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.transcription-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.transcription-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+.transcription-text { width: 100%; min-height: 80px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 13px; font-family: inherit; resize: vertical; background: var(--bg); color: var(--text); }
+.transcription-text:focus { outline: none; border-color: var(--green); }
+
+.audio-form-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.audio-form-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+.audio-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.audio-form-grid .field-full { grid-column: 1 / -1; }
+.audio-field label { font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.audio-field input, .audio-field select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; }
+.audio-field input:focus, .audio-field select:focus { outline: none; border-color: var(--green); }
+.audio-form-actions { display: flex; gap: 10px; margin-top: 14px; }
+.btn-save-audio { flex: 1; padding: 10px; background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
+.btn-save-audio:hover { background: var(--green-dark); }
+.btn-save-audio:disabled { opacity: 0.5; cursor: not-allowed; }
+.audio-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; gap: 8px; padding: 40px; }
+.audio-empty svg { opacity: 0.3; }
+
+@media (max-width: 900px) {
+  .audio-layout { grid-template-columns: 1fr; height: auto; }
+  .audio-list-panel { max-height: 250px; }
+}
 </style>
 </head>
 <body>
@@ -704,6 +773,7 @@ html, body {
       <div class="page active" id="page-dashboard"></div>
       <div class="page" id="page-members"></div>
       <div class="page" id="page-map"></div>
+      <div class="page" id="page-audio"></div>
       <div class="page" id="page-stats"></div>
     </div>
   </div>
@@ -770,9 +840,11 @@ function showApp() {
 const NAV = [
   { id:'dashboard', label:'Dashboard',    icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="4" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="11" width="7" height="10" rx="1.5"/></svg>' },
   { id:'members',   label:'Inscriptions', icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
+  { id:'map',       label:'Carte',        icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' },
+  { id:'audio',     label:'Audios',       icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>' },
   { id:'stats',     label:'Statistiques', icon:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>' },
 ];
-const TITLES = { dashboard:'Dashboard', members:'Inscriptions', stats:'Statistiques' };
+const TITLES = { dashboard:'Dashboard', members:'Inscriptions', map:'Carte mondiale', audio:'Gestion Audios', stats:'Statistiques' };
 
 function buildNav() {
   const nav = document.getElementById('sidebarNav');
@@ -785,11 +857,16 @@ function buildNav() {
 }
 
 function goTo(pageId) {
+  // Cleanup map when leaving
+  if (currentPage === 'map' && worldMap) { worldMap.remove(); worldMap = null; }
+  if (currentPage === 'audio' && adminAudioEl) { adminAudioEl.pause(); adminAudioEl = null; }
   currentPage = pageId;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + pageId).classList.add('active');
   document.getElementById('pageTitle').textContent = TITLES[pageId];
   buildNav();
+  if (pageId === 'map' && allMembers.length) setTimeout(() => initWorldMap(), 150);
+  if (pageId === 'audio') renderAudioPage();
 }
 
 function toggleSidebar() {
@@ -939,6 +1016,7 @@ function onDataReady() {
   const s = computeStats(allMembers);
   renderDashboard(s);
   renderMembers();
+  renderMapPage(s);
   renderStats(s);
 }
 
@@ -981,6 +1059,7 @@ function computeStats(data) {
     byPays: countBy('pays'),
     byRegion: countBy('region'),
     byProfession: countBy('profession'),
+    byDomaine: countBy('domaine'),
     timeline,
   };
 }
@@ -1201,6 +1280,387 @@ function exportCSV() {
 }
 
 // ══════════════════════════════════════
+// PAGE: CARTE MONDIALE
+// ══════════════════════════════════════
+let worldMap = null;
+
+// Coordonnées des pays de la diaspora
+const DIASPORA_COORDS = {
+  'France': [46.6, 2.3], 'Italie': [42.5, 12.5], 'Espagne': [40.0, -3.7],
+  'États-Unis': [39.8, -98.6], 'Canada': [56.1, -106.3], 'Belgique': [50.5, 4.5],
+  'Allemagne': [51.2, 10.4], 'Royaume-Uni': [55.4, -3.4], 'Suisse': [46.8, 8.2],
+  'Portugal': [39.4, -8.2], 'Pays-Bas': [52.1, 5.3], 'Maroc': [31.8, -7.1],
+  'Mauritanie': [21.0, -10.9], 'Mali': [17.6, -4.0], "Côte d'Ivoire": [7.5, -5.5],
+  'Gambie': [13.4, -15.3], 'Guinée': [9.9, -11.8], 'Guinée-Bissau': [12.0, -15.2],
+  'Burkina Faso': [12.4, -1.6], 'Cameroun': [7.4, 12.3], 'Gabon': [-0.8, 11.6],
+  'Turquie': [38.9, 35.2], 'Chine': [35.9, 104.2], 'Arabie Saoudite': [23.9, 45.1],
+  'Émirats Arabes Unis': [23.4, 53.8], 'Tunisie': [33.9, 9.5], 'Algérie': [28.0, 1.7],
+  'Cap-Vert': [16.0, -24.0], 'Niger': [17.6, 8.1], 'Nigéria': [9.1, 8.7],
+  'Ghana': [7.9, -1.0], 'Bénin': [9.3, 2.3], 'Sénégal': [14.5, -14.5]
+};
+
+// Régions du Sénégal — centres approximatifs
+const REGION_CENTERS = {
+  'Dakar':[14.72,-17.47],'Thiès':[14.79,-16.93],'Saint-Louis':[16.05,-16.45],
+  'Diourbel':[14.65,-16.23],'Kaolack':[14.15,-16.08],'Ziguinchor':[12.56,-16.27],
+  'Fatick':[14.33,-16.41],'Louga':[15.61,-16.22],'Kolda':[12.88,-14.95],
+  'Kédougou':[12.56,-12.18],'Matam':[15.66,-13.25],'Tambacounda':[13.77,-13.67],
+  'Sédhiou':[12.71,-15.56],'Kaffrine':[14.1,-15.55]
+};
+
+function chorColor(count) {
+  if (count >= 30) return '#135A2C';
+  if (count >= 15) return '#1B7C3D';
+  if (count >= 8) return '#2E9B52';
+  if (count >= 3) return '#6FCF97';
+  return '#C8E6C9';
+}
+
+function renderMapPage(s) {
+  const el = document.getElementById('page-map');
+  el.innerHTML = `
+    <div class="map-stats-bar">
+      <div class="map-stat-pill"><strong>${s.senegal}</strong> Sénégal</div>
+      <div class="map-stat-pill"><strong>${s.diaspora}</strong> Diaspora</div>
+      <div class="map-stat-pill"><strong>${s.byPays.length}</strong> Pays</div>
+      <div class="map-stat-pill"><strong>${s.byRegion.length}</strong> Régions</div>
+    </div>
+    <div class="map-container" id="worldMapContainer"></div>
+    <div class="map-legend">
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:#135A2C"></div>≥ 30 inscrits</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:#1B7C3D"></div>15–29</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:#2E9B52"></div>8–14</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:#6FCF97"></div>3–7</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:#C8E6C9"></div>1–2</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background:var(--or);border-radius:50%"></div>Diaspora</div>
+    </div>
+  `;
+}
+
+function initWorldMap() {
+  const container = document.getElementById('worldMapContainer');
+  if (!container || worldMap) return;
+  container.innerHTML = '';
+
+  worldMap = L.map(container, {
+    center: [14.5, -14.5], zoom: 3,
+    zoomControl: true, scrollWheelZoom: true,
+    attributionControl: false
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 12, subdomains: 'abcd'
+  }).addTo(worldMap);
+
+  // Comptage par pays et par région
+  const byPays = {}, byRegion = {};
+  allMembers.forEach(m => {
+    byPays[m.pays] = byPays[m.pays] || [];
+    byPays[m.pays].push(m);
+    if (m.pays === 'Sénégal' && m.region) {
+      byRegion[m.region] = byRegion[m.region] || [];
+      byRegion[m.region].push(m);
+    }
+  });
+
+  // Stats helper
+  function buildTooltip(name, members) {
+    const total = members.length;
+    const h = members.filter(m => m.sexe === 'Homme').length;
+    const f = total - h;
+    const eng = members.filter(m => m.engagement_soutenir).length;
+    const cell = members.filter(m => m.appartient_cellule === 'Oui').length;
+    const profMap = {};
+    members.forEach(m => { profMap[m.profession] = (profMap[m.profession]||0) + 1; });
+    const topProf = Object.entries(profMap).sort((a,b) => b[1]-a[1]).slice(0,3).map(p => p[0]).join(', ');
+
+    return `<div style="min-width:180px">
+      <b style="font-size:13px">${name}</b>
+      <hr>
+      <div class="tip-row"><span class="tip-label">Inscrits</span><span class="tip-val">${total}</span></div>
+      <div class="tip-row"><span class="tip-label">Genre</span><span class="tip-val">${h}H / ${f}F</span></div>
+      <div class="tip-row"><span class="tip-label">Engagement</span><span class="tip-val">${Math.round(eng/total*100)}%</span></div>
+      <div class="tip-row"><span class="tip-label">Cellules</span><span class="tip-val">${cell}</span></div>
+      <hr>
+      <div style="font-size:10px;color:rgba(255,255,255,0.5)">Top : ${topProf || '—'}</div>
+    </div>`;
+  }
+
+  // Régions du Sénégal — cercles proportionnels
+  Object.entries(byRegion).forEach(([region, members]) => {
+    const center = REGION_CENTERS[region];
+    if (!center) return;
+    const radius = Math.max(12, Math.min(40, members.length * 1.8));
+    L.circleMarker(center, {
+      radius, fillColor: chorColor(members.length), fillOpacity: 0.85,
+      color: '#fff', weight: 2
+    }).bindTooltip(buildTooltip(region, members), { className: 'map-tip', sticky: true })
+      .addTo(worldMap);
+  });
+
+  // Diaspora — marqueurs orange
+  Object.entries(byPays).forEach(([pays, members]) => {
+    if (pays === 'Sénégal') return;
+    const coords = DIASPORA_COORDS[pays];
+    if (!coords) return;
+    const radius = Math.max(8, Math.min(28, members.length * 3));
+    L.circleMarker(coords, {
+      radius, fillColor: '#D4900A', fillOpacity: 0.8,
+      color: '#fff', weight: 2
+    }).bindTooltip(buildTooltip(pays + ' 🌍', members), { className: 'map-tip', sticky: true })
+      .addTo(worldMap);
+  });
+
+  // Zoom sur le Sénégal avec vue globale
+  worldMap.setView([14.5, -5], 4);
+
+  setTimeout(() => worldMap.invalidateSize(), 200);
+}
+
+// ══════════════════════════════════════
+// PAGE: GESTION AUDIOS
+// ══════════════════════════════════════
+let audioRecordings = [];
+let selectedAudio = null;
+let adminAudioEl = null;
+
+async function loadAudioRecordings() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('has_audio', true)
+      .order('created_at', { ascending: false });
+    if (!error && data) return data;
+  } catch(e) { console.error('Audio load error:', e); }
+  return [];
+}
+
+function renderAudioPage() {
+  const el = document.getElementById('page-audio');
+  el.innerHTML = `
+    <div class="audio-layout">
+      <div class="audio-list-panel">
+        <div class="audio-list-header">
+          Enregistrements
+          <span class="audio-list-count" id="audioCount">…</span>
+        </div>
+        <div class="audio-list-scroll" id="audioListScroll">
+          <div class="loader"><div class="spinner"></div>Chargement…</div>
+        </div>
+      </div>
+      <div class="audio-work-panel" id="audioWorkPanel">
+        <div class="audio-empty">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+            <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+          </svg>
+          <div style="font-weight:600">Sélectionnez un audio</div>
+          <div style="font-size:12px">Cliquez sur un enregistrement à gauche pour l'écouter et le traiter</div>
+        </div>
+      </div>
+    </div>
+  `;
+  loadAndRenderAudioList();
+}
+
+async function loadAndRenderAudioList() {
+  audioRecordings = await loadAudioRecordings();
+  const scroll = document.getElementById('audioListScroll');
+  const count = document.getElementById('audioCount');
+  if (!scroll) return;
+
+  count.textContent = audioRecordings.length;
+
+  if (audioRecordings.length === 0) {
+    scroll.innerHTML = '<div class="audio-empty" style="padding:30px"><div style="font-size:12px;color:var(--text-muted)">Aucun enregistrement vocal</div></div>';
+    return;
+  }
+
+  scroll.innerHTML = audioRecordings.map((r, i) => {
+    const name = (r.prenom && r.prenom !== 'À transcrire') ? `${r.prenom} ${r.nom}` : `Audio #${i+1}`;
+    const date = new Date(r.created_at).toLocaleDateString('fr-FR');
+    const dur = r.audio_duration_sec ? `${Math.floor(r.audio_duration_sec/60)}:${String(r.audio_duration_sec%60).padStart(2,'0')}` : '—';
+    const status = r.transcription_status || 'pending';
+    const statusLabel = status === 'done' ? 'Transcrit' : status === 'failed' ? 'Échec' : 'En attente';
+    return `<div class="audio-item" data-idx="${i}" onclick="APP.selectAudio(${i})">
+      <div class="audio-item-name">${name}</div>
+      <div class="audio-item-meta"><span>${date}</span><span>${dur}</span></div>
+      <span class="audio-item-status ${status}">${statusLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+async function selectAudio(idx) {
+  selectedAudio = audioRecordings[idx];
+  if (!selectedAudio) return;
+
+  // Highlight
+  document.querySelectorAll('.audio-item').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.audio-item[data-idx="${idx}"]`)?.classList.add('active');
+
+  const panel = document.getElementById('audioWorkPanel');
+
+  // Générer une URL signée (valide 1h) pour le bucket privé
+  let audioUrl = null;
+  if (selectedAudio.audio_path && supabase) {
+    try {
+      const bucket = 'enrolments-audio';
+      const filePath = selectedAudio.audio_path.replace(bucket + '/', '');
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .createSignedUrl(filePath, 3600);
+      if (!error && data) audioUrl = data.signedUrl;
+    } catch(e) { console.error('Signed URL error:', e); }
+  }
+
+  panel.innerHTML = `
+    <div class="audio-player-card">
+      <div class="audio-player-top">
+        <button class="audio-play-btn" id="adminPlayBtn" onclick="APP.toggleAdminAudio()">
+          <svg id="adminPlayIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="audio-progress-track">
+          <div class="audio-progress-outer" id="adminProgressOuter" onclick="APP.seekAdminAudio(event)">
+            <div class="audio-progress-inner" id="adminProgressInner"></div>
+          </div>
+          <div class="audio-time-row">
+            <span id="adminTimeCurrent">00:00</span>
+            <span id="adminTimeTotal">${selectedAudio.audio_duration_sec ? formatAdminTime(selectedAudio.audio_duration_sec) : '—'}</span>
+          </div>
+        </div>
+      </div>
+      ${!audioUrl ? '<div style="font-size:12px;color:var(--or);text-align:center">⚠ Fichier audio non disponible (accès storage requis)</div>' : ''}
+    </div>
+
+    <div class="transcription-card">
+      <h3>Transcription IA <span class="transcription-badge" style="background:${selectedAudio.transcription_status==='done'?'#E8F5E9;color:var(--green)':'#FFF8E1;color:var(--or)'}">
+        ${selectedAudio.transcription_status==='done'?'Complète':'En attente'}
+      </span></h3>
+      <textarea class="transcription-text" id="adminTranscription" placeholder="La transcription IA apparaîtra ici. Vous pouvez aussi saisir manuellement les informations entendues dans l'audio.">${selectedAudio.transcription_text || ''}</textarea>
+    </div>
+
+    <div class="audio-form-card">
+      <h3>Formulaire d'enrôlement</h3>
+      <div class="audio-form-grid">
+        <div class="audio-field"><label>Prénom</label><input id="af-prenom" value="${esc(selectedAudio.prenom)}" placeholder="Prénom"></div>
+        <div class="audio-field"><label>Nom</label><input id="af-nom" value="${esc(selectedAudio.nom)}" placeholder="Nom"></div>
+        <div class="audio-field"><label>Sexe</label><select id="af-sexe"><option value="">—</option><option ${selectedAudio.sexe==='Homme'?'selected':''}>Homme</option><option ${selectedAudio.sexe==='Femme'?'selected':''}>Femme</option></select></div>
+        <div class="audio-field"><label>Date naissance</label><input type="date" id="af-dob" value="${selectedAudio.date_naissance !== '1900-01-01' ? selectedAudio.date_naissance : ''}"></div>
+        <div class="audio-field"><label>Lieu naissance</label><input id="af-lieu" value="${esc(selectedAudio.lieu_naissance)}" placeholder="Lieu"></div>
+        <div class="audio-field"><label>Téléphone</label><input id="af-tel" value="${esc(selectedAudio.telephone)}" placeholder="Téléphone"></div>
+        <div class="audio-field"><label>Profession</label><input id="af-prof" value="${esc(selectedAudio.profession)}" placeholder="Profession"></div>
+        <div class="audio-field"><label>Domaine</label><input id="af-domaine" value="${esc(selectedAudio.domaine)}" placeholder="Domaine"></div>
+        <div class="audio-field"><label>Pays</label><input id="af-pays" value="${esc(selectedAudio.pays)}" placeholder="Pays"></div>
+        <div class="audio-field"><label>Région</label><input id="af-region" value="${esc(selectedAudio.region)}" placeholder="Région"></div>
+        <div class="audio-field field-full"><label>Quartier</label><input id="af-quartier" value="${esc(selectedAudio.quartier)}" placeholder="Quartier"></div>
+      </div>
+      <div class="audio-form-actions">
+        <button class="btn-save-audio" id="audioSaveBtn" onclick="APP.saveAudioEnrolment()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Enregistrer l'inscrit
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Init audio player
+  if (adminAudioEl) { adminAudioEl.pause(); adminAudioEl = null; }
+  if (audioUrl) {
+    adminAudioEl = new Audio(audioUrl);
+    adminAudioEl.addEventListener('timeupdate', updateAdminProgress);
+    adminAudioEl.addEventListener('ended', () => {
+      document.getElementById('adminPlayIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+    });
+    adminAudioEl.addEventListener('loadedmetadata', () => {
+      document.getElementById('adminTimeTotal').textContent = formatAdminTime(Math.floor(adminAudioEl.duration));
+    });
+  }
+}
+
+function esc(v) {
+  if (!v || v === 'À transcrire' || v === 'à_déterminer') return '';
+  return String(v).replace(/"/g, '&quot;');
+}
+
+function formatAdminTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function toggleAdminAudio() {
+  if (!adminAudioEl) return;
+  if (adminAudioEl.paused) {
+    adminAudioEl.play();
+    document.getElementById('adminPlayIcon').innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>';
+  } else {
+    adminAudioEl.pause();
+    document.getElementById('adminPlayIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+  }
+}
+
+function updateAdminProgress() {
+  if (!adminAudioEl || !adminAudioEl.duration) return;
+  const pct = (adminAudioEl.currentTime / adminAudioEl.duration) * 100;
+  const inner = document.getElementById('adminProgressInner');
+  if (inner) inner.style.width = pct + '%';
+  const cur = document.getElementById('adminTimeCurrent');
+  if (cur) cur.textContent = formatAdminTime(Math.floor(adminAudioEl.currentTime));
+}
+
+function seekAdminAudio(e) {
+  if (!adminAudioEl || !adminAudioEl.duration) return;
+  const outer = document.getElementById('adminProgressOuter');
+  const rect = outer.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  adminAudioEl.currentTime = pct * adminAudioEl.duration;
+}
+
+async function saveAudioEnrolment() {
+  if (!selectedAudio || !supabase) return;
+  const btn = document.getElementById('audioSaveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Enregistrement…';
+
+  const updates = {
+    prenom: document.getElementById('af-prenom').value.trim() || 'À transcrire',
+    nom: document.getElementById('af-nom').value.trim() || 'À transcrire',
+    sexe: document.getElementById('af-sexe').value || 'À transcrire',
+    date_naissance: document.getElementById('af-dob').value || '1900-01-01',
+    lieu_naissance: document.getElementById('af-lieu').value.trim() || 'À transcrire',
+    telephone: document.getElementById('af-tel').value.trim() || 'À transcrire',
+    profession: document.getElementById('af-prof').value.trim() || 'À transcrire',
+    domaine: document.getElementById('af-domaine').value.trim() || 'À transcrire',
+    pays: document.getElementById('af-pays').value.trim() || 'À transcrire',
+    region: document.getElementById('af-region').value.trim() || 'À transcrire',
+    quartier: document.getElementById('af-quartier').value.trim() || 'À transcrire',
+    transcription_status: 'done'
+  };
+
+  try {
+    const { error } = await supabase
+      .from(TABLE)
+      .update(updates)
+      .eq('id', selectedAudio.id);
+
+    if (error) throw error;
+
+    btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Enregistré ✓';
+    btn.style.background = 'var(--green-dark)';
+
+    // Refresh list
+    setTimeout(() => loadAndRenderAudioList(), 800);
+  } catch(err) {
+    console.error('Save audio error:', err);
+    btn.innerHTML = '❌ Erreur — Réessayer';
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════════
 // PAGE: STATISTIQUES
 // ══════════════════════════════════════
 function renderStats(s) {
@@ -1232,6 +1692,10 @@ window.APP = {
   toggleSidebar,
   filterMembers,
   exportCSV,
+  selectAudio,
+  toggleAdminAudio,
+  seekAdminAudio,
+  saveAudioEnrolment,
 };
 
 checkAuth();
