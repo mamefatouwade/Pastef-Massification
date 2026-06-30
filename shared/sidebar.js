@@ -187,8 +187,16 @@
   }
 
   function toggle() {
-    document.getElementById('sidebar')?.classList.toggle('collapsed');
+  const sidebar = document.getElementById('sidebar');
+
+  if (!sidebar) return;
+
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('open');
+  } else {
+    sidebar.classList.toggle('collapsed');
   }
+}
 
   function toggleGroup(groupId) {
     const group = document.querySelector(`[data-group="${groupId}"]`);
@@ -203,3 +211,18 @@
 
   PASTEF.sidebar = { render, toggle, toggleGroup, logout, MENUS };
 })();
+document.addEventListener('click', (e) => {
+  if (window.innerWidth > 768) return;
+
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.querySelector('.topbar-toggle');
+
+  if (
+    sidebar &&
+    sidebar.classList.contains('open') &&
+    !sidebar.contains(e.target) &&
+    !toggle?.contains(e.target)
+  ) {
+    sidebar.classList.remove('open');
+  }
+});

@@ -448,3 +448,18 @@
   .content { padding: 16px; }
   .topbar-date, .topbar-user-info { display: none; }
 }
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(3px);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: .25s;
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
