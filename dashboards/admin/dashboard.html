@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tableau de bord — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Dashboard Admin — Vue d'ensemble nationale
+     ============================================ */
+
+  /* Hero principal : carte signature du dashboard */
+  .hero-card {
+    position: relative;
+    background:
+      linear-gradient(120deg, rgba(15, 26, 20, 0.88), rgba(27, 124, 61, 0.85)),
+      url('../../assets/couverture.png') center/cover;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 32px 36px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(
+      to bottom,
+      var(--pastef-or) 0%, var(--pastef-or) 33%,
+      var(--pastef-red) 33%, var(--pastef-red) 66%,
+      var(--pastef-green-light) 66%, var(--pastef-green-light) 100%
+    );
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--pastef-or-light);
+    margin-bottom: 12px;
+  }
+
+  .hero-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .hero-greeting {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .hero-greeting em {
+    font-style: normal;
+    color: var(--pastef-or-light);
+  }
+
+  .hero-message {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 480px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    padding-left: 32px;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .hero-stat-value {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  @media (max-width: 900px) {
+    .hero-content { grid-template-columns: 1fr; }
+    .hero-stats {
+      border-left: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-left: 0;
+      padding-top: 16px;
+    }
+  }
+
+  /* Section title */
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 14px;
+    background: var(--pastef-green);
+    border-radius: 2px;
+  }
+
+  /* Quick actions */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .quick-action {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .quick-action:hover {
+    border-color: var(--pastef-green);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .quick-action-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .quick-action-icon.green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .quick-action-icon.red { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .quick-action-icon.or { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .quick-action-icon.ink { background: var(--bg); color: var(--ink); }
+
+  .quick-action-text { flex: 1; }
+  .quick-action-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+  .quick-action-sub { font-size: 11px; color: var(--text-muted); }
+
+  /* Chart placeholder card */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+
+  .chart-wrap {
+    height: 260px;
+    position: relative;
+  }
+
+  /* Activity feed */
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .activity-row {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .activity-row:last-child { border-bottom: none; }
+
+  .activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pastef-green);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .activity-dot.red { background: var(--pastef-red); }
+  .activity-dot.or { background: var(--pastef-or); }
+
+  .activity-content { flex: 1; min-width: 0; }
+  .activity-title { font-size: 13px; font-weight: 600; }
+  .activity-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Section comparatif compact */
+  .geo-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .geo-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .geo-row:last-child { border-bottom: none; }
+  .geo-name { font-size: 13px; font-weight: 600; }
+  .geo-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .geo-bar {
+    width: 120px;
+    height: 6px;
+    background: var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .geo-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pastef-green), var(--pastef-green-light));
+    border-radius: 3px;
+  }
+  .geo-count {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    min-width: 50px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement du tableau de bord…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  // 1. Vérifie l'authentification — admin uniquement
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  // 2. Render sidebar + topbar
+  PASTEF.sidebar.render(session, 'dashboard');
+  PASTEF.topbar.render({
+    session,
+    title: 'Tableau de bord',
+    breadcrumb: 'Vue d\'ensemble nationale',
+  });
+
+  // 3. Charge les données
+  const content = document.getElementById('content');
+
+  try {
+    const { data: members, error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    if (error) throw error;
+
+    renderDashboard(members || [], session);
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    content.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="empty-title">Erreur de chargement</div>
+        <div class="empty-text">${err.message || 'Impossible de récupérer les données.'}</div>
+      </div>
+    `;
+  }
+
+  /* ===== RENDU ===== */
+  function renderDashboard(members, session) {
+    const stats = computeStats(members);
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+    const emailName = session.user.email.split('@')[0];
+
+    content.innerHTML = `
+      <!-- HERO -->
+      <section class="hero-card">
+        <div class="hero-eyebrow">Bienvenue dans l'espace national</div>
+        <div class="hero-content">
+          <div>
+            <h1 class="hero-greeting">${greet}, <em>${PASTEF.utils.escapeHtml(emailName)}</em>.</h1>
+            <p class="hero-message">
+              Vue d'ensemble du mouvement à l'instant T. Suivez les inscriptions, les cellules
+              actives et l'engagement des coordinateurs.
+            </p>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="hero-stat-value">${PASTEF.utils.formatNumber(stats.total)}</div>
+              <div class="hero-stat-label">Patriotes</div>
+            </div>
+            <div>
+              <div class="hero-stat-value">${PASTEF.utils.formatNumber(stats.cellules)}</div>
+              <div class="hero-stat-label">Cellules actives</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- KPIs détaillés -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Nouveaux ce mois</div>
+          <div class="kpi-value">${PASTEF.utils.formatNumber(stats.thisMonth)}</div>
+          <div class="kpi-sub">
+            <span class="kpi-trend ${stats.monthTrend >= 0 ? 'up' : 'down'}">
+              ${stats.monthTrend >= 0 ? '↑' : '↓'} ${Math.abs(stats.monthTrend)}%
+            </span>
+            vs mois dernier
+          </div>
+        </div>
+        <div class="kpi kpi-red">
+          <div class="kpi-label">Hommes / Femmes</div>
+          <div class="kpi-value">${stats.percentH}<span style="font-size:18px;color:var(--text-muted)">% H</span></div>
+          <div class="kpi-sub">${PASTEF.utils.formatNumber(stats.hommes)} hommes · ${PASTEF.utils.formatNumber(stats.femmes)} femmes</div>
+        </div>
+        <div class="kpi kpi-or">
+          <div class="kpi-label">Diaspora</div>
+          <div class="kpi-value">${PASTEF.utils.formatNumber(stats.diaspora)}</div>
+          <div class="kpi-sub">dans ${stats.paysDiaspora} pays</div>
+        </div>
+        <div class="kpi kpi-ink">
+          <div class="kpi-label">Engagement moyen</div>
+          <div class="kpi-value">${stats.engagementMoyen}<span style="font-size:18px;color:var(--text-muted)">%</span></div>
+          <div class="kpi-sub">soutien · participation · œuvre</div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="section-title">Actions rapides</div>
+      <div class="quick-actions">
+        <a class="quick-action" href="inscriptions.html">
+          <div class="quick-action-icon green">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Consulter les inscriptions</div>
+            <div class="quick-action-sub">${PASTEF.utils.formatNumber(stats.total)} patriotes enregistrés</div>
+          </div>
+        </a>
+        <a class="quick-action" href="coordinateurs.html">
+          <div class="quick-action-icon or">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M2 20l3-12 6 6 6-10 5 16z"/>
+            </svg>
+          </div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Désigner un coordinateur</div>
+            <div class="quick-action-sub">Départemental ou diaspora</div>
+          </div>
+        </a>
+        <a class="quick-action" href="rapports.html">
+          <div class="quick-action-icon red">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Rapports mensuels</div>
+            <div class="quick-action-sub">Consulter les derniers envois</div>
+          </div>
+        </a>
+        <a class="quick-action" href="documents.html">
+          <div class="quick-action-icon ink">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <div class="quick-action-text">
+            <div class="quick-action-title">Publier un document</div>
+            <div class="quick-action-sub">Programme, brochures, communiqués</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Comparaison géographique + Activité -->
+      <div class="section-title">Vue comparative</div>
+      <div class="grid grid-2-1">
+        <div class="chart-card">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Inscriptions des 30 derniers jours</div>
+              <div class="card-sub">Évolution quotidienne</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Répartition genre</div>
+              <div class="card-sub">${PASTEF.utils.formatNumber(stats.total)} patriotes</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartGenre"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="chart-card">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Top régions du Sénégal</div>
+              <div class="card-sub">${stats.topRegions.length} régions actives</div>
+            </div>
+          </div>
+          <div class="geo-list">
+            ${stats.topRegions.slice(0, 6).map((r) => {
+              const pct = Math.round((r.value / stats.topRegions[0].value) * 100);
+              return `
+                <div class="geo-row">
+                  <div>
+                    <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
+                    <div class="geo-sub">${r.percent}% du Sénégal</div>
+                  </div>
+                  <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%"></div></div>
+                  <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Top pays diaspora</div>
+              <div class="card-sub">${stats.paysDiaspora} pays</div>
+            </div>
+          </div>
+          <div class="geo-list">
+            ${stats.topDiaspora.slice(0, 6).map((r) => {
+              const pct = Math.round((r.value / Math.max(stats.topDiaspora[0]?.value || 1, 1)) * 100);
+              return `
+                <div class="geo-row">
+                  <div>
+                    <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
+                    <div class="geo-sub">${r.percent}% de la diaspora</div>
+                  </div>
+                  <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),var(--pastef-or-light))"></div></div>
+                  <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
+                </div>
+              `;
+            }).join('') || '<div class="empty-text">Aucun pays de diaspora encore.</div>'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Activité récente -->
+      <div class="section-title">Dernières inscriptions</div>
+      <div class="chart-card">
+        <div class="activity-list">
+          ${stats.recent.slice(0, 6).map((m) => `
+            <div class="activity-row">
+              <div class="activity-dot ${m.pays === 'Sénégal' ? '' : 'or'}"></div>
+              <div class="activity-content">
+                <div class="activity-title">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
+                <div class="activity-meta">
+                  ${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(m.region || m.pays)} · ${PASTEF.utils.formatDateTime(m.created_at)}
+                </div>
+              </div>
+              <span class="badge ${m.pays === 'Sénégal' ? 'badge-green' : 'badge-or'}">${PASTEF.utils.escapeHtml(m.pays || '—')}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    renderCharts(stats);
+  }
+
+  /* ===== STATS ===== */
+  function computeStats(data) {
+    const total = data.length;
+    const hommes = data.filter((m) => m.sexe === 'Homme').length;
+    const femmes = total - hommes;
+    const senegal = data.filter((m) => m.pays === 'Sénégal').length;
+    const diaspora = total - senegal;
+
+    const now = new Date();
+    const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const thisMonth = data.filter((m) => new Date(m.created_at) >= startMonth).length;
+    const lastMonth = data.filter((m) => {
+      const d = new Date(m.created_at);
+      return d >= startLastMonth && d < startMonth;
+    }).length;
+
+    const monthTrend = lastMonth === 0
+      ? (thisMonth > 0 ? 100 : 0)
+      : Math.round(((thisMonth - lastMonth) / lastMonth) * 100);
+
+    const cellules = new Set(data.filter((m) => m.cellule).map((m) => m.cellule)).size;
+    const paysDiaspora = new Set(data.filter((m) => m.pays !== 'Sénégal').map((m) => m.pays)).size;
+
+    const eng = data.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+    const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
+
+    // Top régions Sénégal
+    const regionsSn = {};
+    data.forEach((m) => {
+      if (m.pays === 'Sénégal' && m.region) {
+        regionsSn[m.region] = (regionsSn[m.region] || 0) + 1;
+      }
+    });
+    const topRegions = Object.entries(regionsSn)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, value]) => ({
+        name, value,
+        percent: senegal > 0 ? Math.round((value / senegal) * 100) : 0,
+      }));
+
+    // Top diaspora
+    const paysD = {};
+    data.forEach((m) => {
+      if (m.pays !== 'Sénégal') {
+        paysD[m.pays] = (paysD[m.pays] || 0) + 1;
+      }
+    });
+    const topDiaspora = Object.entries(paysD)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, value]) => ({
+        name, value,
+        percent: diaspora > 0 ? Math.round((value / diaspora) * 100) : 0,
+      }));
+
+    // Timeline 30j
+    const timeline = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
+      const count = data.filter((m) => {
+        const c = new Date(m.created_at);
+        return c >= d && c < next;
+      }).length;
+      timeline.push({
+        label: `${d.getDate()}/${d.getMonth() + 1}`,
+        count,
+      });
+    }
+
+    return {
+      total, hommes, femmes, senegal, diaspora,
+      percentH: total > 0 ? Math.round((hommes / total) * 100) : 0,
+      thisMonth, lastMonth, monthTrend,
+      cellules, paysDiaspora, engagementMoyen,
+      topRegions, topDiaspora, timeline,
+      recent: data.slice(0, 10),
+    };
+  }
+
+  /* ===== CHARTS ===== */
+  function renderCharts(stats) {
+    // Timeline
+    const ctxT = document.getElementById('chartTimeline');
+    if (ctxT) {
+      new Chart(ctxT, {
+        type: 'line',
+        data: {
+          labels: stats.timeline.map((d) => d.label),
+          datasets: [{
+            data: stats.timeline.map((d) => d.count),
+            borderColor: '#1B7C3D',
+            backgroundColor: 'rgba(27, 124, 61, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#6B7B72' } },
+            y: { grid: { color: '#F0F2F0' }, ticks: { font: { size: 10 }, color: '#6B7B72' }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    // Genre
+    const ctxG = document.getElementById('chartGenre');
+    if (ctxG) {
+      new Chart(ctxG, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hommes', 'Femmes'],
+          datasets: [{
+            data: [stats.hommes, stats.femmes],
+            backgroundColor: ['#1B7C3D', '#D4900A'],
+            borderWidth: 0,
+            cutout: '70%',
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { size: 12, weight: 600 }, padding: 14, boxWidth: 10, boxHeight: 10, usePointStyle: true },
+            },
+          },
+        },
+      });
+    }
+  }
+})();
+</script>
+
+</body>
+</html>

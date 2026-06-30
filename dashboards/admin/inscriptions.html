@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inscriptions — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* Page inscriptions */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .mini-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+  }
+
+  .mini-stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .mini-stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Toolbar avancée */
+  .filters-toolbar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select {
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 30px 0 12px;
+    font-size: 13px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    min-width: 130px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--pastef-green);
+  }
+
+  .result-tag {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .result-tag strong {
+    color: var(--ink);
+    font-weight: 800;
+  }
+
+  /* Table styles spécifiques */
+  .table .name-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .name-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark));
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .name-avatar.female {
+    background: linear-gradient(135deg, var(--pastef-or), #B57607);
+  }
+
+  .name-info { min-width: 0; }
+  .name-primary { font-weight: 600; font-size: 13px; }
+  .name-secondary { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .phone-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .engagement-dots { display: flex; gap: 3px; }
+  .eng-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .eng-dot.on { background: var(--pastef-green); }
+  .eng-dot.off { background: var(--border); }
+
+  .cell-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .cell-tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pastef-green);
+  }
+
+  .cell-tag.no .cell-tag-dot { background: var(--text-soft); }
+
+  /* Panel détails */
+  .detail-hero {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 20px;
+  }
+
+  .detail-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark));
+    color: #fff;
+    font-size: 26px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .detail-avatar.female {
+    background: linear-gradient(135deg, var(--pastef-or), #B57607);
+  }
+
+  .detail-name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+  }
+
+  .detail-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .detail-section {
+    margin-bottom: 22px;
+  }
+
+  .detail-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .detail-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 13px;
+    align-items: start;
+  }
+
+  .detail-row .label {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .detail-row .value {
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .detail-row .value em {
+    color: var(--text-soft);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .engagement-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .eng-tile {
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .eng-tile.yes { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .eng-tile.no { background: var(--bg); color: var(--text-soft); }
+
+  .detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .detail-actions .btn { flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement des inscriptions…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer détails -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDetail()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="card-title">Détails de l'inscrit</div>
+    <button class="btn-ghost" style="height:32px;width:32px;border-radius:50%" onclick="closeDetail()" aria-label="Fermer">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allMembers = [];
+let currentFilters = { search: '', pays: 'Tous', sexe: 'Tous', cellule: 'Tous', sort: 'recent' };
+
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'inscriptions');
+  PASTEF.topbar.render({
+    session,
+    title: 'Inscriptions',
+    breadcrumb: 'Tous les patriotes enregistrés',
+  });
+
+  await loadAndRender();
+})();
+
+async function loadAndRender() {
+  const content = document.getElementById('content');
+
+  try {
+    const { data, error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    if (error) throw error;
+    allMembers = data || [];
+    render();
+  } catch (err) {
+    console.error(err);
+    content.innerHTML = renderError(err.message);
+  }
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const stats = computeStats(allMembers);
+  const paysList = [...new Set(allMembers.map((m) => m.pays).filter(Boolean))].sort();
+  const cellules = [...new Set(allMembers.map((m) => m.cellule).filter(Boolean))].sort();
+
+  content.innerHTML = `
+    <div class="page-header">
+      <h1 class="page-title">Inscriptions</h1>
+      <p class="page-subtitle">${PASTEF.utils.formatNumber(allMembers.length)} patriotes au total · Cliquez sur une ligne pour voir le détail</p>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="stats-row">
+      <div class="mini-stat">
+        <div class="mini-stat-label">Total</div>
+        <div class="mini-stat-value">${PASTEF.utils.formatNumber(stats.total)}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Ce mois</div>
+        <div class="mini-stat-value text-green">${PASTEF.utils.formatNumber(stats.thisMonth)}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Sénégal</div>
+        <div class="mini-stat-value">${PASTEF.utils.formatNumber(stats.senegal)}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Diaspora</div>
+        <div class="mini-stat-value text-or">${PASTEF.utils.formatNumber(stats.diaspora)}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">Sans cellule</div>
+        <div class="mini-stat-value text-red">${PASTEF.utils.formatNumber(stats.sansCellule)}</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-toolbar">
+      <div class="search-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Chercher par prénom, nom ou téléphone…" />
+      </div>
+
+      <select class="filter-select" id="paysFilter">
+        <option value="Tous">Tous pays</option>
+        ${paysList.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)}</option>`).join('')}
+      </select>
+
+      <select class="filter-select" id="sexeFilter">
+        <option value="Tous">H et F</option>
+        <option value="Homme">Hommes</option>
+        <option value="Femme">Femmes</option>
+      </select>
+
+      <select class="filter-select" id="celluleFilter">
+        <option value="Tous">Toutes cellules</option>
+        <option value="__with__">Avec cellule</option>
+        <option value="__without__">Sans cellule</option>
+        <option disabled>──────</option>
+        ${cellules.map((c) => `<option value="${PASTEF.utils.escapeHtml(c)}">${PASTEF.utils.escapeHtml(c)}</option>`).join('')}
+      </select>
+
+      <select class="filter-select" id="sortFilter">
+        <option value="recent">Plus récents</option>
+        <option value="oldest">Plus anciens</option>
+        <option value="name">Par nom</option>
+      </select>
+
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter CSV
+      </button>
+
+      <span class="result-tag" id="resultCount"></span>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Patriote</th>
+              <th>Téléphone</th>
+              <th>Localisation</th>
+              <th>Profession</th>
+              <th>Cellule</th>
+              <th>Engagement</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="tableFooter"></div>
+    </div>
+  `;
+
+  // Bind les filtres
+  document.getElementById('searchInput').addEventListener('input', PASTEF.utils.debounce(applyFilters, 200));
+  document.getElementById('paysFilter').addEventListener('change', applyFilters);
+  document.getElementById('sexeFilter').addEventListener('change', applyFilters);
+  document.getElementById('celluleFilter').addEventListener('change', applyFilters);
+  document.getElementById('sortFilter').addEventListener('change', applyFilters);
+
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  const pays = document.getElementById('paysFilter')?.value || 'Tous';
+  const sexe = document.getElementById('sexeFilter')?.value || 'Tous';
+  const cellule = document.getElementById('celluleFilter')?.value || 'Tous';
+  const sort = document.getElementById('sortFilter')?.value || 'recent';
+
+  let filtered = allMembers.filter((m) => {
+    if (search) {
+      const haystack = `${m.prenom || ''} ${m.nom || ''} ${m.telephone || ''}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    if (pays !== 'Tous' && m.pays !== pays) return false;
+    if (sexe !== 'Tous' && m.sexe !== sexe) return false;
+
+    if (cellule !== 'Tous') {
+      const hasCell = m.appartient_cellule === 'Oui' && m.cellule;
+      if (cellule === '__with__' && !hasCell) return false;
+      if (cellule === '__without__' && hasCell) return false;
+      if (cellule !== '__with__' && cellule !== '__without__' && m.cellule !== cellule) return false;
+    }
+
+    return true;
+  });
+
+  if (sort === 'recent') {
+    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (sort === 'oldest') {
+    filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  } else if (sort === 'name') {
+    filtered.sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`));
+  }
+
+  renderTable(filtered);
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('tableBody');
+  const footer = document.getElementById('tableFooter');
+  const resultCount = document.getElementById('resultCount');
+
+  resultCount.innerHTML = `<strong>${PASTEF.utils.formatNumber(list.length)}</strong> résultat${list.length > 1 ? 's' : ''}`;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="7" style="padding:0">
+        <div class="empty">
+          <div class="empty-icon">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="empty-title">Aucun résultat</div>
+          <div class="empty-text">Aucun patriote ne correspond à vos critères. Essayez d'élargir les filtres.</div>
+        </div>
+      </td></tr>
+    `;
+    footer.textContent = '0 inscription';
+    return;
+  }
+
+  const limit = 100;
+  const visible = list.slice(0, limit);
+
+  tbody.innerHTML = visible.map((m) => {
+    const isFemale = m.sexe === 'Femme';
+    const inits = PASTEF.utils.initials(m.prenom, m.nom);
+    const cellDisplay = (m.appartient_cellule === 'Oui' && m.cellule)
+      ? `<span class="cell-tag"><span class="cell-tag-dot"></span>${PASTEF.utils.escapeHtml(m.cellule)}</span>`
+      : `<span class="cell-tag no"><span class="cell-tag-dot"></span><em style="color:var(--text-soft)">Non affecté</em></span>`;
+
+    return `
+      <tr onclick="openDetail('${m.id}')">
+        <td>
+          <div class="name-cell">
+            <div class="name-avatar ${isFemale ? 'female' : ''}">${inits}</div>
+            <div class="name-info">
+              <div class="name-primary">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
+              <div class="name-secondary">${m.sexe === 'Homme' ? 'Homme' : 'Femme'} · ${PASTEF.utils.computeAge(m.date_naissance) || '—'} ans</div>
+            </div>
+          </div>
+        </td>
+        <td class="phone-cell">${PASTEF.utils.escapeHtml(m.telephone || '—')}</td>
+        <td>
+          <div style="font-size:13px;font-weight:500">${PASTEF.utils.escapeHtml(m.pays || '—')}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${PASTEF.utils.escapeHtml(m.region || '')}</div>
+        </td>
+        <td style="font-size:13px">${PASTEF.utils.escapeHtml(m.profession || '—')}</td>
+        <td>${cellDisplay}</td>
+        <td>
+          <div class="engagement-dots">
+            <div class="eng-dot ${m.engagement_soutenir ? 'on' : 'off'}" title="Soutenir"></div>
+            <div class="eng-dot ${m.engagement_participer ? 'on' : 'off'}" title="Participer"></div>
+            <div class="eng-dot ${m.engagement_oeuvrer ? 'on' : 'off'}" title="Œuvrer"></div>
+            <div class="eng-dot ${m.certification ? 'on' : 'off'}" title="Certifié"></div>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">${PASTEF.utils.formatDate(m.created_at)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  if (list.length > limit) {
+    footer.textContent = `Affichage des ${limit} premiers sur ${PASTEF.utils.formatNumber(list.length)} — affinez vos filtres pour réduire`;
+  } else {
+    footer.textContent = `${PASTEF.utils.formatNumber(list.length)} inscription${list.length > 1 ? 's' : ''}`;
+  }
+}
+
+function openDetail(id) {
+  const m = allMembers.find((x) => String(x.id) === String(id));
+  if (!m) return;
+
+  const body = document.getElementById('drawerBody');
+  const isFemale = m.sexe === 'Femme';
+  const inits = PASTEF.utils.initials(m.prenom, m.nom);
+  const age = PASTEF.utils.computeAge(m.date_naissance);
+
+  body.innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-avatar ${isFemale ? 'female' : ''}">${inits}</div>
+      <div class="detail-name">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
+      <div class="detail-meta">Inscrit le ${PASTEF.utils.formatDate(m.created_at, { long: true })}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Identité</div>
+      <div class="detail-row"><span class="label">Sexe</span><span class="value">${PASTEF.utils.escapeHtml(m.sexe || '—')}</span></div>
+      <div class="detail-row"><span class="label">Date naissance</span><span class="value">${PASTEF.utils.formatDate(m.date_naissance)} ${age ? `<em>(${age} ans)</em>` : ''}</span></div>
+      <div class="detail-row"><span class="label">Lieu naissance</span><span class="value">${PASTEF.utils.escapeHtml(m.lieu_naissance || '—')}</span></div>
+      <div class="detail-row"><span class="label">Téléphone</span><span class="value font-mono">${PASTEF.utils.escapeHtml(m.telephone || '—')}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Activité professionnelle</div>
+      <div class="detail-row"><span class="label">Profession</span><span class="value">${PASTEF.utils.escapeHtml(m.profession || '—')}</span></div>
+      <div class="detail-row"><span class="label">Domaine</span><span class="value">${PASTEF.utils.escapeHtml(m.domaine || '—')}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Résidence</div>
+      <div class="detail-row"><span class="label">Pays</span><span class="value">${PASTEF.utils.escapeHtml(m.pays || '—')}</span></div>
+      <div class="detail-row"><span class="label">Région</span><span class="value">${PASTEF.utils.escapeHtml(m.region || '—')}</span></div>
+      <div class="detail-row"><span class="label">Quartier</span><span class="value">${PASTEF.utils.escapeHtml(m.quartier || '—')}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Cellule PASTEF</div>
+      <div class="detail-row"><span class="label">Appartenance</span><span class="value">${PASTEF.utils.escapeHtml(m.appartient_cellule || '—')}</span></div>
+      <div class="detail-row"><span class="label">Cellule</span><span class="value">${m.cellule ? PASTEF.utils.escapeHtml(m.cellule) : '<em>Non affecté</em>'}</span></div>
+      <div class="detail-row"><span class="label">Fonction</span><span class="value">${m.fonction_cellule ? PASTEF.utils.escapeHtml(m.fonction_cellule) : '<em>Aucune</em>'}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Engagement</div>
+      <div class="engagement-grid">
+        <div class="eng-tile ${m.engagement_soutenir ? 'yes' : 'no'}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            ${m.engagement_soutenir ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+          </svg>
+          Soutenir
+        </div>
+        <div class="eng-tile ${m.engagement_participer ? 'yes' : 'no'}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            ${m.engagement_participer ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+          </svg>
+          Participer
+        </div>
+        <div class="eng-tile ${m.engagement_oeuvrer ? 'yes' : 'no'}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            ${m.engagement_oeuvrer ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+          </svg>
+          Œuvrer
+        </div>
+        <div class="eng-tile ${m.certification ? 'yes' : 'no'}">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            ${m.certification ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+          </svg>
+          Certifié
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn btn-secondary" onclick="closeDetail()">Fermer</button>
+      <button class="btn btn-danger" onclick="deleteInscrit('${m.id}')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Supprimer
+      </button>
+    </div>
+  `;
+
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+async function deleteInscrit(id) {
+  const m = allMembers.find((x) => String(x.id) === String(id));
+  if (!m) return;
+
+  const fullName = `${m.prenom} ${m.nom}`;
+  const confirmation = prompt(
+    `⚠️ ATTENTION : Cette action est définitive.\n\nPour confirmer la suppression de "${fullName}", retapez son nom complet exactement :`
+  );
+
+  if (confirmation !== fullName) {
+    PASTEF.utils.toast('Suppression annulée', 'Le nom ne correspond pas', { color: 'var(--pastef-or)' });
+    return;
+  }
+
+  try {
+    const { error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    allMembers = allMembers.filter((x) => String(x.id) !== String(id));
+    closeDetail();
+    applyFilters();
+    PASTEF.utils.toast('Inscrit supprimé', `${fullName} a été retiré`, { color: 'var(--pastef-red)' });
+  } catch (err) {
+    PASTEF.utils.toast('Erreur', err.message, { color: 'var(--pastef-red)' });
+  }
+}
+
+function exportCSV() {
+  if (!allMembers.length) return;
+
+  const headers = ['Prénom', 'Nom', 'Sexe', 'Date naissance', 'Lieu naissance', 'Téléphone',
+    'Profession', 'Domaine', 'Pays', 'Région', 'Quartier', 'Cellule', 'Fonction',
+    'Soutenir', 'Participer', 'Œuvrer', 'Certifié', 'Date inscription'];
+
+  const rows = allMembers.map((m) => [
+    m.prenom, m.nom, m.sexe, m.date_naissance, m.lieu_naissance, m.telephone,
+    m.profession, m.domaine, m.pays, m.region, m.quartier, m.cellule, m.fonction_cellule,
+    m.engagement_soutenir ? 'Oui' : 'Non',
+    m.engagement_participer ? 'Oui' : 'Non',
+    m.engagement_oeuvrer ? 'Oui' : 'Non',
+    m.certification ? 'Oui' : 'Non',
+    m.created_at,
+  ]);
+
+  const csv = [headers, ...rows]
+    .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pastef_inscriptions_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  PASTEF.utils.toast('Export terminé', `${allMembers.length} inscrits téléchargés`);
+}
+
+function computeStats(data) {
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  return {
+    total: data.length,
+    thisMonth: data.filter((m) => new Date(m.created_at) >= startMonth).length,
+    senegal: data.filter((m) => m.pays === 'Sénégal').length,
+    diaspora: data.filter((m) => m.pays !== 'Sénégal').length,
+    sansCellule: data.filter((m) => m.appartient_cellule !== 'Oui' || !m.cellule).length,
+  };
+}
+
+function renderError(msg) {
+  return `
+    <div class="empty">
+      <div class="empty-icon">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="empty-title">Erreur de chargement</div>
+      <div class="empty-text">${PASTEF.utils.escapeHtml(msg)}</div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

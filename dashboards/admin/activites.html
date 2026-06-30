@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Activités — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Page Activités
+     ============================================ */
+
+  /* Header avec action principale */
+  .activities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* Stats rapides */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-content { flex: 1; min-width: 0; }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.4px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  /* Filtres */
+  .filters-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select {
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 28px 0 12px;
+    font-size: 13px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+  }
+
+  .filter-select:focus { outline: none; border-color: var(--pastef-green); }
+
+  .count-badge {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .count-badge strong { color: var(--ink); font-weight: 800; }
+
+  /* Grille des activités */
+  .activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  .activity-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .activity-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--pastef-green);
+  }
+
+  .activity-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--pastef-green);
+  }
+
+  .activity-card[data-level="national"]::before { background: var(--pastef-red); }
+  .activity-card[data-level="departemental"]::before { background: var(--pastef-or); }
+  .activity-card[data-level="diaspora"]::before { background: var(--ink); }
+
+  .activity-status {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+  }
+
+  .activity-header {
+    margin-bottom: 12px;
+    padding-right: 80px;
+  }
+
+  .activity-level-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pastef-green);
+    margin-bottom: 6px;
+  }
+
+  .activity-card[data-level="national"] .activity-level-tag { color: var(--pastef-red); }
+  .activity-card[data-level="departemental"] .activity-level-tag { color: var(--pastef-or); }
+  .activity-card[data-level="diaspora"] .activity-level-tag { color: var(--ink); }
+
+  .activity-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .activity-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .activity-desc {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 12px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .activity-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .activity-participants {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+  }
+
+  .activity-date-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Modal de création */
+  .modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Empty state */
+  .activities-empty {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 1024px) {
+    .activities-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  }
+
+  @media (max-width: 768px) {
+    .activities-header { flex-direction: column; align-items: stretch; }
+    .activities-header > div:first-child { width: 100%; }
+    .activities-header .btn { width: 100%; justify-content: center; }
+    .quick-stats { grid-template-columns: repeat(2, 1fr); }
+    .activities-grid { grid-template-columns: 1fr; }
+    .filters-bar { flex-direction: column; align-items: stretch; }
+    .filter-select { width: 100%; }
+    .count-badge { margin-left: 0; text-align: center; }
+    .modal-form-row { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .quick-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement des activités…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal création/édition activité -->
+<div class="modal-overlay" id="activityModal" onclick="if(event.target===this)closeActivityModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Nouvelle activité nationale</div>
+      <button class="btn-ghost" style="height:32px;width:32px;border-radius:50%" onclick="closeActivityModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Titre de l'activité *</label>
+        <input type="text" id="actTitle" class="field-input" placeholder="Ex : Congrès national 2026" required />
+      </div>
+
+      <div class="field">
+        <label class="field-label">Description</label>
+        <textarea id="actDesc" class="field-textarea" placeholder="Détaillez les objectifs et le déroulement de l'activité…"></textarea>
+      </div>
+
+      <div class="modal-form-row">
+        <div class="field">
+          <label class="field-label">Type d'activité</label>
+          <select id="actType" class="field-select">
+            <option value="reunion">Réunion</option>
+            <option value="mobilisation">Mobilisation</option>
+            <option value="formation">Formation</option>
+            <option value="sensibilisation">Sensibilisation</option>
+            <option value="congres">Congrès</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Date prévue *</label>
+          <input type="date" id="actDate" class="field-input" required />
+        </div>
+      </div>
+
+      <div class="modal-form-row">
+        <div class="field">
+          <label class="field-label">Statut</label>
+          <select id="actStatus" class="field-select">
+            <option value="planifiee">Planifiée</option>
+            <option value="en_cours">En cours</option>
+            <option value="terminee">Terminée</option>
+            <option value="annulee">Annulée</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Participants prévus</label>
+          <input type="number" id="actPrevus" class="field-input" placeholder="Ex : 500" min="0" />
+        </div>
+      </div>
+
+      <div class="field" id="compteRenduField" hidden>
+        <label class="field-label">Compte-rendu (après l'activité)</label>
+        <textarea id="actCompteRendu" class="field-textarea" placeholder="Bilan, résultats, observations…"></textarea>
+      </div>
+
+      <div class="field" id="reelsField" hidden>
+        <label class="field-label">Participants réels</label>
+        <input type="number" id="actReels" class="field-input" placeholder="Nombre réel" min="0" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeActivityModal()">Annuler</button>
+      <button class="btn btn-primary" id="saveActivityBtn" onclick="saveActivity()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allActivities = [];
+let editingActivity = null;
+let currentSession = null;
+
+(async function () {
+  'use strict';
+
+  currentSession = await PASTEF.auth.requireAuth(['admin']);
+  if (!currentSession) return;
+
+  PASTEF.sidebar.render(currentSession, 'activites');
+  PASTEF.topbar.render({
+    session: currentSession,
+    title: 'Activités',
+    breadcrumb: 'Activités à tous les niveaux',
+  });
+
+  await loadAndRender();
+})();
+
+async function loadAndRender() {
+  // Pour l'instant, table `activites` n'existe pas encore → données démo
+  // À remplacer par : await PASTEF.supabase.from('activites').select('*')
+  try {
+    const { data, error } = await PASTEF.supabase
+      .from('activites')
+      .select('*')
+      .order('date_activite', { ascending: false });
+
+    if (error && error.code !== 'PGRST106' && error.code !== '42P01') throw error;
+    allActivities = data || [];
+  } catch (err) {
+    // Table n'existe pas encore → on affiche un état vide
+    console.log('Table activites non créée — utilisation de données vides');
+    allActivities = [];
+  }
+
+  render();
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const stats = computeStats(allActivities);
+
+  content.innerHTML = `
+    <div class="activities-header">
+      <div>
+        <h1 class="page-title">Activités</h1>
+        <p class="page-subtitle">Toutes les activités du parti à tous les niveaux</p>
+      </div>
+      <button class="btn btn-primary" onclick="openNewActivity()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nouvelle activité nationale
+      </button>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="quick-stats">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--pastef-green-soft);color:var(--pastef-green-dark)">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Total activités</div>
+          <div class="stat-value">${PASTEF.utils.formatNumber(stats.total)}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--pastef-or-soft);color:var(--pastef-or)">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Planifiées</div>
+          <div class="stat-value">${PASTEF.utils.formatNumber(stats.planifiees)}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--pastef-green-soft);color:var(--pastef-green-dark)">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Terminées</div>
+          <div class="stat-value">${PASTEF.utils.formatNumber(stats.terminees)}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--pastef-red-soft);color:var(--pastef-red-dark)">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Participants ce mois</div>
+          <div class="stat-value">${PASTEF.utils.formatNumber(stats.participantsMois)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-bar">
+      <select class="filter-select" id="filterLevel" onchange="applyFilters()">
+        <option value="all">Tous niveaux</option>
+        <option value="national">National</option>
+        <option value="departemental">Départemental</option>
+        <option value="communal">Communal</option>
+        <option value="diaspora">Diaspora</option>
+      </select>
+
+      <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+        <option value="all">Tous statuts</option>
+        <option value="planifiee">Planifiées</option>
+        <option value="en_cours">En cours</option>
+        <option value="terminee">Terminées</option>
+        <option value="annulee">Annulées</option>
+      </select>
+
+      <select class="filter-select" id="filterType" onchange="applyFilters()">
+        <option value="all">Tous types</option>
+        <option value="reunion">Réunion</option>
+        <option value="mobilisation">Mobilisation</option>
+        <option value="formation">Formation</option>
+        <option value="sensibilisation">Sensibilisation</option>
+        <option value="congres">Congrès</option>
+        <option value="autre">Autre</option>
+      </select>
+
+      <select class="filter-select" id="filterPeriod" onchange="applyFilters()">
+        <option value="all">Toutes périodes</option>
+        <option value="upcoming">À venir</option>
+        <option value="this-month">Ce mois</option>
+        <option value="past">Passées</option>
+      </select>
+
+      <span class="count-badge" id="countBadge"></span>
+    </div>
+
+    <div id="activitiesContainer"></div>
+  `;
+
+  applyFilters();
+}
+
+function applyFilters() {
+  const level = document.getElementById('filterLevel')?.value || 'all';
+  const status = document.getElementById('filterStatus')?.value || 'all';
+  const type = document.getElementById('filterType')?.value || 'all';
+  const period = document.getElementById('filterPeriod')?.value || 'all';
+
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const filtered = allActivities.filter((a) => {
+    if (level !== 'all' && a.niveau !== level) return false;
+    if (status !== 'all' && a.statut !== status) return false;
+    if (type !== 'all' && a.type !== type) return false;
+
+    if (period !== 'all') {
+      const d = new Date(a.date_activite);
+      if (period === 'upcoming' && d < now) return false;
+      if (period === 'past' && d >= now) return false;
+      if (period === 'this-month' && (d < startMonth || d > endMonth)) return false;
+    }
+
+    return true;
+  });
+
+  document.getElementById('countBadge').innerHTML = `<strong>${filtered.length}</strong> activité${filtered.length > 1 ? 's' : ''}`;
+
+  const container = document.getElementById('activitiesContainer');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="activities-empty">
+        <div style="opacity:0.3;margin-bottom:12px">
+          <svg width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto;display:block">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucune activité</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:380px;margin:0 auto 16px">
+          ${allActivities.length === 0
+            ? 'Aucune activité n\'a encore été créée. Démarrez en créant votre première activité nationale.'
+            : 'Aucune activité ne correspond aux filtres sélectionnés.'}
+        </div>
+        ${allActivities.length === 0 ? `
+          <button class="btn btn-primary" onclick="openNewActivity()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Créer la première activité
+          </button>
+        ` : ''}
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `<div class="activities-grid">${filtered.map(renderActivityCard).join('')}</div>`;
+}
+
+function renderActivityCard(a) {
+  const statusMap = {
+    planifiee: { label: 'Planifiée', badge: 'badge-or' },
+    en_cours: { label: 'En cours', badge: 'badge-green' },
+    terminee: { label: 'Terminée', badge: 'badge-neutral' },
+    annulee: { label: 'Annulée', badge: 'badge-red' },
+  };
+  const status = statusMap[a.statut] || statusMap.planifiee;
+
+  const levelLabel = {
+    national: 'National',
+    departemental: 'Départemental',
+    communal: 'Communal',
+    diaspora: 'Diaspora',
+    cellule_base: 'Cellule',
+  }[a.niveau] || 'National';
+
+  return `
+    <div class="activity-card" data-level="${a.niveau || 'national'}" onclick="openEditActivity('${a.id}')">
+      <span class="activity-status badge ${status.badge}">${status.label}</span>
+
+      <div class="activity-header">
+        <div class="activity-level-tag">${levelLabel}</div>
+        <div class="activity-title">${PASTEF.utils.escapeHtml(a.titre)}</div>
+        <div class="activity-meta">
+          ${capitalize(a.type || 'autre')} · ${PASTEF.utils.formatDate(a.date_activite, { long: true })}
+        </div>
+      </div>
+
+      ${a.description ? `<div class="activity-desc">${PASTEF.utils.escapeHtml(a.description)}</div>` : ''}
+
+      <div class="activity-footer">
+        <div class="activity-date-icon">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          </svg>
+          ${PASTEF.utils.formatDate(a.date_activite)}
+        </div>
+        ${(a.nb_participants_reels || a.nb_participants_prevus) ? `
+          <div class="activity-participants">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            </svg>
+            ${a.nb_participants_reels || a.nb_participants_prevus} participants
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function computeStats(activities) {
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  return {
+    total: activities.length,
+    planifiees: activities.filter((a) => a.statut === 'planifiee').length,
+    terminees: activities.filter((a) => a.statut === 'terminee').length,
+    participantsMois: activities
+      .filter((a) => new Date(a.date_activite) >= startMonth && a.statut === 'terminee')
+      .reduce((sum, a) => sum + (a.nb_participants_reels || 0), 0),
+  };
+}
+
+function capitalize(s) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+}
+
+// ===== MODAL CRUD =====
+function openNewActivity() {
+  editingActivity = null;
+  document.getElementById('modalTitle').textContent = 'Nouvelle activité nationale';
+  document.getElementById('actTitle').value = '';
+  document.getElementById('actDesc').value = '';
+  document.getElementById('actType').value = 'reunion';
+  document.getElementById('actDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('actStatus').value = 'planifiee';
+  document.getElementById('actPrevus').value = '';
+  document.getElementById('actCompteRendu').value = '';
+  document.getElementById('actReels').value = '';
+  toggleCompteRendu();
+  document.getElementById('activityModal').classList.add('open');
+  setTimeout(() => document.getElementById('actTitle').focus(), 100);
+}
+
+function openEditActivity(id) {
+  const a = allActivities.find((x) => String(x.id) === String(id));
+  if (!a) return;
+  editingActivity = a;
+  document.getElementById('modalTitle').textContent = 'Modifier l\'activité';
+  document.getElementById('actTitle').value = a.titre || '';
+  document.getElementById('actDesc').value = a.description || '';
+  document.getElementById('actType').value = a.type || 'reunion';
+  document.getElementById('actDate').value = a.date_activite ? a.date_activite.split('T')[0] : '';
+  document.getElementById('actStatus').value = a.statut || 'planifiee';
+  document.getElementById('actPrevus').value = a.nb_participants_prevus || '';
+  document.getElementById('actCompteRendu').value = a.compte_rendu || '';
+  document.getElementById('actReels').value = a.nb_participants_reels || '';
+  toggleCompteRendu();
+  document.getElementById('activityModal').classList.add('open');
+}
+
+function closeActivityModal() {
+  document.getElementById('activityModal').classList.remove('open');
+  editingActivity = null;
+}
+
+// Afficher compte-rendu si statut "terminée"
+document.addEventListener('change', (e) => {
+  if (e.target?.id === 'actStatus') toggleCompteRendu();
+});
+
+function toggleCompteRendu() {
+  const status = document.getElementById('actStatus')?.value;
+  const showFields = (status === 'terminee' || status === 'en_cours');
+  document.getElementById('compteRenduField').hidden = !showFields;
+  document.getElementById('reelsField').hidden = !showFields;
+}
+
+async function saveActivity() {
+  const titre = document.getElementById('actTitle').value.trim();
+  const date = document.getElementById('actDate').value;
+
+  if (!titre || !date) {
+    PASTEF.utils.toast('Champs manquants', 'Le titre et la date sont obligatoires', { color: 'var(--pastef-red)' });
+    return;
+  }
+
+  const btn = document.getElementById('saveActivityBtn');
+  btn.disabled = true;
+
+  const payload = {
+    titre,
+    description: document.getElementById('actDesc').value.trim() || null,
+    type: document.getElementById('actType').value,
+    date_activite: date,
+    statut: document.getElementById('actStatus').value,
+    niveau: 'national',
+    nb_participants_prevus: parseInt(document.getElementById('actPrevus').value) || null,
+    nb_participants_reels: parseInt(document.getElementById('actReels').value) || null,
+    compte_rendu: document.getElementById('actCompteRendu').value.trim() || null,
+    created_by: currentSession.user.id,
+  };
+
+  try {
+    let result;
+    if (editingActivity) {
+      result = await PASTEF.supabase
+        .from('activites')
+        .update(payload)
+        .eq('id', editingActivity.id);
+    } else {
+      result = await PASTEF.supabase
+        .from('activites')
+        .insert(payload);
+    }
+
+    if (result.error) throw result.error;
+
+    PASTEF.utils.toast(
+      editingActivity ? 'Activité modifiée' : 'Activité créée',
+      titre
+    );
+    closeActivityModal();
+    await loadAndRender();
+
+  } catch (err) {
+    console.error(err);
+    // Si la table n'existe pas encore
+    if (err.code === '42P01' || err.message?.includes('does not exist')) {
+      PASTEF.utils.toast(
+        'Table activites manquante',
+        'La table n\'existe pas encore dans Supabase. Création en Phase 1.',
+        { color: 'var(--pastef-or)', duration: 6000 }
+      );
+    } else {
+      PASTEF.utils.toast('Erreur', err.message || 'Impossible d\'enregistrer', { color: 'var(--pastef-red)' });
+    }
+    btn.disabled = false;
+  }
+}
+</script>
+
+</body>
+</html>

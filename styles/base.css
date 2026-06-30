@@ -1,0 +1,136 @@
+/* ============================================
+   PASTEF — Design Tokens & Base Styles
+   ============================================ */
+
+:root {
+  /* Couleurs officielles PASTEF */
+  --pastef-green: #1B7C3D;
+  --pastef-green-dark: #135A2C;
+  --pastef-green-light: #2E9B52;
+  --pastef-green-soft: #E8F5E9;
+  --pastef-red: #C42528;
+  --pastef-red-dark: #9E1E20;
+  --pastef-red-light: #DC3A3D;
+  --pastef-red-soft: #FFEBEE;
+  --pastef-or: #D4900A;
+  --pastef-or-light: #E8B847;
+  --pastef-or-soft: #FFF8E1;
+
+  /* Neutres */
+  --ink: #0F1A14;
+  --ink-soft: #1A2E22;
+  --text: #1A2E22;
+  --text-muted: #6B7B72;
+  --text-soft: #9CA8A2;
+  --border: #E5E9E7;
+  --border-light: #F0F2F0;
+  --bg: #F4F6F4;
+  --bg-soft: #FAFBFA;
+  --card: #FFFFFF;
+
+  /* Système */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-xs: 0 1px 2px rgba(15, 26, 20, 0.04);
+  --shadow-sm: 0 2px 6px rgba(15, 26, 20, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 26, 20, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 26, 20, 0.12);
+
+  /* Typographie */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+img, svg { display: block; max-width: 100%; }
+
+/* Scrollbar discrète */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-soft); }
+
+/* Spinner global */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--pastef-green);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+/* Loader pleine page */
+.page-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Utilitaires */
+.text-muted { color: var(--text-muted); }
+.text-green { color: var(--pastef-green); }
+.text-red { color: var(--pastef-red); }
+.text-or { color: var(--pastef-or); }
+.font-mono { font-family: var(--font-mono); }
+
+/* Accessibilité */
+:focus-visible {
+  outline: 2px solid var(--pastef-green);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

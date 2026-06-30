@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coordinations Départementales — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* Hero sélecteur */
+  .selector-card {
+    background:
+      linear-gradient(120deg, rgba(15,26,20,0.92), rgba(196,37,40,0.85)),
+      url('../../assets/couverture.png') center/cover;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .selector-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom,
+      var(--pastef-red) 0%, var(--pastef-red) 33%,
+      var(--pastef-or) 33%, var(--pastef-or) 66%,
+      var(--pastef-green-light) 66%, var(--pastef-green-light) 100%);
+  }
+
+  .selector-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pastef-or-light);
+    margin-bottom: 8px;
+  }
+
+  .selector-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .selector-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 18px;
+  }
+
+  .selector-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .selector-field label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 6px;
+  }
+
+  .selector-select {
+    width: 100%;
+    height: 44px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-sm);
+    padding: 0 36px 0 14px;
+    font-size: 14px;
+    font-weight: 500;
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='white' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+  }
+
+  .selector-select:focus {
+    outline: none;
+    border-color: var(--pastef-or-light);
+    background-color: rgba(255,255,255,0.15);
+  }
+
+  .selector-select option { background: var(--ink); color: #fff; }
+
+  .selector-btn {
+    height: 44px;
+    padding: 0 22px;
+    background: var(--pastef-or);
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+
+  .selector-btn:hover { background: var(--pastef-or-light); transform: translateY(-1px); }
+
+  @media (max-width: 768px) {
+    .selector-row { grid-template-columns: 1fr; }
+  }
+
+  /* KPIs */
+  .section-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .section-kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    position: relative;
+  }
+
+  .section-kpi-label {
+    font-size: 11px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+  }
+
+  .section-kpi-value {
+    font-size: 26px; font-weight: 800; color: var(--ink);
+    letter-spacing: -0.6px; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+
+  .section-kpi-icon {
+    position: absolute; top: 14px; right: 14px;
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .icon-green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .icon-or { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .icon-red { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .icon-ink { background: var(--bg); color: var(--ink); }
+
+  /* Coordinator card */
+  .coord-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .coord-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--pastef-red); margin-bottom: 14px;
+  }
+
+  .coord-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--pastef-red), var(--pastef-red-dark));
+    color: #fff; font-size: 24px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px; box-shadow: var(--shadow-sm);
+  }
+
+  .coord-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .coord-fn { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+  .coord-contact {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  .coord-contact-row {
+    display: flex; align-items: center; gap: 8px; justify-content: center;
+  }
+
+  .coord-empty {
+    padding: 32px 16px; text-align: center; color: var(--text-muted);
+  }
+  .coord-empty svg { opacity: 0.3; margin-bottom: 8px; }
+
+  /* Communes list (rattachées au département) */
+  .communes-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .commune-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 90px 70px 80px;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 14px;
+    transition: background 0.12s;
+  }
+
+  .commune-row:last-child { border-bottom: none; }
+  .commune-row:hover { background: var(--bg-soft); }
+
+  .commune-name { font-size: 13px; font-weight: 600; }
+  .commune-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .commune-stat {
+    font-size: 14px; font-weight: 700;
+    color: var(--ink);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .commune-stat-label {
+    font-size: 10px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600; margin-top: 2px; text-align: right;
+  }
+
+  .commune-row-header {
+    display: grid;
+    grid-template-columns: 1fr 80px 90px 70px 80px;
+    gap: 14px;
+    padding: 12px 18px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .commune-row-header > div:not(:first-child) { text-align: right; }
+
+  @media (max-width: 700px) {
+    .commune-row, .commune-row-header {
+      grid-template-columns: 1fr 70px;
+    }
+    .commune-row > div:nth-child(n+4),
+    .commune-row-header > div:nth-child(n+4) { display: none; }
+  }
+
+  /* Placeholder */
+  .placeholder {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 80px 24px;
+    text-align: center;
+  }
+
+  .placeholder-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--pastef-red-soft);
+    color: var(--pastef-red);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .placeholder-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+  .placeholder-text { font-size: 13px; color: var(--text-muted); max-width: 360px; margin: 0 auto; }
+
+  /* Section actions */
+  .section-actions {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+  }
+
+  /* Chart */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+  }
+  .chart-wrap { height: 240px; position: relative; }
+
+  .info-strip {
+    background: var(--pastef-or-soft);
+    border-left: 3px solid var(--pastef-or);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: start;
+    gap: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allMembers = [];
+let departements = {};
+
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'sec-departementales');
+  PASTEF.topbar.render({
+    session,
+    title: 'Coordinations Départementales',
+    breadcrumb: 'Vue par département du Sénégal',
+  });
+
+  try {
+    const { data, error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .select('*')
+      .eq('pays', 'Sénégal')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+    if (error) throw error;
+    allMembers = data || [];
+    buildPage();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('content').innerHTML = `
+      <div class="empty">
+        <div class="empty-title">Erreur de chargement</div>
+        <div class="empty-text">${PASTEF.utils.escapeHtml(err.message)}</div>
+      </div>
+    `;
+  }
+})();
+
+function buildPage() {
+  // Regroupement par département (region dans Supabase = département admin)
+  departements = {};
+  allMembers.forEach((m) => {
+    if (!m.region) return;
+    if (!departements[m.region]) {
+      departements[m.region] = { region: m.region, members: [] };
+    }
+    departements[m.region].members.push(m);
+  });
+
+  const list = Object.keys(departements).sort();
+
+  document.getElementById('content').innerHTML = `
+    <!-- SÉLECTEUR -->
+    <div class="selector-card">
+      <div class="selector-eyebrow">Vue départementale</div>
+      <h1 class="selector-title">Coordinations départementales</h1>
+      <p class="selector-sub">${list.length} département${list.length > 1 ? 's' : ''} recensé${list.length > 1 ? 's' : ''} au Sénégal · Sélectionnez-en un pour voir le détail.</p>
+
+      <div class="selector-row">
+        <div class="selector-field">
+          <label>Département</label>
+          <select class="selector-select" id="deptSelect">
+            <option value="">— Choisir un département —</option>
+            ${list.map((d) => `<option value="${PASTEF.utils.escapeHtml(d)}">${PASTEF.utils.escapeHtml(d)} · ${departements[d].members.length} patriotes</option>`).join('')}
+          </select>
+        </div>
+
+        <button class="selector-btn" onclick="showDept()">
+          Voir le département
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ZONE DE DÉTAIL -->
+    <div id="deptDetail">
+      <div class="placeholder">
+        <div class="placeholder-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div class="placeholder-title">Sélectionnez un département</div>
+        <div class="placeholder-text">Choisissez un département dans la liste ci-dessus pour visualiser son coordinateur, ses sections communales rattachées et ses statistiques.</div>
+      </div>
+    </div>
+  `;
+}
+
+function showDept() {
+  const key = document.getElementById('deptSelect').value;
+  if (!key || !departements[key]) {
+    PASTEF.utils.toast('Choisissez un département', '', { color: 'var(--pastef-or)' });
+    return;
+  }
+
+  const data = departements[key];
+  const members = data.members;
+  const stats = computeStats(members);
+  const coord = findCoordinator(members);
+
+  document.getElementById('deptDetail').innerHTML = `
+    <div class="section-actions">
+      <div>
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">Département de ${PASTEF.utils.escapeHtml(data.region)}</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">${stats.communes} section${stats.communes > 1 ? 's' : ''} communale${stats.communes > 1 ? 's' : ''} · ${PASTEF.utils.formatNumber(stats.total)} patriote${stats.total > 1 ? 's' : ''}</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.region)}', 'excel')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Excel
+        </button>
+        <button class="btn btn-primary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.region)}', 'pdf')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Rapport PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="section-kpis">
+      <div class="section-kpi">
+        <div class="section-kpi-icon icon-green">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
+        </div>
+        <div class="section-kpi-label">Patriotes totaux</div>
+        <div class="section-kpi-value">${PASTEF.utils.formatNumber(stats.total)}</div>
+      </div>
+      <div class="section-kpi">
+        <div class="section-kpi-icon icon-ink">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4"/></svg>
+        </div>
+        <div class="section-kpi-label">Sections communales</div>
+        <div class="section-kpi-value">${stats.communes}</div>
+      </div>
+      <div class="section-kpi">
+        <div class="section-kpi-icon icon-or">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+        </div>
+        <div class="section-kpi-label">Cellules de base</div>
+        <div class="section-kpi-value">${stats.cellules}</div>
+      </div>
+      <div class="section-kpi">
+        <div class="section-kpi-icon icon-green">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="section-kpi-label">Nouveaux ce mois</div>
+        <div class="section-kpi-value text-green">+${PASTEF.utils.formatNumber(stats.thisMonth)}</div>
+      </div>
+      <div class="section-kpi">
+        <div class="section-kpi-icon icon-red">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="section-kpi-label">Engagement</div>
+        <div class="section-kpi-value">${stats.engagementMoyen}<span style="font-size:14px;color:var(--text-muted)">%</span></div>
+      </div>
+    </div>
+
+    <!-- Layout : Coordinateur + Genre | Communes rattachées -->
+    <div class="grid grid-1-2">
+      <!-- Colonne gauche : Coordinateur + Chart -->
+      <div>
+        <div class="coord-card">
+          <div class="coord-eyebrow">Coordinateur départemental</div>
+          ${renderCoordinator(coord)}
+        </div>
+
+        <div class="chart-card" style="margin-top:16px">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Répartition par genre</div>
+              <div class="card-sub">${stats.hommes} H · ${stats.femmes} F</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="chartGenre"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Colonne droite : Communes rattachées -->
+      <div>
+        <div class="info-strip" style="margin-bottom:16px">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span><strong>Activités départementales</strong> — Les activités saisies par le coordinateur départemental apparaîtront ici. Module en cours d'intégration avec la nouvelle base de données.</span>
+        </div>
+
+        <div class="communes-table">
+          <div class="card-header" style="border-bottom:1px solid var(--border);padding:16px 18px;margin:0">
+            <div>
+              <div class="card-title">Sections communales rattachées</div>
+              <div class="card-sub">${stats.communesList.length} commune${stats.communesList.length > 1 ? 's' : ''}</div>
+            </div>
+          </div>
+
+          <div class="commune-row-header">
+            <div>Commune</div>
+            <div>Patriotes</div>
+            <div>Cellules</div>
+            <div>Nouveaux</div>
+            <div>Engagement</div>
+          </div>
+
+          ${stats.communesList.length > 0 ? stats.communesList.map((c) => `
+            <div class="commune-row">
+              <div>
+                <div class="commune-name">${PASTEF.utils.escapeHtml(c.name)}</div>
+                <div class="commune-sub">${c.coordinator ? `${c.coordinator.prenom} ${c.coordinator.nom}` : 'Aucun coordinateur'}</div>
+              </div>
+              <div>
+                <div class="commune-stat">${c.total}</div>
+                <div class="commune-stat-label">Total</div>
+              </div>
+              <div>
+                <div class="commune-stat">${c.cellules}</div>
+                <div class="commune-stat-label">Cellules</div>
+              </div>
+              <div>
+                <div class="commune-stat text-green">+${c.thisMonth}</div>
+                <div class="commune-stat-label">Ce mois</div>
+              </div>
+              <div>
+                <div class="commune-stat">${c.engagement}%</div>
+                <div class="commune-stat-label">Engagé</div>
+              </div>
+            </div>
+          `).join('') : `
+            <div style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px">
+              Aucune commune recensée dans ce département.
+            </div>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+
+  renderGenreChart(stats);
+}
+
+function findCoordinator(members) {
+  // Pour un département : on cherche un coordinateur départemental
+  // En attendant la table coordinator_accounts, on prend le premier "Coordinateur" trouvé
+  return members.find((m) =>
+    m.fonction_cellule === 'Coordinateur' ||
+    m.fonction_cellule === 'Coordinateur Adjoint'
+  );
+}
+
+function renderCoordinator(coord) {
+  if (!coord) {
+    return `
+      <div class="coord-empty">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <div style="font-weight:600;color:var(--text);margin-bottom:4px">Aucun coordinateur</div>
+        <div style="font-size:12px">Aucun coordinateur n'a encore été désigné pour ce département.</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="window.location.href='coordinateurs.html'">
+          Désigner un coordinateur
+        </button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="coord-avatar">${PASTEF.utils.initials(coord.prenom, coord.nom)}</div>
+    <div class="coord-name">${PASTEF.utils.escapeHtml(coord.prenom || '')} ${PASTEF.utils.escapeHtml(coord.nom || '')}</div>
+    <div class="coord-fn">Coordinateur départemental</div>
+
+    <div class="coord-contact">
+      <div class="coord-contact-row">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <span class="font-mono">${PASTEF.utils.escapeHtml(coord.telephone || '—')}</span>
+      </div>
+      <div class="coord-contact-row">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>${PASTEF.utils.escapeHtml(coord.quartier || coord.region || '—')}</span>
+      </div>
+    </div>
+  `;
+}
+
+function computeStats(members) {
+  const total = members.length;
+  const hommes = members.filter((m) => m.sexe === 'Homme').length;
+  const femmes = total - hommes;
+
+  const now = new Date();
+  const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
+
+  // Communes (quartiers dans Sénégal) rattachées
+  const communeMap = {};
+  members.forEach((m) => {
+    if (!m.quartier) return;
+    if (!communeMap[m.quartier]) {
+      communeMap[m.quartier] = { name: m.quartier, members: [] };
+    }
+    communeMap[m.quartier].members.push(m);
+  });
+
+  const communesList = Object.values(communeMap).map((c) => {
+    const cMembers = c.members;
+    const cThisMonth = cMembers.filter((m) => new Date(m.created_at) >= startMonth).length;
+    const cEng = cMembers.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+    const cCellules = new Set(cMembers.filter((m) => m.cellule).map((m) => m.cellule)).size;
+    return {
+      name: c.name,
+      total: cMembers.length,
+      cellules: cCellules,
+      thisMonth: cThisMonth,
+      engagement: cMembers.length > 0 ? Math.round((cEng / cMembers.length) * 100) : 0,
+      coordinator: cMembers.find((m) => m.fonction_cellule === 'Coordinateur' || m.fonction_cellule === 'Coordinateur Adjoint'),
+    };
+  }).sort((a, b) => b.total - a.total);
+
+  // Cellules totales
+  const cellules = new Set(members.filter((m) => m.cellule).map((m) => m.cellule)).size;
+
+  const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+  const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
+
+  return {
+    total, hommes, femmes, thisMonth,
+    communes: communesList.length,
+    communesList,
+    cellules,
+    engagementMoyen,
+  };
+}
+
+function renderGenreChart(stats) {
+  const ctx = document.getElementById('chartGenre');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Hommes', 'Femmes'],
+      datasets: [{
+        data: [stats.hommes, stats.femmes],
+        backgroundColor: ['#C42528', '#D4900A'],
+        borderWidth: 0,
+        cutout: '68%',
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 12, weight: 600 }, padding: 12, boxWidth: 10, boxHeight: 10, usePointStyle: true },
+        },
+      },
+    },
+  });
+}
+
+function downloadReport(dept, format) {
+  PASTEF.utils.toast(
+    `Rapport ${format.toUpperCase()} bientôt disponible`,
+    'Module de génération en cours de développement',
+    { color: 'var(--pastef-or)' }
+  );
+}
+</script>
+
+</body>
+</html>
