@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statistiques comparatives — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Statistiques comparatives — Styles
+     ============================================ */
+
+  /* Filtres */
+  .filters-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .filter-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-pill:hover { border-color: var(--pastef-green); color: var(--pastef-green); }
+  .filter-pill.active { background: var(--pastef-green); color: #fff; border-color: var(--pastef-green); }
+
+  .filter-select {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7B72' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .filter-select:focus { border-color: var(--pastef-green); outline: none; }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+
+  .kpi-green::before { background: var(--pastef-green); }
+  .kpi-or::before    { background: var(--pastef-or); }
+  .kpi-red::before   { background: var(--pastef-red); }
+  .kpi-ink::before   { background: var(--ink); }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  .kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .kpi-trend.up   { background: var(--pastef-green-soft); color: var(--pastef-green); }
+  .kpi-trend.down { background: var(--pastef-red-soft); color: var(--pastef-red); }
+
+  /* Section layout */
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title svg {
+    width: 16px;
+    height: 16px;
+    color: var(--pastef-green);
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .chart-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .chart-card-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green);
+  }
+
+  .chart-wrapper {
+    position: relative;
+  }
+
+  /* Tableau ranking */
+  .rank-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+  }
+
+  .rank-table th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rank-table th:last-child,
+  .rank-table td:last-child { text-align: right; }
+
+  .rank-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .rank-table tr:last-child td { border-bottom: none; }
+
+  .rank-table tr:hover td { background: var(--bg-soft); }
+
+  .rank-pos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .rank-1 { background: var(--pastef-green); color: #fff; }
+  .rank-2 { background: var(--pastef-green-soft); color: var(--pastef-green); }
+  .rank-3 { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .rank-default { background: var(--bg); color: var(--text-muted); }
+
+  .rank-name {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .rank-bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rank-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .rank-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .rank-bar-value {
+    font-weight: 700;
+    font-size: 12px;
+    min-width: 42px;
+    text-align: right;
+    color: var(--ink);
+  }
+
+  /* Donut center */
+  .donut-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .donut-center {
+    position: absolute;
+    text-align: center;
+  }
+
+  .donut-center-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .donut-center-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Tabs mini */
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    border: none;
+    background: transparent;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--card); color: var(--pastef-green); box-shadow: var(--shadow-xs); }
+
+  /* Full width card */
+  .full-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+    .filters-bar { gap: 6px; }
+  }
+</style>
+</head>
+
+<body>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement des statistiques…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  /* ============================================
+     1. AUTH + LAYOUT
+     ============================================ */
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'statistiques');
+  PASTEF.topbar.render({
+    session,
+    title: 'Statistiques comparatives',
+    breadcrumb: 'Analyse nationale et diaspora',
+  });
+
+  /* ============================================
+     2. DONNÉES MOCK — Remplacer par Supabase
+     ============================================ */
+
+  // Régions du Sénégal
+  const REGIONS = [
+    { nom: 'Dakar',        patriotes: 4120, hommes: 2300, femmes: 1820, age18_25: 1240, age26_35: 1450, age36_50: 940, age50p: 490, cellules: 14, activites: 23, growth: 8.5 },
+    { nom: 'Thiès',        patriotes: 1980, hommes: 1120, femmes:  860, age18_25:  590, age26_35:  680, age36_50: 440, age50p: 270, cellules: 4,  activites: 12, growth: 6.2 },
+    { nom: 'Saint-Louis',  patriotes: 1240, hommes:  720, femmes:  520, age18_25:  370, age26_35:  420, age36_50: 280, age50p: 170, cellules: 3,  activites:  8, growth: 4.8 },
+    { nom: 'Kaolack',      patriotes:  890, hommes:  510, femmes:  380, age18_25:  260, age26_35:  310, age36_50: 200, age50p: 120, cellules: 3,  activites:  7, growth: 5.1 },
+    { nom: 'Ziguinchor',   patriotes:  780, hommes:  430, femmes:  350, age18_25:  240, age26_35:  270, age36_50: 170, age50p: 100, cellules: 3,  activites:  9, growth: 7.3 },
+    { nom: 'Diourbel',     patriotes:  720, hommes:  410, femmes:  310, age18_25:  210, age26_35:  240, age36_50: 170, age50p: 100, cellules: 3,  activites:  5, growth: 3.9 },
+    { nom: 'Louga',        patriotes:  540, hommes:  320, femmes:  220, age18_25:  160, age26_35:  180, age36_50: 120, age50p:  80, cellules: 2,  activites:  4, growth: 2.5 },
+    { nom: 'Fatick',       patriotes:  480, hommes:  280, femmes:  200, age18_25:  140, age26_35:  160, age36_50: 110, age50p:  70, cellules: 2,  activites:  3, growth: 3.2 },
+    { nom: 'Kolda',        patriotes:  420, hommes:  250, femmes:  170, age18_25:  130, age26_35:  140, age36_50:  90, age50p:  60, cellules: 2,  activites:  4, growth: 4.6 },
+    { nom: 'Tambacounda',  patriotes:  390, hommes:  240, femmes:  150, age18_25:  120, age26_35:  130, age36_50:  80, age50p:  60, cellules: 2,  activites:  3, growth: 5.4 },
+    { nom: 'Matam',        patriotes:  340, hommes:  210, femmes:  130, age18_25:  100, age26_35:  110, age36_50:  80, age50p:  50, cellules: 2,  activites:  3, growth: 3.7 },
+    { nom: 'Kaffrine',     patriotes:  280, hommes:  170, femmes:  110, age18_25:   80, age26_35:   90, age36_50:  70, age50p:  40, cellules: 2,  activites:  2, growth: 2.8 },
+    { nom: 'Sédhiou',      patriotes:  240, hommes:  140, femmes:  100, age18_25:   70, age26_35:   80, age36_50:  50, age50p:  40, cellules: 2,  activites:  2, growth: 4.1 },
+    { nom: 'Kédougou',     patriotes:  160, hommes:  100, femmes:   60, age18_25:   50, age26_35:   50, age36_50:  35, age50p:  25, cellules: 1,  activites:  1, growth: 6.8 },
+  ];
+
+  // Top pays diaspora
+  const DIASPORA = [
+    { nom: 'France',        flag: '🇫🇷', patriotes: 2340, hommes: 1380, femmes:  960, age18_25:  620, age26_35:  890, age36_50: 540, age50p: 290, cellules: 14, growth:  8.5 },
+    { nom: 'Italie',        flag: '🇮🇹', patriotes: 1820, hommes: 1150, femmes:  670, age18_25:  540, age26_35:  680, age36_50: 380, age50p: 220, cellules: 10, growth:  5.2 },
+    { nom: 'Espagne',       flag: '🇪🇸', patriotes:  980, hommes:  590, femmes:  390, age18_25:  310, age26_35:  340, age36_50: 210, age50p: 120, cellules: 6,  growth:  3.1 },
+    { nom: 'États-Unis',    flag: '🇺🇸', patriotes:  760, hommes:  420, femmes:  340, age18_25:  280, age26_35:  250, age36_50: 150, age50p:  80, cellules: 8,  growth: 15.6 },
+    { nom: 'Gambie',        flag: '🇬🇲', patriotes:  610, hommes:  360, femmes:  250, age18_25:  200, age26_35:  190, age36_50: 140, age50p:  80, cellules: 3,  growth:  2.5 },
+    { nom: "Côte d'Ivoire", flag: '🇨🇮', patriotes:  420, hommes:  250, femmes:  170, age18_25:  150, age26_35:  140, age36_50:  80, age50p:  50, cellules: 2,  growth:  9.3 },
+    { nom: 'Canada',        flag: '🇨🇦', patriotes:  410, hommes:  230, femmes:  180, age18_25:  160, age26_35:  130, age36_50:  80, age50p:  40, cellules: 6,  growth: 11.0 },
+    { nom: 'Belgique',      flag: '🇧🇪', patriotes:  380, hommes:  210, femmes:  170, age18_25:  120, age26_35:  130, age36_50:  80, age50p:  50, cellules: 4,  growth:  2.8 },
+    { nom: 'Mauritanie',    flag: '🇲🇷', patriotes:  350, hommes:  210, femmes:  140, age18_25:  110, age26_35:  120, age36_50:  80, age50p:  40, cellules: 2,  growth:  3.8 },
+    { nom: 'Guinée',        flag: '🇬🇳', patriotes:  340, hommes:  200, femmes:  140, age18_25:  120, age26_35:  100, age36_50:  70, age50p:  50, cellules: 3,  growth:  5.7 },
+  ];
+
+  // Évolution mensuelle (6 derniers mois)
+  const EVOLUTION = {
+    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+    national:  [18200, 19100, 19800, 20900, 21700, 22480],
+    diaspora:  [8100, 8520, 8890, 9400, 9950, 10805],
+    nouveaux:  [1200, 1380, 1490, 1710, 1560, 1820],
+  };
+
+  /*
+   * DÉPARTEMENTS — comparatif activité
+   * → À remplacer par: SELECT departement, COUNT(*) as patriotes, ... FROM enrolments JOIN activites ...
+   */
+  const DEPARTEMENTS = [
+    { nom: 'Dakar',           region: 'Dakar',       patriotes: 2840, activites: 18, rapports: 5, cellules: 8,  nouveaux: 320, hommes: 1590, femmes: 1250, jeunes: 1870, growth: 9.2 },
+    { nom: 'Pikine',          region: 'Dakar',       patriotes: 1280, activites: 12, rapports: 4, cellules: 6,  nouveaux: 145, hommes:  720, femmes:  560, jeunes:  850, growth: 7.8 },
+    { nom: 'Thiès',           region: 'Thiès',       patriotes: 1120, activites: 10, rapports: 4, cellules: 3,  nouveaux: 110, hommes:  630, femmes:  490, jeunes:  720, growth: 6.5 },
+    { nom: 'Mbour',           region: 'Thiès',       patriotes:  860, activites:  8, rapports: 3, cellules: 2,  nouveaux:  95, hommes:  490, femmes:  370, jeunes:  560, growth: 5.8 },
+    { nom: 'Saint-Louis',     region: 'Saint-Louis', patriotes:  780, activites:  7, rapports: 3, cellules: 2,  nouveaux:  72, hommes:  450, femmes:  330, jeunes:  490, growth: 4.2 },
+    { nom: 'Kaolack',         region: 'Kaolack',     patriotes:  620, activites:  6, rapports: 3, cellules: 2,  nouveaux:  68, hommes:  360, femmes:  260, jeunes:  400, growth: 5.3 },
+    { nom: 'Ziguinchor',      region: 'Ziguinchor',  patriotes:  540, activites:  8, rapports: 3, cellules: 2,  nouveaux:  82, hommes:  300, femmes:  240, jeunes:  360, growth: 7.6 },
+    { nom: 'Touba',           region: 'Diourbel',    patriotes:  480, activites:  4, rapports: 2, cellules: 2,  nouveaux:  42, hommes:  280, femmes:  200, jeunes:  290, growth: 3.1 },
+    { nom: 'Rufisque',        region: 'Dakar',       patriotes:  460, activites:  5, rapports: 2, cellules: 2,  nouveaux:  48, hommes:  260, femmes:  200, jeunes:  310, growth: 4.5 },
+    { nom: 'Louga',           region: 'Louga',       patriotes:  380, activites:  3, rapports: 2, cellules: 1,  nouveaux:  35, hommes:  230, femmes:  150, jeunes:  230, growth: 2.8 },
+    { nom: 'Kolda',           region: 'Kolda',       patriotes:  340, activites:  4, rapports: 2, cellules: 1,  nouveaux:  40, hommes:  200, femmes:  140, jeunes:  220, growth: 4.9 },
+    { nom: 'Tambacounda',     region: 'Tambacounda', patriotes:  310, activites:  3, rapports: 2, cellules: 1,  nouveaux:  38, hommes:  190, femmes:  120, jeunes:  200, growth: 5.1 },
+    { nom: 'Fatick',          region: 'Fatick',      patriotes:  290, activites:  3, rapports: 1, cellules: 1,  nouveaux:  28, hommes:  170, femmes:  120, jeunes:  180, growth: 3.4 },
+    { nom: 'Matam',           region: 'Matam',       patriotes:  260, activites:  2, rapports: 1, cellules: 1,  nouveaux:  22, hommes:  160, femmes:  100, jeunes:  160, growth: 3.0 },
+    { nom: 'Kaffrine',        region: 'Kaffrine',    patriotes:  210, activites:  2, rapports: 1, cellules: 1,  nouveaux:  18, hommes:  130, femmes:   80, jeunes:  130, growth: 2.4 },
+    { nom: 'Sédhiou',         region: 'Sédhiou',     patriotes:  190, activites:  2, rapports: 1, cellules: 1,  nouveaux:  20, hommes:  110, femmes:   80, jeunes:  120, growth: 4.3 },
+    { nom: 'Kédougou',        region: 'Kédougou',    patriotes:  120, activites:  1, rapports: 1, cellules: 1,  nouveaux:  15, hommes:   70, femmes:   50, jeunes:   80, growth: 7.0 },
+    { nom: 'Podor',           region: 'Saint-Louis', patriotes:  280, activites:  2, rapports: 1, cellules: 1,  nouveaux:  20, hommes:  170, femmes:  110, jeunes:  170, growth: 2.6 },
+    { nom: 'Tivaouane',       region: 'Thiès',       patriotes:  350, activites:  3, rapports: 2, cellules: 1,  nouveaux:  32, hommes:  200, femmes:  150, jeunes:  220, growth: 3.8 },
+    { nom: 'Bignona',         region: 'Ziguinchor',  patriotes:  240, activites:  3, rapports: 1, cellules: 1,  nouveaux:  30, hommes:  130, femmes:  110, jeunes:  160, growth: 6.2 },
+  ];
+
+  /*
+   * COMMUNES — top communes les plus actives
+   * → À remplacer par: SELECT commune, ... FROM enrolments JOIN activites ... LIMIT 15
+   */
+  const COMMUNES = [
+    { nom: 'Médina',            departement: 'Dakar',       patriotes: 620, activites: 8, rapports: 3, nouveaux: 85, jeunes: 420, growth: 11.2 },
+    { nom: 'Parcelles Assainies', departement: 'Dakar',     patriotes: 580, activites: 7, rapports: 3, nouveaux: 72, jeunes: 400, growth: 9.8 },
+    { nom: 'Grand-Yoff',       departement: 'Dakar',       patriotes: 510, activites: 6, rapports: 2, nouveaux: 65, jeunes: 350, growth: 8.5 },
+    { nom: 'Pikine Nord',      departement: 'Pikine',      patriotes: 440, activites: 5, rapports: 2, nouveaux: 58, jeunes: 310, growth: 7.2 },
+    { nom: 'Guédiawaye',       departement: 'Pikine',      patriotes: 390, activites: 5, rapports: 2, nouveaux: 48, jeunes: 270, growth: 6.8 },
+    { nom: 'Thiès Ville',      departement: 'Thiès',       patriotes: 380, activites: 4, rapports: 2, nouveaux: 42, jeunes: 250, growth: 5.9 },
+    { nom: 'Mbour Ville',      departement: 'Mbour',       patriotes: 350, activites: 4, rapports: 2, nouveaux: 40, jeunes: 240, growth: 5.5 },
+    { nom: 'Keur Massar',      departement: 'Pikine',      patriotes: 320, activites: 4, rapports: 2, nouveaux: 45, jeunes: 230, growth: 8.0 },
+    { nom: 'HLM',              departement: 'Dakar',       patriotes: 310, activites: 3, rapports: 1, nouveaux: 32, jeunes: 200, growth: 4.8 },
+    { nom: 'Sicap-Liberté',    departement: 'Dakar',       patriotes: 290, activites: 3, rapports: 1, nouveaux: 30, jeunes: 190, growth: 4.2 },
+    { nom: 'Rufisque Ville',   departement: 'Rufisque',    patriotes: 270, activites: 3, rapports: 1, nouveaux: 28, jeunes: 180, growth: 3.9 },
+    { nom: 'Ziguinchor Ville', departement: 'Ziguinchor',  patriotes: 250, activites: 4, rapports: 2, nouveaux: 35, jeunes: 170, growth: 7.4 },
+    { nom: 'Kaolack Ville',    departement: 'Kaolack',     patriotes: 230, activites: 3, rapports: 1, nouveaux: 25, jeunes: 150, growth: 5.0 },
+    { nom: 'Saint-Louis Ville', departement: 'Saint-Louis', patriotes: 220, activites: 3, rapports: 1, nouveaux: 22, jeunes: 140, growth: 3.6 },
+    { nom: 'Bignona Ville',    departement: 'Bignona',     patriotes: 180, activites: 3, rapports: 1, nouveaux: 22, jeunes: 120, growth: 6.5 },
+  ];
+
+  /* ============================================
+     3. CALCULS GLOBAUX
+     ============================================ */
+  const totalSenegal    = REGIONS.reduce((s, r) => s + r.patriotes, 0);
+  const totalDiaspora   = DIASPORA.reduce((s, r) => s + r.patriotes, 0);
+  const totalGlobal     = totalSenegal + totalDiaspora;
+  const totalHommes     = [...REGIONS, ...DIASPORA].reduce((s, r) => s + r.hommes, 0);
+  const totalFemmes     = [...REGIONS, ...DIASPORA].reduce((s, r) => s + r.femmes, 0);
+  const totalJeunes     = [...REGIONS, ...DIASPORA].reduce((s, r) => s + r.age18_25 + r.age26_35, 0);
+  const totalCellules   = [...REGIONS, ...DIASPORA].reduce((s, r) => s + r.cellules, 0);
+  const avgGrowth       = Math.round([...REGIONS, ...DIASPORA].reduce((s, r) => s + r.growth, 0) / (REGIONS.length + DIASPORA.length) * 10) / 10;
+  const pctHommes       = Math.round(totalHommes / totalGlobal * 100);
+  const pctJeunes       = Math.round(totalJeunes / totalGlobal * 100);
+
+  const avgAge = Math.round(
+    [...REGIONS, ...DIASPORA].reduce((s, r) =>
+      s + r.age18_25 * 21.5 + r.age26_35 * 30.5 + r.age36_50 * 43 + r.age50p * 58, 0
+    ) / totalGlobal
+  );
+
+  const maxRegionPat    = Math.max(...REGIONS.map(r => r.patriotes));
+  const maxDiasporaPat  = Math.max(...DIASPORA.map(r => r.patriotes));
+
+  /* ============================================
+     4. RENDER
+     ============================================ */
+  const content = document.getElementById('content');
+
+  const fmt = n => n.toLocaleString('fr-FR');
+
+  function rankClass(i) {
+    if (i === 0) return 'rank-1';
+    if (i === 1) return 'rank-2';
+    if (i === 2) return 'rank-3';
+    return 'rank-default';
+  }
+
+  function renderRegionRows(data, maxVal) {
+    return data
+      .sort((a, b) => b.patriotes - a.patriotes)
+      .map((r, i) => {
+        const pctH = Math.round(r.hommes / r.patriotes * 100);
+        const pctJ = Math.round((r.age18_25 + r.age26_35) / r.patriotes * 100);
+        const barW = Math.round(r.patriotes / maxVal * 100);
+        return `
+          <tr>
+            <td><span class="rank-pos ${rankClass(i)}">${i + 1}</span></td>
+            <td><span class="rank-name">${r.flag || ''} ${r.nom}</span></td>
+            <td>
+              <div class="rank-bar-cell">
+                <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${barW}%;background:var(--pastef-green);"></div></div>
+                <span class="rank-bar-value">${fmt(r.patriotes)}</span>
+              </div>
+            </td>
+            <td style="text-align:center;font-size:11px;color:var(--text-muted);">${pctH}% / ${100 - pctH}%</td>
+            <td style="text-align:center;"><span style="font-weight:600;color:${pctJ >= 65 ? 'var(--pastef-green)' : 'var(--text)'}">${pctJ}%</span></td>
+            <td style="text-align:right;"><span class="kpi-trend ${r.growth >= 5 ? 'up' : ''}" style="${r.growth < 5 ? 'background:var(--bg);color:var(--text-muted);' : ''}">▲ ${r.growth}%</span></td>
+          </tr>`;
+      }).join('');
+  }
+
+  // Score d'activité = pondération activités + rapports + nouveaux + croissance
+  function scoreActivite(z) {
+    return (z.activites * 10) + (z.rapports * 15) + (z.nouveaux * 0.5) + (z.growth * 3);
+  }
+
+  function renderActivityRows(data, type) {
+    const scored = data.map(z => ({ ...z, score: Math.round(scoreActivite(z)) }));
+    scored.sort((a, b) => b.score - a.score);
+    const maxScore = scored[0]?.score || 1;
+    const maxAct   = Math.max(...scored.map(z => z.activites));
+
+    return scored.map((z, i) => {
+      const barW = Math.round(z.score / maxScore * 100);
+      const pctJ = z.jeunes ? Math.round(z.jeunes / z.patriotes * 100) : '—';
+      const subLabel = type === 'dept' ? z.region : type === 'comm' ? z.departement : '';
+
+      return `
+        <tr>
+          <td><span class="rank-pos ${rankClass(i)}">${i + 1}</span></td>
+          <td>
+            <span class="rank-name">${z.flag || ''} ${z.nom}</span>
+            ${subLabel ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">${subLabel}</div>` : ''}
+          </td>
+          <td style="text-align:center;font-weight:700;color:var(--pastef-green);">${z.activites}</td>
+          <td style="text-align:center;font-size:11px;">${z.rapports}</td>
+          <td style="text-align:center;font-size:11px;">+${fmt(z.nouveaux)}</td>
+          <td style="text-align:center;font-size:11px;">${typeof pctJ === 'number' ? pctJ + '%' : pctJ}</td>
+          <td>
+            <div class="rank-bar-cell">
+              <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${barW}%;background:${i < 3 ? 'var(--pastef-green)' : 'var(--pastef-green-light)'};"></div></div>
+              <span class="rank-bar-value">${z.score}</span>
+            </div>
+          </td>
+          <td style="text-align:right;"><span class="kpi-trend ${z.growth >= 5 ? 'up' : ''}" style="${z.growth < 5 ? 'background:var(--bg);color:var(--text-muted);' : ''}">▲ ${z.growth}%</span></td>
+        </tr>`;
+    }).join('');
+  }
+
+  content.innerHTML = `
+    <!-- Filtres -->
+    <div class="filters-bar">
+      <button class="filter-pill active" onclick="switchPeriod(this, 'mois')">Ce mois</button>
+      <button class="filter-pill" onclick="switchPeriod(this, 'trimestre')">Trimestre</button>
+      <button class="filter-pill" onclick="switchPeriod(this, 'semestre')">Semestre</button>
+      <button class="filter-pill" onclick="switchPeriod(this, 'annee')">Année</button>
+      <select class="filter-select" id="filterRegion">
+        <option value="">Toutes les zones</option>
+        <option value="national">National uniquement</option>
+        <option value="diaspora">Diaspora uniquement</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="alert('Export PDF en développement')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter PDF
+      </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-strip">
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Total patriotes</div>
+        <div class="kpi-value">${fmt(totalGlobal)}</div>
+        <div class="kpi-trend up">▲ ${avgGrowth}%</div>
+      </div>
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Sénégal</div>
+        <div class="kpi-value">${fmt(totalSenegal)}</div>
+        <div class="kpi-sub">${Math.round(totalSenegal / totalGlobal * 100)}% du total</div>
+      </div>
+      <div class="kpi kpi-or">
+        <div class="kpi-label">Diaspora</div>
+        <div class="kpi-value">${fmt(totalDiaspora)}</div>
+        <div class="kpi-sub">${DIASPORA.length} pays</div>
+      </div>
+      <div class="kpi kpi-ink">
+        <div class="kpi-label">Âge moyen</div>
+        <div class="kpi-value">${avgAge} <span style="font-size:16px;color:var(--text-muted)">ans</span></div>
+        <div class="kpi-sub">${pctJeunes}% de jeunes</div>
+      </div>
+      <div class="kpi kpi-red">
+        <div class="kpi-label">Genre H / F</div>
+        <div class="kpi-value">${pctHommes}<span style="font-size:16px;color:var(--text-muted)">%</span></div>
+        <div class="kpi-sub">${fmt(totalHommes)} H · ${fmt(totalFemmes)} F</div>
+      </div>
+    </div>
+
+    <!-- Évolution + Répartition -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Évolution des inscriptions</div>
+          <div class="chart-card-badge">6 derniers mois</div>
+        </div>
+        <div class="chart-wrapper" style="height:260px;">
+          <canvas id="chartEvolution"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Sénégal vs Diaspora</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="donut-container" style="height:180px;">
+              <canvas id="chartRepartition"></canvas>
+              <div class="donut-center">
+                <div class="donut-center-value">${fmt(totalGlobal)}</div>
+                <div class="donut-center-label">total</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:6px;">
+            <div style="padding:12px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);">
+              <div style="font-size:10px;font-weight:600;color:var(--pastef-green);text-transform:uppercase;letter-spacing:0.06em;">Sénégal</div>
+              <div style="font-size:20px;font-weight:800;color:var(--pastef-green-dark);margin-top:2px;">${fmt(totalSenegal)}</div>
+              <div style="font-size:11px;color:var(--pastef-green);">14 régions · ${REGIONS.reduce((s,r) => s+r.cellules, 0)} cellules</div>
+            </div>
+            <div style="padding:12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);">
+              <div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Diaspora</div>
+              <div style="font-size:20px;font-weight:800;color:var(--ink);margin-top:2px;">${fmt(totalDiaspora)}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${DIASPORA.length} pays · ${DIASPORA.reduce((s,r) => s+r.cellules, 0)} cellules</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Démographie genre + âge -->
+    <div class="grid-3">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Genre par région</div>
+        </div>
+        <div class="chart-wrapper" style="height:300px;">
+          <canvas id="chartGenreRegion"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Tranches d'âge</div>
+        </div>
+        <div class="chart-wrapper" style="height:300px;">
+          <canvas id="chartAgeGlobal"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Croissance par zone</div>
+          <div class="chart-card-badge">Ce mois</div>
+        </div>
+        <div class="chart-wrapper" style="height:300px;">
+          <canvas id="chartGrowth"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classement Régions -->
+    <div class="full-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--pastef-green)" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Classement des régions du Sénégal
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Région</th>
+              <th style="min-width:200px;">Patriotes</th>
+              <th style="text-align:center;">H / F</th>
+              <th style="text-align:center;">Jeunes</th>
+              <th style="text-align:right;">Croissance</th>
+            </tr>
+          </thead>
+          <tbody>${renderRegionRows(REGIONS, maxRegionPat)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Classement Diaspora -->
+    <div class="full-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--pastef-or)" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Classement de la diaspora
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Pays</th>
+              <th style="min-width:200px;">Patriotes</th>
+              <th style="text-align:center;">H / F</th>
+              <th style="text-align:center;">Jeunes</th>
+              <th style="text-align:right;">Croissance</th>
+            </tr>
+          </thead>
+          <tbody>${renderRegionRows(DIASPORA, maxDiasporaPat)}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nouveaux inscrits par mois -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Nouveaux patriotes par mois</div>
+      </div>
+      <div class="chart-wrapper" style="height:220px;">
+        <canvas id="chartNouveaux"></canvas>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         COMPARATIFS D'ACTIVITÉ
+         ═══════════════════════════════════════════ -->
+
+    <!-- Podium : qui est le plus actif ? -->
+    <div class="section-title" style="margin-top:8px;">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20l3-12 6 6 6-10 5 16z"/></svg>
+      Comparatif d'activité — Qui mobilise le plus ?
+    </div>
+
+    <div class="grid-2" style="margin-bottom:0;">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Top 10 départements par activité</div>
+          <div class="chart-card-badge">Score pondéré</div>
+        </div>
+        <div class="chart-wrapper" style="height:320px;">
+          <canvas id="chartDeptActivity"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">Top 10 communes par activité</div>
+          <div class="chart-card-badge">Score pondéré</div>
+        </div>
+        <div class="chart-wrapper" style="height:320px;">
+          <canvas id="chartCommActivity"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:6px 16px;margin-bottom:20px;">
+      <span style="font-size:10px;color:var(--text-muted);font-style:italic;">Score = (activités×10) + (rapports×15) + (nouveaux×0.5) + (croissance×3)</span>
+    </div>
+
+    <!-- Classement départements -->
+    <div class="full-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--pastef-green)" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Classement des départements — Activité
+        </div>
+        <select class="filter-select" onchange="filterDeptByRegion(this.value)">
+          <option value="">Toutes les régions</option>
+          <option value="Dakar">Dakar</option>
+          <option value="Thiès">Thiès</option>
+          <option value="Saint-Louis">Saint-Louis</option>
+          <option value="Ziguinchor">Ziguinchor</option>
+          <option value="Kaolack">Kaolack</option>
+          <option value="Diourbel">Diourbel</option>
+          <option value="Louga">Louga</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Département</th>
+              <th style="text-align:center;">Activités</th>
+              <th style="text-align:center;">Rapports</th>
+              <th style="text-align:center;">Nouveaux</th>
+              <th style="text-align:center;">Jeunes</th>
+              <th style="min-width:140px;">Score activité</th>
+              <th style="text-align:right;">Croissance</th>
+            </tr>
+          </thead>
+          <tbody id="tbDept">${renderActivityRows(DEPARTEMENTS, 'dept')}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Classement communes -->
+    <div class="full-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--pastef-green-light)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06c.5.5 1.17.67 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51c.65.34 1.32.17 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06c-.5.5-.67 1.17-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09c-.7 0-1.32.41-1.51 1z"/></svg>
+          Classement des communes — Activité
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Commune</th>
+              <th style="text-align:center;">Activités</th>
+              <th style="text-align:center;">Rapports</th>
+              <th style="text-align:center;">Nouveaux</th>
+              <th style="text-align:center;">Jeunes</th>
+              <th style="min-width:140px;">Score activité</th>
+              <th style="text-align:right;">Croissance</th>
+            </tr>
+          </thead>
+          <tbody>${renderActivityRows(COMMUNES, 'comm')}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Classement diaspora par activité -->
+    <div class="full-card">
+      <div class="chart-card-header">
+        <div class="chart-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--pastef-or)" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+          Classement diaspora — Activité
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Pays</th>
+              <th style="text-align:center;">Activités</th>
+              <th style="text-align:center;">Rapports</th>
+              <th style="text-align:center;">Nouveaux</th>
+              <th style="text-align:center;">Jeunes</th>
+              <th style="min-width:140px;">Score activité</th>
+              <th style="text-align:right;">Croissance</th>
+            </tr>
+          </thead>
+          <tbody>${renderActivityRows(DIASPORA.map(d => ({
+            ...d,
+            jeunes: d.age18_25 + d.age26_35,
+            activites: Math.round(d.cellules * 1.8),
+            rapports: Math.min(d.cellules, 5),
+            nouveaux: Math.round(d.patriotes * d.growth / 100),
+          })), 'diaspora')}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Graphique comparatif global : départements vs diaspora -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="chart-card-header">
+        <div class="chart-card-title">Activités menées — Départements vs Diaspora</div>
+      </div>
+      <div class="chart-wrapper" style="height:260px;">
+        <canvas id="chartCompareAct"></canvas>
+      </div>
+    </div>
+  `;
+
+  /* ============================================
+     5. CHARTS
+     ============================================ */
+  const CHART_FONT = { family: 'Inter, sans-serif' };
+
+  const gridStyle = {
+    color: 'rgba(229,233,231,0.6)',
+    drawBorder: false,
+  };
+
+  const tickStyle = {
+    font: { size: 11, family: 'Inter' },
+    color: '#9CA8A2',
+    padding: 6,
+  };
+
+  // ─── Évolution inscriptions ───
+  new Chart(document.getElementById('chartEvolution'), {
+    type: 'line',
+    data: {
+      labels: EVOLUTION.labels,
+      datasets: [
+        {
+          label: 'National',
+          data: EVOLUTION.national,
+          borderColor: '#1B7C3D',
+          backgroundColor: 'rgba(27,124,61,0.06)',
+          borderWidth: 2.5,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+          pointBackgroundColor: '#1B7C3D',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Diaspora',
+          data: EVOLUTION.diaspora,
+          borderColor: '#9CA8A2',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 4],
+          fill: false,
+          tension: 0.35,
+          pointRadius: 3,
+          pointBackgroundColor: '#9CA8A2',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: { font: { size: 11, family: 'Inter', weight: 600 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 14 },
+        },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72',
+          borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10,
+          bodyFont: { family: 'Inter', size: 12 }, titleFont: { family: 'Inter', size: 12, weight: 600 },
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toLocaleString('fr-FR')}` }
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: tickStyle },
+        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v >= 1000 ? (v/1000) + 'k' : v }, beginAtZero: false },
+      },
+    },
+  });
+
+  // ─── Répartition Sénégal vs Diaspora ───
+  new Chart(document.getElementById('chartRepartition'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sénégal', 'Diaspora'],
+      datasets: [{
+        data: [totalSenegal, totalDiaspora],
+        backgroundColor: ['#1B7C3D', '#E5E9E7'],
+        borderWidth: 0,
+        spacing: 3,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '72%',
+      plugins: { legend: { display: false } },
+    },
+  });
+
+  // ─── Genre par région (top 8) ───
+  const top8 = REGIONS.slice().sort((a,b) => b.patriotes - a.patriotes).slice(0, 8);
+  new Chart(document.getElementById('chartGenreRegion'), {
+    type: 'bar',
+    data: {
+      labels: top8.map(r => r.nom),
+      datasets: [
+        { label: 'Hommes', data: top8.map(r => r.hommes), backgroundColor: '#1B7C3D', borderRadius: 3, barPercentage: 0.6 },
+        { label: 'Femmes', data: top8.map(r => r.femmes), backgroundColor: '#D5E8D9', borderRadius: 3, barPercentage: 0.6 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { font: { size: 10, family: 'Inter', weight: 600 }, boxWidth: 8, boxHeight: 8, usePointStyle: true, padding: 10 } },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 11 }, titleFont: { family: 'Inter', size: 11, weight: 600 } },
+      },
+      scales: {
+        x: { stacked: true, grid: gridStyle, ticks: { ...tickStyle, font: { size: 10, family: 'Inter' } } },
+        y: { stacked: true, grid: { display: false }, ticks: { ...tickStyle, font: { size: 10, family: 'Inter', weight: 500 } } },
+      },
+    },
+  });
+
+  // ─── Tranches d'âge global (donut) ───
+  const ages = {
+    '18-25': [...REGIONS, ...DIASPORA].reduce((s,r) => s + r.age18_25, 0),
+    '26-35': [...REGIONS, ...DIASPORA].reduce((s,r) => s + r.age26_35, 0),
+    '36-50': [...REGIONS, ...DIASPORA].reduce((s,r) => s + r.age36_50, 0),
+    '50+':   [...REGIONS, ...DIASPORA].reduce((s,r) => s + r.age50p, 0),
+  };
+
+  new Chart(document.getElementById('chartAgeGlobal'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(ages).map(k => k + ' ans'),
+      datasets: [{
+        data: Object.values(ages),
+        backgroundColor: ['#2E9B52', '#1B7C3D', '#135A2C', '#9CA8A2'],
+        borderWidth: 0,
+        spacing: 2,
+        borderRadius: 3,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '55%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 11, family: 'Inter', weight: 500 }, boxWidth: 10, boxHeight: 10, usePointStyle: true, padding: 12 },
+        },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 11 }, titleFont: { family: 'Inter', size: 11, weight: 600 },
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('fr-FR')} (${Math.round(ctx.raw/totalGlobal*100)}%)` }
+        },
+      },
+    },
+  });
+
+  // ─── Croissance par zone (bar horizontal) ───
+  const allZones = [...REGIONS.map(r => ({ ...r, type: 'sn' })), ...DIASPORA.map(r => ({ ...r, type: 'di' }))];
+  const topGrowth = allZones.sort((a,b) => b.growth - a.growth).slice(0, 10);
+
+  new Chart(document.getElementById('chartGrowth'), {
+    type: 'bar',
+    data: {
+      labels: topGrowth.map(r => (r.flag || '🇸🇳') + ' ' + r.nom),
+      datasets: [{
+        label: 'Croissance %',
+        data: topGrowth.map(r => r.growth),
+        backgroundColor: topGrowth.map(r => r.growth >= 8 ? '#1B7C3D' : r.growth >= 5 ? '#2E9B52' : '#D5E8D9'),
+        borderRadius: 3,
+        barPercentage: 0.65,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 11 }, titleFont: { family: 'Inter', size: 11, weight: 600 },
+          callbacks: { label: ctx => ` +${ctx.raw}%` }
+        },
+      },
+      scales: {
+        x: { grid: gridStyle, ticks: { ...tickStyle, font: { size: 10, family: 'Inter' }, callback: v => '+' + v + '%' } },
+        y: { grid: { display: false }, ticks: { ...tickStyle, font: { size: 10, family: 'Inter', weight: 500 } } },
+      },
+    },
+  });
+
+  // ─── Nouveaux patriotes par mois ───
+  new Chart(document.getElementById('chartNouveaux'), {
+    type: 'bar',
+    data: {
+      labels: EVOLUTION.labels,
+      datasets: [{
+        label: 'Nouveaux inscrits',
+        data: EVOLUTION.nouveaux,
+        backgroundColor: '#1B7C3D',
+        borderRadius: 5,
+        barPercentage: 0.5,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 12 }, titleFont: { family: 'Inter', size: 12, weight: 600 },
+          callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('fr-FR')} nouveaux patriotes` }
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: tickStyle },
+        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v >= 1000 ? (v/1000) + 'k' : v }, beginAtZero: true },
+      },
+    },
+  });
+
+  // ─── Top départements par score d'activité ───
+  const deptScored = DEPARTEMENTS.map(d => ({ ...d, score: Math.round(scoreActivite(d)) })).sort((a,b) => b.score - a.score).slice(0, 10);
+
+  new Chart(document.getElementById('chartDeptActivity'), {
+    type: 'bar',
+    data: {
+      labels: deptScored.map(d => d.nom),
+      datasets: [{
+        label: 'Score',
+        data: deptScored.map(d => d.score),
+        backgroundColor: deptScored.map((d, i) => i < 3 ? '#1B7C3D' : i < 6 ? '#2E9B52' : '#D5E8D9'),
+        borderRadius: 3,
+        barPercentage: 0.6,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 11 }, titleFont: { family: 'Inter', size: 11, weight: 600 },
+          callbacks: {
+            afterLabel: ctx => {
+              const d = deptScored[ctx.dataIndex];
+              return `${d.activites} activités · ${d.rapports} rapports · +${d.nouveaux} nouveaux`;
+            }
+          }
+        },
+      },
+      scales: {
+        x: { grid: gridStyle, ticks: tickStyle },
+        y: { grid: { display: false }, ticks: { ...tickStyle, font: { size: 11, family: 'Inter', weight: 500 } } },
+      },
+    },
+  });
+
+  // ─── Top communes par score d'activité ───
+  const commScored = COMMUNES.map(c => ({ ...c, score: Math.round(scoreActivite(c)) })).sort((a,b) => b.score - a.score).slice(0, 10);
+
+  new Chart(document.getElementById('chartCommActivity'), {
+    type: 'bar',
+    data: {
+      labels: commScored.map(c => c.nom),
+      datasets: [{
+        label: 'Score',
+        data: commScored.map(c => c.score),
+        backgroundColor: commScored.map((c, i) => i < 3 ? '#1B7C3D' : i < 6 ? '#2E9B52' : '#D5E8D9'),
+        borderRadius: 3,
+        barPercentage: 0.6,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 11 }, titleFont: { family: 'Inter', size: 11, weight: 600 },
+          callbacks: {
+            afterLabel: ctx => {
+              const c = commScored[ctx.dataIndex];
+              return `${c.activites} activités · ${c.rapports} rapports · +${c.nouveaux} nouveaux`;
+            }
+          }
+        },
+      },
+      scales: {
+        x: { grid: gridStyle, ticks: tickStyle },
+        y: { grid: { display: false }, ticks: { ...tickStyle, font: { size: 11, family: 'Inter', weight: 500 } } },
+      },
+    },
+  });
+
+  // ─── Comparatif activités : top 5 départements vs top 5 diaspora ───
+  const topDept5 = DEPARTEMENTS.sort((a,b) => b.activites - a.activites).slice(0, 5);
+  const topDia5  = DIASPORA.sort((a,b) => b.cellules - a.cellules).slice(0, 5).map(d => ({ ...d, activites: Math.round(d.cellules * 1.8) }));
+
+  new Chart(document.getElementById('chartCompareAct'), {
+    type: 'bar',
+    data: {
+      labels: [...topDept5.map(d => '🇸🇳 ' + d.nom), ...topDia5.map(d => d.flag + ' ' + d.nom)],
+      datasets: [{
+        label: 'Activités menées',
+        data: [...topDept5.map(d => d.activites), ...topDia5.map(d => d.activites)],
+        backgroundColor: [...topDept5.map(() => '#1B7C3D'), ...topDia5.map(() => '#D4900A')],
+        borderRadius: 4,
+        barPercentage: 0.55,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#fff', titleColor: '#0F1A14', bodyColor: '#6B7B72', borderColor: '#E5E9E7', borderWidth: 1, cornerRadius: 8, padding: 10, bodyFont: { family: 'Inter', size: 12 }, titleFont: { family: 'Inter', size: 12, weight: 600 },
+          callbacks: { label: ctx => ` ${ctx.raw} activités` }
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { ...tickStyle, font: { size: 10, family: 'Inter' } } },
+        y: { grid: gridStyle, ticks: tickStyle, beginAtZero: true },
+      },
+    },
+  });
+
+  /* ============================================
+     6. FILTRE DÉPARTEMENT PAR RÉGION
+     ============================================ */
+  window.filterDeptByRegion = function (region) {
+    const filtered = region ? DEPARTEMENTS.filter(d => d.region === region) : DEPARTEMENTS;
+    document.getElementById('tbDept').innerHTML = renderActivityRows(filtered, 'dept');
+  };
+
+  /* ============================================
+     6. INTERACTIONS FILTRES
+     ============================================ */
+  window.switchPeriod = function (btn, period) {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    // TODO: recharger les données selon la période sélectionnée
+  };
+
+})();
+</script>
+
+</body>
+</html>

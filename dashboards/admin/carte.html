@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carte mondiale — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Carte mondiale — Styles
+     ============================================ */
+
+  /* Carte */
+  .map-wrapper {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    background: #fff;
+  }
+
+  #map {
+    height: 520px;
+    width: 100%;
+    background: #f8faf8;
+  }
+
+  /* Contrôles superposés */
+  .map-controls {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 800;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .map-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .map-btn:hover {
+    border-color: var(--pastef-green);
+    color: var(--pastef-green);
+  }
+
+  .map-btn.active {
+    background: var(--pastef-green);
+    color: #fff;
+    border-color: var(--pastef-green);
+  }
+
+  .map-btn .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Info panel au survol */
+  .map-info {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 800;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    min-width: 200px;
+    font-size: 12px;
+    transition: opacity 0.2s;
+  }
+
+  .map-info-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .map-info-title .flag {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .map-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--text-muted);
+  }
+
+  .map-info-row span:last-child {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .map-info-bar {
+    height: 3px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .map-info-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* Légende carte */
+  .map-legend {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 800;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .map-legend-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .map-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+  }
+
+  .legend-circle {
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Stats bottom section */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .stat-card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .stat-chart-container {
+    position: relative;
+    width: 130px;
+    height: 130px;
+  }
+
+  .stat-chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .stat-chart-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .stat-chart-unit {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .stat-details {
+    width: 100%;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .stat-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+  }
+
+  .stat-detail-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+  }
+
+  .stat-detail-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .stat-detail-value {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-mini {
+    background: #fff;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .kpi-mini-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--pastef-green);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-mini-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .kpi-mini-trend {
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .kpi-mini-trend.up { color: var(--pastef-green); }
+  .kpi-mini-trend.down { color: var(--pastef-red); }
+
+  /* Zoom Sénégal button */
+  .zoom-senegal-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 800;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--pastef-green);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .zoom-senegal-btn:hover {
+    background: var(--pastef-green-dark);
+  }
+
+  /* Leaflet overrides */
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; border-radius: var(--radius-sm) !important; overflow: hidden; }
+  .leaflet-control-zoom a { width: 30px !important; height: 30px !important; line-height: 30px !important; font-size: 14px !important; color: var(--text) !important; background: rgba(255,255,255,0.92) !important; }
+  .leaflet-control-zoom a:hover { background: var(--pastef-green-soft) !important; color: var(--pastef-green) !important; }
+  .leaflet-control-attribution { font-size: 9px !important; background: rgba(255,255,255,0.7) !important; }
+
+  /* Popup */
+  .leaflet-popup-content-wrapper { border-radius: var(--radius) !important; box-shadow: var(--shadow-md) !important; border: 1px solid var(--border) !important; }
+  .leaflet-popup-content { margin: 12px 16px !important; font-family: var(--font-sans) !important; font-size: 12px !important; }
+  .leaflet-popup-tip { border-top-color: #fff !important; }
+
+  /* Custom marker pulse */
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  .growth-pulse {
+    position: absolute;
+    border-radius: 50%;
+    animation: pulse-ring 2s ease-out infinite;
+    pointer-events: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #map { height: 380px; }
+    .map-controls { flex-wrap: wrap; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .map-info { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement de la carte mondiale…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  /* ============================================
+     1. AUTH + LAYOUT
+     ============================================ */
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'carte');
+  PASTEF.topbar.render({
+    session,
+    title: 'Carte mondiale',
+    breadcrumb: 'Présence des patriotes dans le monde',
+  });
+
+  /* ============================================
+     2. DONNÉES MOCK — Remplacer par Supabase
+     ============================================ */
+
+  // Coordonnées et drapeaux par pays
+  const PAYS_GEO = {
+    'Sénégal':          { lat: 14.50, lng: -14.45, flag: '🇸🇳' },
+    'France':           { lat: 46.60, lng:   2.35, flag: '🇫🇷' },
+    'Italie':           { lat: 41.87, lng:  12.57, flag: '🇮🇹' },
+    'Espagne':          { lat: 40.46, lng:  -3.75, flag: '🇪🇸' },
+    'États-Unis':       { lat: 37.09, lng: -95.71, flag: '🇺🇸' },
+    'Canada':           { lat: 56.13, lng: -106.35, flag: '🇨🇦' },
+    'Belgique':         { lat: 50.50, lng:   4.47, flag: '🇧🇪' },
+    'Allemagne':        { lat: 51.17, lng:  10.45, flag: '🇩🇪' },
+    'Royaume-Uni':      { lat: 55.38, lng:  -3.44, flag: '🇬🇧' },
+    'Suisse':           { lat: 46.82, lng:   8.23, flag: '🇨🇭' },
+    'Maroc':            { lat: 31.79, lng:  -7.09, flag: '🇲🇦' },
+    'Mauritanie':       { lat: 21.01, lng: -10.94, flag: '🇲🇷' },
+    'Mali':             { lat: 17.57, lng:  -4.00, flag: '🇲🇱' },
+    'Côte d\'Ivoire':   { lat:  7.54, lng:  -5.55, flag: '🇨🇮' },
+    'Gambie':           { lat: 13.44, lng: -15.31, flag: '🇬🇲' },
+    'Guinée':           { lat:  9.95, lng: -11.79, flag: '🇬🇳' },
+    'Guinée-Bissau':    { lat: 11.80, lng: -15.18, flag: '🇬🇼' },
+    'Gabon':            { lat: -0.80, lng:  11.61, flag: '🇬🇦' },
+    'Cameroun':         { lat:  7.37, lng:  12.35, flag: '🇨🇲' },
+    'Algérie':          { lat: 28.03, lng:   1.66, flag: '🇩🇿' },
+    'Tunisie':          { lat: 33.89, lng:   9.54, flag: '🇹🇳' },
+    'Turquie':          { lat: 38.96, lng:  35.24, flag: '🇹🇷' },
+    'Arabie Saoudite':  { lat: 23.89, lng:  45.08, flag: '🇸🇦' },
+    'Émirats Arabes Unis': { lat: 23.42, lng: 53.85, flag: '🇦🇪' },
+    'Chine':            { lat: 35.86, lng: 104.20, flag: '🇨🇳' },
+    'Bénin':            { lat:  9.31, lng:   2.32, flag: '🇧🇯' },
+    'Burkina Faso':     { lat: 12.24, lng:  -1.56, flag: '🇧🇫' },
+    'Ghana':            { lat:  7.95, lng:  -1.02, flag: '🇬🇭' },
+    'Niger':            { lat: 17.61, lng:   8.08, flag: '🇳🇪' },
+    'Nigéria':          { lat:  9.08, lng:   8.68, flag: '🇳🇬' },
+    'Cap-Vert':         { lat: 16.00, lng: -24.01, flag: '🇨🇻' },
+    'Portugal':         { lat: 39.40, lng:  -8.22, flag: '🇵🇹' },
+    'Pays-Bas':         { lat: 52.13, lng:   5.29, flag: '🇳🇱' },
+  };
+
+  /*
+   * MOCK: stats par pays
+   * → À remplacer par: SELECT pays, COUNT(*), ... FROM enrolments GROUP BY pays
+   */
+  const MOCK_DATA = {
+    'Sénégal':        { patriotes: 12480, cellules: 48, hommes: 7120, femmes: 5360, age18_25: 3740, age26_35: 4370, age36_50: 2870, age50p: 1500, growth: 12.3 },
+    'France':         { patriotes: 2340, cellules: 14, hommes: 1380, femmes: 960,  age18_25: 620, age26_35: 890,  age36_50: 540,  age50p: 290,  growth: 8.5 },
+    'Italie':         { patriotes: 1820, cellules: 10, hommes: 1150, femmes: 670,  age18_25: 540, age26_35: 680,  age36_50: 380,  age50p: 220,  growth: 5.2 },
+    'Espagne':        { patriotes: 980,  cellules: 6,  hommes: 590,  femmes: 390,  age18_25: 310, age26_35: 340,  age36_50: 210,  age50p: 120,  growth: 3.1 },
+    'États-Unis':     { patriotes: 760,  cellules: 8,  hommes: 420,  femmes: 340,  age18_25: 280, age26_35: 250,  age36_50: 150,  age50p: 80,   growth: 15.6 },
+    'Canada':         { patriotes: 410,  cellules: 6,  hommes: 230,  femmes: 180,  age18_25: 160, age26_35: 130,  age36_50: 80,   age50p: 40,   growth: 11.0 },
+    'Belgique':       { patriotes: 380,  cellules: 4,  hommes: 210,  femmes: 170,  age18_25: 120, age26_35: 130,  age36_50: 80,   age50p: 50,   growth: 2.8 },
+    'Allemagne':      { patriotes: 320,  cellules: 5,  hommes: 190,  femmes: 130,  age18_25: 100, age26_35: 110,  age36_50: 70,   age50p: 40,   growth: 4.5 },
+    'Royaume-Uni':    { patriotes: 280,  cellules: 4,  hommes: 160,  femmes: 120,  age18_25: 90,  age26_35: 90,   age36_50: 60,   age50p: 40,   growth: 6.3 },
+    'Suisse':         { patriotes: 220,  cellules: 4,  hommes: 120,  femmes: 100,  age18_25: 60,  age26_35: 80,   age36_50: 50,   age50p: 30,   growth: 1.9 },
+    'Maroc':          { patriotes: 190,  cellules: 4,  hommes: 110,  femmes: 80,   age18_25: 70,  age26_35: 60,   age36_50: 40,   age50p: 20,   growth: 7.2 },
+    'Mauritanie':     { patriotes: 350,  cellules: 2,  hommes: 210,  femmes: 140,  age18_25: 110, age26_35: 120,  age36_50: 80,   age50p: 40,   growth: 3.8 },
+    'Mali':           { patriotes: 280,  cellules: 2,  hommes: 170,  femmes: 110,  age18_25: 90,  age26_35: 90,   age36_50: 60,   age50p: 40,   growth: 4.1 },
+    'Côte d\'Ivoire': { patriotes: 420,  cellules: 2,  hommes: 250,  femmes: 170,  age18_25: 150, age26_35: 140,  age36_50: 80,   age50p: 50,   growth: 9.3 },
+    'Gambie':         { patriotes: 610,  cellules: 3,  hommes: 360,  femmes: 250,  age18_25: 200, age26_35: 190,  age36_50: 140,  age50p: 80,   growth: 2.5 },
+    'Guinée':         { patriotes: 340,  cellules: 3,  hommes: 200,  femmes: 140,  age18_25: 120, age26_35: 100,  age36_50: 70,   age50p: 50,   growth: 5.7 },
+    'Guinée-Bissau':  { patriotes: 180,  cellules: 2,  hommes: 110,  femmes: 70,   age18_25: 60,  age26_35: 50,   age36_50: 40,   age50p: 30,   growth: 3.4 },
+    'Gabon':          { patriotes: 150,  cellules: 1,  hommes: 90,   femmes: 60,   age18_25: 50,  age26_35: 50,   age36_50: 30,   age50p: 20,   growth: 6.0 },
+    'Cameroun':       { patriotes: 130,  cellules: 1,  hommes: 80,   femmes: 50,   age18_25: 40,  age26_35: 40,   age36_50: 30,   age50p: 20,   growth: 4.8 },
+    'Algérie':        { patriotes: 90,   cellules: 1,  hommes: 55,   femmes: 35,   age18_25: 30,  age26_35: 30,   age36_50: 20,   age50p: 10,   growth: 2.1 },
+    'Tunisie':        { patriotes: 75,   cellules: 1,  hommes: 45,   femmes: 30,   age18_25: 25,  age26_35: 25,   age36_50: 15,   age50p: 10,   growth: 1.5 },
+    'Turquie':        { patriotes: 60,   cellules: 1,  hommes: 35,   femmes: 25,   age18_25: 20,  age26_35: 20,   age36_50: 12,   age50p: 8,    growth: 3.2 },
+    'Arabie Saoudite': { patriotes: 85,  cellules: 1,  hommes: 60,   femmes: 25,   age18_25: 25,  age26_35: 30,   age36_50: 20,   age50p: 10,   growth: 4.0 },
+    'Émirats Arabes Unis': { patriotes: 70, cellules: 1, hommes: 45, femmes: 25, age18_25: 20, age26_35: 25, age36_50: 15, age50p: 10, growth: 5.5 },
+    'Bénin':          { patriotes: 95,   cellules: 1,  hommes: 55,   femmes: 40,   age18_25: 30,  age26_35: 30,   age36_50: 20,   age50p: 15,   growth: 2.0 },
+    'Burkina Faso':   { patriotes: 110,  cellules: 1,  hommes: 65,   femmes: 45,   age18_25: 40,  age26_35: 35,   age36_50: 20,   age50p: 15,   growth: 3.5 },
+    'Ghana':          { patriotes: 80,   cellules: 1,  hommes: 50,   femmes: 30,   age18_25: 25,  age26_35: 25,   age36_50: 18,   age50p: 12,   growth: 2.8 },
+    'Niger':          { patriotes: 50,   cellules: 1,  hommes: 30,   femmes: 20,   age18_25: 18,  age26_35: 15,   age36_50: 10,   age50p: 7,    growth: 1.0 },
+    'Nigéria':        { patriotes: 65,   cellules: 1,  hommes: 40,   femmes: 25,   age18_25: 20,  age26_35: 20,   age36_50: 15,   age50p: 10,   growth: 2.3 },
+    'Cap-Vert':       { patriotes: 40,   cellules: 1,  hommes: 22,   femmes: 18,   age18_25: 12,  age26_35: 12,   age36_50: 10,   age50p: 6,    growth: 1.2 },
+    'Portugal':       { patriotes: 120,  cellules: 1,  hommes: 70,   femmes: 50,   age18_25: 40,  age26_35: 40,   age36_50: 25,   age50p: 15,   growth: 3.0 },
+    'Pays-Bas':       { patriotes: 140,  cellules: 1,  hommes: 80,   femmes: 60,   age18_25: 45,  age26_35: 45,   age36_50: 30,   age50p: 20,   growth: 2.6 },
+    'Chine':          { patriotes: 35,   cellules: 1,  hommes: 20,   femmes: 15,   age18_25: 15,  age26_35: 10,   age36_50: 6,    age50p: 4,    growth: 8.0 },
+  };
+
+  // GeoJSON des pays (frontières officielles Natural Earth)
+  let COUNTRIES_GEOJSON = null;
+  try {
+    const resp = await fetch('../../js/countries-pastef.json');
+    COUNTRIES_GEOJSON = await resp.json();
+  } catch (e) {
+    console.warn('Impossible de charger countries-pastef.json', e);
+  }
+
+  /* ============================================
+     3. AGRÉGATION DES STATS GLOBALES
+     ============================================ */
+  const allEntries = Object.entries(MOCK_DATA);
+  const diasporaEntries = allEntries.filter(([k]) => k !== 'Sénégal');
+
+  const GLOBAL = {
+    totalPatriotes: allEntries.reduce((s, [, v]) => s + v.patriotes, 0),
+    totalCellules: allEntries.reduce((s, [, v]) => s + v.cellules, 0),
+    totalPays: allEntries.length,
+    totalDiaspora: diasporaEntries.reduce((s, [, v]) => s + v.patriotes, 0),
+
+    totalHommes: allEntries.reduce((s, [, v]) => s + v.hommes, 0),
+    totalFemmes: allEntries.reduce((s, [, v]) => s + v.femmes, 0),
+
+    total18_25: allEntries.reduce((s, [, v]) => s + v.age18_25, 0),
+    total26_35: allEntries.reduce((s, [, v]) => s + v.age26_35, 0),
+    total36_50: allEntries.reduce((s, [, v]) => s + v.age36_50, 0),
+    total50p:   allEntries.reduce((s, [, v]) => s + v.age50p, 0),
+
+    avgGrowth: Math.round(allEntries.reduce((s, [, v]) => s + v.growth, 0) / allEntries.length * 10) / 10,
+  };
+
+  GLOBAL.avgAge = Math.round(
+    (GLOBAL.total18_25 * 21.5 + GLOBAL.total26_35 * 30.5 + GLOBAL.total36_50 * 43 + GLOBAL.total50p * 58) /
+    GLOBAL.totalPatriotes
+  );
+
+  GLOBAL.youthPercent = Math.round((GLOBAL.total18_25 + GLOBAL.total26_35) / GLOBAL.totalPatriotes * 100);
+
+  /* ============================================
+     4. RENDER PAGE
+     ============================================ */
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi-mini">
+        <div class="kpi-mini-value">${GLOBAL.totalPatriotes.toLocaleString('fr-FR')}</div>
+        <div class="kpi-mini-label">Patriotes total</div>
+      </div>
+      <div class="kpi-mini">
+        <div class="kpi-mini-value">${GLOBAL.totalPays}</div>
+        <div class="kpi-mini-label">Pays couverts</div>
+      </div>
+      <div class="kpi-mini">
+        <div class="kpi-mini-value">${GLOBAL.totalCellules}</div>
+        <div class="kpi-mini-label">Cellules actives</div>
+      </div>
+      <div class="kpi-mini">
+        <div class="kpi-mini-value">${GLOBAL.totalDiaspora.toLocaleString('fr-FR')}</div>
+        <div class="kpi-mini-label">Diaspora</div>
+        <div class="kpi-mini-trend up">+${GLOBAL.avgGrowth}% ce mois</div>
+      </div>
+    </div>
+
+    <!-- Carte -->
+    <div class="map-wrapper">
+      <div class="map-controls">
+        <button class="map-btn active" data-layer="patriotes" onclick="toggleLayer('patriotes', this)">
+          <span class="dot" style="background:#1B7C3D"></span>Patriotes
+        </button>
+        <button class="map-btn active" data-layer="cellules" onclick="toggleLayer('cellules', this)">
+          <span class="dot" style="background:#D4900A"></span>Cellules
+        </button>
+        <button class="map-btn" data-layer="jeunesse" onclick="toggleLayer('jeunesse', this)">
+          <span class="dot" style="background:#2E9B52"></span>Jeunesse
+        </button>
+        <button class="map-btn" data-layer="croissance" onclick="toggleLayer('croissance', this)">
+          <span class="dot" style="background:#135A2C"></span>Croissance
+        </button>
+      </div>
+
+      <button class="zoom-senegal-btn" onclick="zoomSenegal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Sénégal
+      </button>
+
+      <div id="map"></div>
+
+      <div class="map-info" id="mapInfo" style="opacity:0;">
+        <div class="map-info-title" id="infoTitle">—</div>
+        <div id="infoBody"></div>
+      </div>
+
+      <div class="map-legend">
+        <div class="map-legend-title">Densité par pays</div>
+        <div class="map-legend-item">
+          <span class="legend-circle" style="width:12px;height:8px;border-radius:2px;background:rgba(19,90,44,0.30)"></span>
+          <span>&gt; 5 000</span>
+        </div>
+        <div class="map-legend-item">
+          <span class="legend-circle" style="width:12px;height:8px;border-radius:2px;background:rgba(27,124,61,0.22)"></span>
+          <span>1 000 – 5 000</span>
+        </div>
+        <div class="map-legend-item">
+          <span class="legend-circle" style="width:12px;height:8px;border-radius:2px;background:rgba(46,155,82,0.18)"></span>
+          <span>500 – 1 000</span>
+        </div>
+        <div class="map-legend-item">
+          <span class="legend-circle" style="width:12px;height:8px;border-radius:2px;background:rgba(107,123,114,0.10)"></span>
+          <span>&lt; 500</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats démographiques -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-label">Répartition par genre</div>
+        <div class="stat-chart-container">
+          <canvas id="chartGenre"></canvas>
+          <div class="stat-chart-center">
+            <div class="stat-chart-value">${Math.round(GLOBAL.totalHommes / GLOBAL.totalPatriotes * 100)}%</div>
+            <div class="stat-chart-unit">hommes</div>
+          </div>
+        </div>
+        <div class="stat-details">
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#1B7C3D"></span>Hommes</span>
+            <span class="stat-detail-value">${GLOBAL.totalHommes.toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#9CA8A2"></span>Femmes</span>
+            <span class="stat-detail-value">${GLOBAL.totalFemmes.toLocaleString('fr-FR')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Tranches d'âge</div>
+        <div class="stat-chart-container">
+          <canvas id="chartAge"></canvas>
+          <div class="stat-chart-center">
+            <div class="stat-chart-value">${GLOBAL.avgAge}</div>
+            <div class="stat-chart-unit">âge moyen</div>
+          </div>
+        </div>
+        <div class="stat-details">
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#2E9B52"></span>18 – 25 ans</span>
+            <span class="stat-detail-value">${GLOBAL.total18_25.toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#1B7C3D"></span>26 – 35 ans</span>
+            <span class="stat-detail-value">${GLOBAL.total26_35.toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#135A2C"></span>36 – 50 ans</span>
+            <span class="stat-detail-value">${GLOBAL.total36_50.toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#9CA8A2"></span>50+ ans</span>
+            <span class="stat-detail-value">${GLOBAL.total50p.toLocaleString('fr-FR')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-label">Part de la jeunesse</div>
+        <div class="stat-chart-container">
+          <canvas id="chartYouth"></canvas>
+          <div class="stat-chart-center">
+            <div class="stat-chart-value">${GLOBAL.youthPercent}%</div>
+            <div class="stat-chart-unit">18 – 35 ans</div>
+          </div>
+        </div>
+        <div class="stat-details">
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#1B7C3D"></span>Jeunes (18-35)</span>
+            <span class="stat-detail-value">${(GLOBAL.total18_25 + GLOBAL.total26_35).toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="stat-detail-row">
+            <span class="stat-detail-label"><span class="stat-detail-dot" style="background:#E5E9E7"></span>Seniors (36+)</span>
+            <span class="stat-detail-value">${(GLOBAL.total36_50 + GLOBAL.total50p).toLocaleString('fr-FR')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  /* ============================================
+     5. INITIALISER LA CARTE LEAFLET
+     ============================================ */
+  const map = L.map('map', {
+    center: [20, 0],
+    zoom: 2,
+    minZoom: 2,
+    maxZoom: 10,
+    zoomControl: true,
+    scrollWheelZoom: true,
+    attributionControl: true,
+  });
+
+  // Tuiles CartoDB Positron (grayscale, léger)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/">OSM</a> · <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  /* --- Pays colorés par nombre de patriotes --- */
+  function getCountryColor(nameFr) {
+    const d = MOCK_DATA[nameFr];
+    if (!d) return null;
+    const p = d.patriotes;
+    if (p > 5000)  return { fill: '#135A2C', opacity: 0.30 };
+    if (p > 1000)  return { fill: '#1B7C3D', opacity: 0.22 };
+    if (p > 500)   return { fill: '#2E9B52', opacity: 0.18 };
+    if (p > 200)   return { fill: '#2E9B52', opacity: 0.12 };
+    if (p > 50)    return { fill: '#6B7B72', opacity: 0.10 };
+    return { fill: '#9CA8A2', opacity: 0.08 };
+  }
+
+  let senegalBounds = null;
+
+  const countriesLayer = COUNTRIES_GEOJSON ? L.geoJSON(COUNTRIES_GEOJSON, {
+    style: function (feature) {
+      const nameFr = feature.properties.nameFr;
+      const isSenegal = feature.properties.iso === 'SEN';
+      const c = getCountryColor(nameFr);
+
+      if (isSenegal) {
+        return {
+          color: '#135A2C',
+          weight: 3,
+          fillColor: '#1B7C3D',
+          fillOpacity: 0.12,
+          dashArray: null,
+        };
+      }
+
+      return {
+        color: c ? '#1B7C3D' : '#9CA8A2',
+        weight: c ? 1.2 : 0.5,
+        fillColor: c ? c.fill : 'transparent',
+        fillOpacity: c ? c.opacity : 0,
+        dashArray: null,
+      };
+    },
+    onEachFeature: function (feature, layer) {
+      const nameFr = feature.properties.nameFr;
+      const d = MOCK_DATA[nameFr];
+      const geo = PAYS_GEO[nameFr];
+
+      if (feature.properties.iso === 'SEN') {
+        senegalBounds = layer.getBounds();
+      }
+
+      if (d && geo) {
+        const yPct = Math.round((d.age18_25 + d.age26_35) / d.patriotes * 100);
+        const hPct = Math.round(d.hommes / d.patriotes * 100);
+
+        layer.bindPopup(`
+          <div style="font-family:Inter,sans-serif;min-width:180px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="font-size:18px;">${geo.flag}</span> ${nameFr}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;">
+              <span style="color:#6B7B72;">Patriotes</span><span style="font-weight:600;text-align:right;">${d.patriotes.toLocaleString('fr-FR')}</span>
+              <span style="color:#6B7B72;">Cellules</span><span style="font-weight:600;text-align:right;">${d.cellules}</span>
+              <span style="color:#6B7B72;">Hommes</span><span style="font-weight:600;text-align:right;">${hPct}%</span>
+              <span style="color:#6B7B72;">Jeunes</span><span style="font-weight:600;text-align:right;">${yPct}%</span>
+              <span style="color:#6B7B72;">Croissance</span><span style="font-weight:600;text-align:right;color:#1B7C3D;">+${d.growth}%</span>
+            </div>
+          </div>
+        `, { closeButton: false });
+
+        layer.on('mouseover', function (e) {
+          if (feature.properties.iso !== 'SEN') {
+            this.setStyle({ weight: 2, fillOpacity: 0.3 });
+          }
+          showInfo(nameFr, d, geo);
+        });
+
+        layer.on('mouseout', function (e) {
+          countriesLayer.resetStyle(this);
+          hideInfo();
+        });
+      }
+    },
+  }).addTo(map) : null;
+
+  /* --- Layers groupés --- */
+  const layers = {
+    patriotes: L.layerGroup().addTo(map),
+    cellules: L.layerGroup().addTo(map),
+    jeunesse: L.layerGroup(),
+    croissance: L.layerGroup(),
+  };
+
+  /* --- Créer les marqueurs --- */
+  const maxPat = Math.max(...Object.values(MOCK_DATA).map(d => d.patriotes));
+
+  Object.entries(MOCK_DATA).forEach(([pays, data]) => {
+    const geo = PAYS_GEO[pays];
+    if (!geo) return;
+
+    const isSenegal = pays === 'Sénégal';
+
+    // Rayon proportionnel
+    const radius = Math.max(6, Math.sqrt(data.patriotes / maxPat) * 35);
+
+    // --- Couche Patriotes : cercles proportionnels ---
+    const patrioteCircle = L.circleMarker([geo.lat, geo.lng], {
+      radius: radius,
+      fillColor: isSenegal ? '#1B7C3D' : '#2E9B52',
+      color: isSenegal ? '#135A2C' : '#1B7C3D',
+      weight: isSenegal ? 2 : 1,
+      opacity: 0.8,
+      fillOpacity: isSenegal ? 0.45 : 0.35,
+    });
+
+    const youthPct = Math.round((data.age18_25 + data.age26_35) / data.patriotes * 100);
+    const hPct = Math.round(data.hommes / data.patriotes * 100);
+
+    patrioteCircle.bindPopup(`
+      <div style="font-family:Inter,sans-serif;min-width:180px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:18px;">${geo.flag}</span> ${pays}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;">
+          <span style="color:#6B7B72;">Patriotes</span><span style="font-weight:600;text-align:right;">${data.patriotes.toLocaleString('fr-FR')}</span>
+          <span style="color:#6B7B72;">Cellules</span><span style="font-weight:600;text-align:right;">${data.cellules}</span>
+          <span style="color:#6B7B72;">Hommes</span><span style="font-weight:600;text-align:right;">${hPct}%</span>
+          <span style="color:#6B7B72;">Jeunes</span><span style="font-weight:600;text-align:right;">${youthPct}%</span>
+          <span style="color:#6B7B72;">Croissance</span><span style="font-weight:600;text-align:right;color:#1B7C3D;">+${data.growth}%</span>
+        </div>
+      </div>
+    `, { closeButton: false, className: 'pastef-popup' });
+
+    patrioteCircle.on('mouseover', () => showInfo(pays, data, geo));
+    patrioteCircle.on('mouseout', hideInfo);
+
+    layers.patriotes.addLayer(patrioteCircle);
+
+    // --- Couche Cellules : petits losanges dorés ---
+    if (data.cellules > 0 && !isSenegal) {
+      const cellIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:${Math.min(8 + data.cellules, 18)}px;
+          height:${Math.min(8 + data.cellules, 18)}px;
+          background:#D4900A;
+          border:1.5px solid #fff;
+          border-radius:3px;
+          transform:rotate(45deg);
+          opacity:0.85;
+          box-shadow:0 1px 3px rgba(0,0,0,0.15);
+        "></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      const cellMarker = L.marker([geo.lat + 0.8, geo.lng + 0.8], { icon: cellIcon });
+      cellMarker.bindPopup(`
+        <div style="font-family:Inter,sans-serif;font-size:12px;">
+          <strong>${geo.flag} ${pays}</strong><br/>
+          ${data.cellules} cellule${data.cellules > 1 ? 's' : ''} active${data.cellules > 1 ? 's' : ''}
+        </div>
+      `, { closeButton: false });
+      layers.cellules.addLayer(cellMarker);
+    }
+
+    // --- Couche Jeunesse : halo vert pour zones à forte jeunesse ---
+    if (youthPct >= 60) {
+      const youthHalo = L.circleMarker([geo.lat, geo.lng], {
+        radius: radius + 10,
+        fillColor: '#2E9B52',
+        color: '#2E9B52',
+        weight: 1.5,
+        opacity: 0.3,
+        fillOpacity: 0.08,
+        dashArray: '4 4',
+      });
+      layers.jeunesse.addLayer(youthHalo);
+    }
+
+    // --- Couche Croissance : pulse pour zones en forte croissance ---
+    if (data.growth >= 8) {
+      const growthIcon = L.divIcon({
+        className: '',
+        html: `
+          <div style="position:relative;width:20px;height:20px;">
+            <div class="growth-pulse" style="width:20px;height:20px;background:rgba(27,124,61,0.25);top:0;left:0;"></div>
+            <div style="position:absolute;top:6px;left:6px;width:8px;height:8px;background:#135A2C;border-radius:50;border:1.5px solid #fff;border-radius:50%;"></div>
+          </div>
+        `,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+      layers.croissance.addLayer(L.marker([geo.lat - 1, geo.lng - 1], { icon: growthIcon }));
+    }
+  });
+
+  /* ============================================
+     6. INFO PANEL AU SURVOL
+     ============================================ */
+  const infoEl = document.getElementById('mapInfo');
+  const infoTitle = document.getElementById('infoTitle');
+  const infoBody = document.getElementById('infoBody');
+
+  function showInfo(pays, data, geo) {
+    const youthPct = Math.round((data.age18_25 + data.age26_35) / data.patriotes * 100);
+    const hPct = Math.round(data.hommes / data.patriotes * 100);
+    const fPct = 100 - hPct;
+
+    infoTitle.innerHTML = `<span class="flag">${geo.flag}</span> ${pays}`;
+    infoBody.innerHTML = `
+      <div class="map-info-row"><span>Patriotes</span><span>${data.patriotes.toLocaleString('fr-FR')}</span></div>
+      <div class="map-info-row"><span>Cellules</span><span>${data.cellules}</span></div>
+      <div class="map-info-row"><span>Hommes / Femmes</span><span>${hPct}% / ${fPct}%</span></div>
+      <div class="map-info-row"><span>Jeunesse (18-35)</span><span>${youthPct}%</span></div>
+      <div class="map-info-row"><span>Croissance</span><span style="color:#1B7C3D;">+${data.growth}%</span></div>
+      <div class="map-info-bar">
+        <div class="map-info-bar-fill" style="width:${hPct}%;background:linear-gradient(90deg,#1B7C3D ${hPct}%,#9CA8A2 ${hPct}%)"></div>
+      </div>
+    `;
+    infoEl.style.opacity = '1';
+  }
+
+  function hideInfo() {
+    infoEl.style.opacity = '0';
+  }
+
+  /* ============================================
+     7. TOGGLE LAYERS + ZOOM SÉNÉGAL
+     ============================================ */
+  window.toggleLayer = function (name, btn) {
+    btn.classList.toggle('active');
+    if (map.hasLayer(layers[name])) {
+      map.removeLayer(layers[name]);
+    } else {
+      map.addLayer(layers[name]);
+    }
+  };
+
+  window.zoomSenegal = function () {
+    if (senegalBounds) {
+      map.fitBounds(senegalBounds, { padding: [40, 40], maxZoom: 7 });
+    } else {
+      map.setView([14.5, -14.5], 7);
+    }
+  };
+
+  /* ============================================
+     8. CHARTS DÉMOGRAPHIQUES
+     ============================================ */
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#fff',
+        titleColor: '#0F1A14',
+        bodyColor: '#6B7B72',
+        borderColor: '#E5E9E7',
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 10,
+        bodyFont: { family: 'Inter', size: 12 },
+        titleFont: { family: 'Inter', size: 12, weight: 600 },
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.raw.toLocaleString('fr-FR')}`
+        }
+      },
+    },
+    cutout: '72%',
+    animation: { animateRotate: true, duration: 800 },
+  };
+
+  // Genre
+  new Chart(document.getElementById('chartGenre'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Hommes', 'Femmes'],
+      datasets: [{
+        data: [GLOBAL.totalHommes, GLOBAL.totalFemmes],
+        backgroundColor: ['#1B7C3D', '#9CA8A2'],
+        borderWidth: 0,
+        spacing: 2,
+        borderRadius: 3,
+      }],
+    },
+    options: chartDefaults,
+  });
+
+  // Âge
+  new Chart(document.getElementById('chartAge'), {
+    type: 'doughnut',
+    data: {
+      labels: ['18-25 ans', '26-35 ans', '36-50 ans', '50+ ans'],
+      datasets: [{
+        data: [GLOBAL.total18_25, GLOBAL.total26_35, GLOBAL.total36_50, GLOBAL.total50p],
+        backgroundColor: ['#2E9B52', '#1B7C3D', '#135A2C', '#9CA8A2'],
+        borderWidth: 0,
+        spacing: 2,
+        borderRadius: 3,
+      }],
+    },
+    options: chartDefaults,
+  });
+
+  // Jeunesse
+  new Chart(document.getElementById('chartYouth'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Jeunes (18-35)', 'Seniors (36+)'],
+      datasets: [{
+        data: [GLOBAL.total18_25 + GLOBAL.total26_35, GLOBAL.total36_50 + GLOBAL.total50p],
+        backgroundColor: ['#1B7C3D', '#E5E9E7'],
+        borderWidth: 0,
+        spacing: 2,
+        borderRadius: 3,
+      }],
+    },
+    options: chartDefaults,
+  });
+
+})();
+</script>
+
+</body>
+</html>

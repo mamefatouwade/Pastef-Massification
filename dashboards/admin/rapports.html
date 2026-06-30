@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rapports Mensuels — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Rapports Mensuels — Styles spécifiques
+     ============================================ */
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; }
+  .kpi-green::before { background: var(--pastef-green); }
+  .kpi-or::before    { background: var(--pastef-or); }
+  .kpi-red::before   { background: var(--pastef-red); }
+  .kpi-ink::before   { background: var(--ink); }
+  .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -0.5px; }
+  .kpi-sub   { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Header actions */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 38px;
+    min-width: 240px;
+  }
+
+  .search-box svg { flex-shrink: 0; color: var(--text-muted); }
+
+  .search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text);
+    width: 100%;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--pastef-green);
+    box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
+  }
+
+  .filter-select {
+    height: 38px;
+    padding: 0 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7B72' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 30px;
+  }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--pastef-green);
+    box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
+  }
+
+  /* Bouton créer rapport */
+  .btn-rapport {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 16px;
+    background: var(--pastef-green);
+    color: #fff;
+    border: 2px solid var(--pastef-green-dark);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-rapport:hover {
+    background: var(--pastef-green-dark);
+    border-color: var(--pastef-green-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(27,124,61,0.2);
+  }
+
+  .btn-rapport:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(27,124,61,0.1);
+  }
+
+  /* Table rapports */
+  .rapport-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .rapport-table thead tr { border-bottom: 1px solid var(--border); background: var(--bg-soft); }
+  .rapport-table th { padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .rapport-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+  .rapport-table tr:last-child td { border-bottom: none; }
+  .rapport-table tr:hover td { background: var(--bg-soft); }
+
+  .rapport-coordinateur { font-weight: 600; color: var(--ink); }
+  .rapport-affectation { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .rapport-periode { font-weight: 500; color: var(--ink); }
+  .rapport-periode-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .rapport-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .avatar-green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .avatar-or    { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .avatar-ink   { background: var(--bg); color: var(--text-muted); }
+
+  .rapport-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-green  { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .badge-or     { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .badge-red    { background: var(--pastef-red-soft); color: var(--pastef-red); }
+  .badge-yellow { background: rgba(253,185,19,0.15); color: #D97706; }
+  .badge-neutral { background: var(--bg); color: var(--text-muted); }
+
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .rapport-actions { display: flex; gap: 4px; }
+  .rapport-actions button {
+    width: 30px; height: 30px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.15s; border: none; background: transparent; cursor: pointer;
+  }
+  .rapport-actions button:hover { background: var(--bg); color: var(--pastef-green); }
+  .rapport-actions button.danger:hover { color: var(--pastef-red); }
+
+  .date-envoi { font-size: 11px; color: var(--text-muted); }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(15,26,20,0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.15s; border: none; background: transparent; cursor: pointer;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--ink); }
+
+  .modal-body { padding: 20px 24px; }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* Rapport detail */
+  .rapport-detail-section {
+    margin-bottom: 24px;
+  }
+
+  .rapport-detail-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .rapport-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 14px;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+  }
+
+  .meta-item { font-size: 12px; }
+  .meta-label { font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .meta-value { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  .rapport-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 12px;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 800; color: var(--pastef-green); }
+
+  .rapport-content {
+    padding: 14px;
+    background: var(--bg-soft);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .btn {
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--pastef-green);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: var(--pastef-green-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--bg-soft);
+    border-color: var(--text-muted);
+  }
+
+  .btn-danger {
+    background: var(--pastef-red-soft);
+    color: var(--pastef-red);
+  }
+
+  .btn-danger:hover {
+    background: var(--pastef-red);
+    color: #fff;
+  }
+
+  .btn-sm {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  /* Empty state */
+  .empty-search {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .modal { max-width: 100%; margin: 10px; }
+    .search-box { min-width: 160px; }
+    .page-header { flex-direction: column; align-items: stretch; }
+    .rapport-meta { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+    .rapport-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="page-loader"><div class="spinner"></div>Chargement des rapports…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal consultation rapport -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Rapport mensuel</div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Modal création rapport -->
+<div class="modal-overlay" id="modalRapportOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalRapportTitle">Créer mon rapport mensuel</div>
+      <button class="modal-close" onclick="closeRapportModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalRapportBody"></div>
+    <div class="modal-footer" id="modalRapportFooter"></div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../js/data.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'rapports');
+  PASTEF.topbar.render({ session, title: 'Rapports Mensuels', breadcrumb: 'Rapports reçus des coordinateurs' });
+
+  /* ============================================
+     DONNÉES MOCK
+     ============================================ */
+  const RAPPORTS = [
+    {
+      id: 'r1',
+      coordinateur_id: 'c1',
+      coordinateur_nom: 'Abdoulaye Diallo',
+      coordinateur_prenom: 'Abdoulaye',
+      role: 'departemental',
+      affectation: 'Dakar',
+      region: 'Dakar',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-30',
+      statut: 'reçu',
+      nb_activites: 12,
+      nb_patriotes_nouveaux: 34,
+      nb_patriotes_total: 287,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport d\'activités pour le département de Dakar. 12 activités menées en juin avec un taux de participation de 85%. 34 nouveaux inscrits enregistrés.'
+    },
+    {
+      id: 'r2',
+      coordinateur_id: 'c2',
+      coordinateur_nom: 'Fatou Ndiaye',
+      coordinateur_prenom: 'Fatou',
+      role: 'departemental',
+      affectation: 'Thiès',
+      region: 'Thiès',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-28',
+      statut: 'validé',
+      nb_activites: 8,
+      nb_patriotes_nouveaux: 18,
+      nb_patriotes_total: 156,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport mensuel Thiès. Activités centrées sur les quartiers de Thiès Ville et Mbour. Bonnes synergies avec les coordinateurs communaux.'
+    },
+    {
+      id: 'r3',
+      coordinateur_id: 'c3',
+      coordinateur_nom: 'Moussa Sow',
+      coordinateur_prenom: 'Moussa',
+      role: 'departemental',
+      affectation: 'Saint-Louis',
+      region: 'Saint-Louis',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: null,
+      statut: 'en_attente',
+      nb_activites: 0,
+      nb_patriotes_nouveaux: 0,
+      nb_patriotes_total: 89,
+      file_url: null,
+      file_type: null,
+      contenu: null
+    },
+    {
+      id: 'r4',
+      coordinateur_id: 'c4',
+      coordinateur_nom: 'Aïssatou Ba',
+      coordinateur_prenom: 'Aïssatou',
+      role: 'communal',
+      affectation: 'Médina',
+      region: 'Dakar',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-29',
+      statut: 'reçu',
+      nb_activites: 4,
+      nb_patriotes_nouveaux: 12,
+      nb_patriotes_total: 67,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport de Médina. 4 réunions de cellule tenues en juin. Très bonne mobilisation. Audit de 12 nouveaux patriotes validés.'
+    },
+    {
+      id: 'r5',
+      coordinateur_id: 'c5',
+      coordinateur_nom: 'Ibrahima Fall',
+      coordinateur_prenom: 'Ibrahima',
+      role: 'communal',
+      affectation: 'Parcelles Assainies',
+      region: 'Dakar',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-27',
+      statut: 'reçu',
+      nb_activites: 5,
+      nb_patriotes_nouveaux: 8,
+      nb_patriotes_total: 45,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport Parcelles Assainies. Difficultés de mobilisation en fin de mois. Nécessité d\'une sensibilisation plus active.'
+    },
+    {
+      id: 'r6',
+      coordinateur_id: 'c6',
+      coordinateur_nom: 'Mariama Diop',
+      coordinateur_prenom: 'Mariama',
+      role: 'communal',
+      affectation: 'Pikine Nord',
+      region: 'Dakar',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-15',
+      statut: 'probleme',
+      nb_activites: 2,
+      nb_patriotes_nouveaux: 2,
+      nb_patriotes_total: 34,
+      file_url: '#',
+      file_type: 'excel',
+      contenu: 'Coordinateur inactif depuis mai. Rapport incomplet. Recommandé pour révision.'
+    },
+    {
+      id: 'r7',
+      coordinateur_id: 'c7',
+      coordinateur_nom: 'Ousmane Sarr',
+      coordinateur_prenom: 'Ousmane',
+      role: 'diaspora',
+      affectation: 'Paris',
+      region: 'France',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-29',
+      statut: 'reçu',
+      nb_activites: 3,
+      nb_patriotes_nouveaux: 6,
+      nb_patriotes_total: 42,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport Cellule Paris. Réunion mensuelle le 22 juin avec 28 présents. Dynamique positive. Collecte de fonds pour campagne.'
+    },
+    {
+      id: 'r8',
+      coordinateur_id: 'c8',
+      coordinateur_nom: 'Aminata Touré',
+      coordinateur_prenom: 'Aminata',
+      role: 'diaspora',
+      affectation: 'Milan',
+      region: 'Italie',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: '2026-06-30',
+      statut: 'validé',
+      nb_activites: 2,
+      nb_patriotes_nouveaux: 3,
+      nb_patriotes_total: 18,
+      file_url: '#',
+      file_type: 'pdf',
+      contenu: 'Rapport Milan. Petit groupe mais très actif. Liaison bien établie avec siège.'
+    },
+    {
+      id: 'r9',
+      coordinateur_id: 'c9',
+      coordinateur_nom: 'Cheikh Mbaye',
+      coordinateur_prenom: 'Cheikh',
+      role: 'diaspora',
+      affectation: 'New York',
+      region: 'États-Unis',
+      mois: '2026-06',
+      periode: 'Juin 2026',
+      date_envoi: null,
+      statut: 'en_attente',
+      nb_activites: 0,
+      nb_patriotes_nouveaux: 0,
+      nb_patriotes_total: 55,
+      file_url: null,
+      file_type: null,
+      contenu: null
+    },
+  ];
+
+  /* ============================================
+     STATS
+     ============================================ */
+  const stats = {
+    total: RAPPORTS.length,
+    reçus: RAPPORTS.filter(r => r.statut === 'reçu').length,
+    validés: RAPPORTS.filter(r => r.statut === 'validé').length,
+    en_attente: RAPPORTS.filter(r => r.statut === 'en_attente').length,
+    problèmes: RAPPORTS.filter(r => r.statut === 'probleme').length,
+  };
+
+  const totalActivites = RAPPORTS.reduce((sum, r) => sum + r.nb_activites, 0);
+  const totalNouveaux = RAPPORTS.reduce((sum, r) => sum + r.nb_patriotes_nouveaux, 0);
+
+  /* ============================================
+     RENDER PAGE
+     ============================================ */
+  function roleLabel(role) {
+    return { departemental: 'Départemental', communal: 'Communal', diaspora: 'Diaspora' }[role] || role;
+  }
+
+  function roleBadge(role) {
+    const cls = { departemental: 'badge-green', communal: 'badge-or', diaspora: 'badge-neutral' }[role] || 'badge-neutral';
+    return `<span class="badge ${cls}">${roleLabel(role)}</span>`;
+  }
+
+  function avatarCls(role) {
+    return { departemental: 'avatar-green', communal: 'avatar-or', diaspora: 'avatar-ink' }[role] || 'avatar-ink';
+  }
+
+  function statutBadge(statut) {
+    const mapping = {
+      'reçu': { cls: 'badge-green', label: 'Reçu' },
+      'validé': { cls: 'badge-green', label: 'Validé' },
+      'en_attente': { cls: 'badge-yellow', label: 'En attente' },
+      'probleme': { cls: 'badge-red', label: 'Problème' }
+    };
+    const m = mapping[statut] || { cls: 'badge-neutral', label: statut };
+    return `<span class="badge ${m.cls}"><span class="badge-dot"></span>${m.label}</span>`;
+  }
+
+  function dateFormat(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' });
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff === 0) return "Aujourd'hui";
+    if (diff === 1) return 'Hier';
+    if (diff < 7) return `Il y a ${diff}j`;
+    return dateFormat(dateStr);
+  }
+
+  function renderTable(data) {
+    return data.map(r => `
+      <tr data-id="${r.id}">
+        <td>
+          <div class="rapport-cell">
+            <div class="rapport-avatar ${avatarCls(r.role)}">${r.coordinateur_prenom[0]}${r.coordinateur_nom[0]}</div>
+            <div>
+              <div class="rapport-coordinateur">${r.coordinateur_nom}</div>
+              <div class="rapport-affectation">${r.affectation}</div>
+            </div>
+          </div>
+        </td>
+        <td>${roleBadge(r.role)}</td>
+        <td>
+          <div class="rapport-periode">${r.periode}</div>
+          <div class="rapport-periode-sub">${dateFormat(r.date_envoi)}</div>
+        </td>
+        <td>${statutBadge(r.statut)}</td>
+        <td style="text-align:center;">
+          <div style="font-weight:700;color:var(--pastef-green);">${r.nb_activites}</div>
+          <div class="date-envoi">activités</div>
+        </td>
+        <td style="text-align:center;">
+          <div style="font-weight:700;color:var(--pastef-or);">${r.nb_patriotes_nouveaux}</div>
+          <div class="date-envoi">nouveaux</div>
+        </td>
+        <td>
+          <div class="rapport-actions">
+            <button title="Consulter" onclick="openRapport('${r.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            ${r.file_url ? `<button title="Télécharger" onclick="downloadRapport('${r.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>` : ''}
+            ${r.statut === 'reçu' ? `<button title="Valider" onclick="validerRapport('${r.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>` : ''}
+            ${r.statut === 'en_attente' ? `<button title="Relancer" onclick="relancerRapport('${r.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="kpi-strip">
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Total rapports (juin)</div>
+        <div class="kpi-value">${stats.total}</div>
+        <div class="kpi-sub">${stats.reçus + stats.validés} traités · ${stats.en_attente} en attente</div>
+      </div>
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Reçus & validés</div>
+        <div class="kpi-value">${stats.reçus + stats.validés}</div>
+        <div class="kpi-sub">${Math.round((stats.reçus + stats.validés) / stats.total * 100)}% du total</div>
+      </div>
+      <div class="kpi kpi-or">
+        <div class="kpi-label">En attente</div>
+        <div class="kpi-value">${stats.en_attente}</div>
+      </div>
+      <div class="kpi kpi-red">
+        <div class="kpi-label">Problèmes</div>
+        <div class="kpi-value">${stats.problèmes}</div>
+      </div>
+      <div class="kpi kpi-ink">
+        <div class="kpi-label">Activités menées</div>
+        <div class="kpi-value">${totalActivites}</div>
+        <div class="kpi-sub">${totalNouveaux} nouveaux inscrits</div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="search-box">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchRapport" placeholder="Chercher un coordinateur…" oninput="filterRapports(this.value)" />
+        </div>
+        <select class="filter-select" onchange="filterRole(this.value)">
+          <option value="">Tous les niveaux</option>
+          <option value="departemental">Départemental</option>
+          <option value="communal">Communal</option>
+          <option value="diaspora">Diaspora</option>
+        </select>
+        <select class="filter-select" onchange="filterStatut(this.value)">
+          <option value="">Tous les statuts</option>
+          <option value="reçu">Reçu</option>
+          <option value="validé">Validé</option>
+          <option value="en_attente">En attente</option>
+          <option value="probleme">Problème</option>
+        </select>
+        <select class="filter-select" onchange="filterPeriode(this.value)">
+          <option value="">Tous les mois</option>
+          <option value="2026-06">Juin 2026</option>
+          <option value="2026-05">Mai 2026</option>
+          <option value="2026-04">Avril 2026</option>
+          <option value="2026-03">Mars 2026</option>
+        </select>
+      </div>
+      <button class="btn-rapport" onclick="openMonRapport()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Créer mon rapport
+      </button>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="rapport-table">
+          <thead>
+            <tr>
+              <th>Coordinateur</th>
+              <th>Rôle</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th style="text-align:center;">Activités</th>
+              <th style="text-align:center;">Nouveaux</th>
+              <th style="width:100px;"></th>
+            </tr>
+          </thead>
+          <tbody id="rapportBody">${renderTable(RAPPORTS)}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  /* ============================================
+     FILTRAGE TABLE
+     ============================================ */
+  let currentFilter = '';
+  let currentRole = '';
+  let currentStatut = '';
+  let currentPeriode = '';
+
+  window.filterRapports = function (q) {
+    currentFilter = q.toLowerCase();
+    applyFilters();
+  };
+
+  window.filterRole = function (role) {
+    currentRole = role;
+    applyFilters();
+  };
+
+  window.filterStatut = function (statut) {
+    currentStatut = statut;
+    applyFilters();
+  };
+
+  window.filterPeriode = function (periode) {
+    currentPeriode = periode;
+    applyFilters();
+  };
+
+  function applyFilters() {
+    let data = RAPPORTS;
+    if (currentRole) data = data.filter(r => r.role === currentRole);
+    if (currentStatut) data = data.filter(r => r.statut === currentStatut);
+    if (currentPeriode) data = data.filter(r => r.mois === currentPeriode);
+    if (currentFilter) data = data.filter(r =>
+      (r.coordinateur_nom).toLowerCase().includes(currentFilter) ||
+      r.affectation.toLowerCase().includes(currentFilter)
+    );
+    document.getElementById('rapportBody').innerHTML = data.length
+      ? renderTable(data)
+      : '<tr><td colspan="7" class="empty-search"><div class="empty-icon">📋</div>Aucun rapport trouvé</td></tr>';
+  }
+
+  /* ============================================
+     ACTIONS RAPPORT
+     ============================================ */
+  window.openRapport = function (id) {
+    const r = RAPPORTS.find(x => x.id === id);
+    if (!r) return;
+
+    const overlay = document.getElementById('modalOverlay');
+    const mTitle = document.getElementById('modalTitle');
+    const mBody = document.getElementById('modalBody');
+    const mFooter = document.getElementById('modalFooter');
+
+    mTitle.textContent = `Rapport — ${r.coordinateur_nom} (${r.periode})`;
+
+    mBody.innerHTML = `
+      <div class="rapport-detail-section">
+        <div class="rapport-meta">
+          <div class="meta-item">
+            <div class="meta-label">Coordinateur</div>
+            <div class="meta-value">${r.coordinateur_nom}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Affectation</div>
+            <div class="meta-value">${r.affectation} (${roleLabel(r.role)})</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Période</div>
+            <div class="meta-value">${r.periode}</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Reçu le</div>
+            <div class="meta-value">${dateFormat(r.date_envoi) || '—'}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rapport-detail-section">
+        <div class="rapport-detail-title">Statistiques du mois</div>
+        <div class="rapport-stats">
+          <div class="stat-card">
+            <div class="stat-label">Activités</div>
+            <div class="stat-value">${r.nb_activites}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Nouveaux inscrits</div>
+            <div class="stat-value">${r.nb_patriotes_nouveaux}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total du secteur</div>
+            <div class="stat-value">${r.nb_patriotes_total}</div>
+          </div>
+        </div>
+      </div>
+
+      ${r.contenu ? `
+        <div class="rapport-detail-section">
+          <div class="rapport-detail-title">Contenu du rapport</div>
+          <div class="rapport-content">${r.contenu}</div>
+        </div>
+      ` : ''}
+
+      <div class="rapport-detail-section">
+        <div class="rapport-detail-title">Statut</div>
+        <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);">
+          ${statutBadge(r.statut)}
+        </div>
+      </div>
+    `;
+
+    mFooter.innerHTML = `
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Fermer</button>
+      ${r.file_url ? `<button class="btn btn-primary btn-sm" onclick="downloadRapport('${r.id}')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger
+      </button>` : ''}
+      ${r.statut === 'reçu' ? `<button class="btn btn-primary btn-sm" onclick="validerRapport('${r.id}')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Valider
+      </button>` : ''}
+    `;
+
+    overlay.classList.add('open');
+  };
+
+  window.closeModal = function () {
+    document.getElementById('modalOverlay').classList.remove('open');
+  };
+
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+
+  window.downloadRapport = function (id) {
+    const r = RAPPORTS.find(x => x.id === id);
+    if (!r || !r.file_url) return;
+    alert(`Téléchargement du rapport de ${r.coordinateur_nom}\n${r.periode}\n\n(Intégration avec Supabase Storage à implémenter)`);
+    // TODO: Supabase Storage download
+  };
+
+  window.validerRapport = function (id) {
+    const r = RAPPORTS.find(x => x.id === id);
+    if (!r) return;
+    if (confirm(`Valider le rapport de ${r.coordinateur_nom} (${r.periode}) ?`)) {
+      r.statut = 'validé';
+      applyFilters();
+      closeModal();
+      alert(`✅ Rapport validé`);
+      // TODO: UPDATE rapports_mensuels SET status = 'validé' WHERE id = ?
+    }
+  };
+
+  window.relancerRapport = function (id) {
+    const r = RAPPORTS.find(x => x.id === id);
+    if (!r) return;
+    alert(`Relance envoyée à ${r.coordinateur_nom}\n\n(Intégration avec email Supabase à implémenter)`);
+    // TODO: Supabase Edge Function pour envoyer email
+  };
+
+  /* ============================================
+     CRÉATION DU RAPPORT MENSUEL (ADMIN)
+     ============================================ */
+  let rapportState = { step: 1, mois: '2026-06', notes: '', status: 'draft', format: 'pdf' };
+
+  window.openMonRapport = function () {
+    const now = new Date();
+    const mois = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    
+    // Vérifier si rapport déjà créé ce mois
+    const existant = RAPPORTS.find(r => r.mois === mois && r.coordinateur_id === 'admin');
+    if (existant) {
+      alert(`Vous avez déjà un rapport pour ${mois}. Modifiez-le via "Consulter".`);
+      return;
+    }
+
+    rapportState = { step: 1, mois: mois, notes: '', status: 'draft', format: 'pdf' };
+    renderRapportStep();
+    document.getElementById('modalRapportOverlay').classList.add('open');
+  };
+
+  window.closeRapportModal = function () {
+    document.getElementById('modalRapportOverlay').classList.remove('open');
+  };
+
+  document.getElementById('modalRapportOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalRapportOverlay')) closeRapportModal();
+  });
+
+  function renderRapportStep() {
+    const s = rapportState;
+    const mTitle = document.getElementById('modalRapportTitle');
+    const mBody = document.getElementById('modalRapportBody');
+    const mFooter = document.getElementById('modalRapportFooter');
+
+    const stepsHtml = `
+      <div class="steps">
+        <div class="step ${s.step >= 1 ? 'done' : ''} ${s.step === 1 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 2 ? 'done' : ''} ${s.step === 2 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 3 ? 'done' : ''} ${s.step === 3 ? 'active' : ''}"></div>
+      </div>
+    `;
+
+    if (s.step === 1) {
+      const rapportsRecus = RAPPORTS.filter(r => r.mois === s.mois && r.coordinateur_id !== 'admin');
+      const rapportsValides = rapportsRecus.filter(r => r.statut === 'validé').length;
+      const rapportsEnAttente = rapportsRecus.filter(r => r.statut === 'en_attente').length;
+      const totalActivites = rapportsRecus.reduce((sum, r) => sum + r.nb_activites, 0);
+      const totalNouveaux = rapportsRecus.reduce((sum, r) => sum + r.nb_patriotes_nouveaux, 0);
+
+      mTitle.textContent = `Étape 1 — Aperçu du mois`;
+      mBody.innerHTML = stepsHtml + `
+        <div style="margin-bottom:20px;padding:14px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);">
+          <div style="font-size:14px;font-weight:700;color:var(--pastef-green-dark);margin-bottom:10px;">📊 Statistiques nationales — ${new Date(s.mois + '-01').toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'})}</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+            <div style="padding:10px;background:var(--card);border-radius:var(--radius-sm);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">Rapports reçus</div>
+              <div style="font-size:18px;font-weight:800;color:var(--pastef-green);">${rapportsValides + (rapportsRecus.length - rapportsValides - rapportsEnAttente)}</div>
+              <div style="font-size:10px;color:var(--text-muted);">${rapportsValides} validés · ${rapportsEnAttente} en attente</div>
+            </div>
+            <div style="padding:10px;background:var(--card);border-radius:var(--radius-sm);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">Activités menées</div>
+              <div style="font-size:18px;font-weight:800;color:var(--pastef-or);">${totalActivites}</div>
+              <div style="font-size:10px;color:var(--text-muted);">${totalNouveaux} nouveaux inscrits</div>
+            </div>
+            <div style="padding:10px;background:var(--card);border-radius:var(--radius-sm);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">Niveaux opérationnels</div>
+              <div style="font-size:12px;color:var(--ink);"><div>3 Départementaux</div><div>4 Communaux</div><div>2 Diaspora</div></div>
+            </div>
+            <div style="padding:10px;background:var(--card);border-radius:var(--radius-sm);">
+              <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">Secteurs couverts</div>
+              <div style="font-size:12px;color:var(--ink);">Senegal + Diaspora (5 pays)</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);">
+          <div style="font-size:12px;color:var(--text);line-height:1.6;">✅ Tous les rapports départementaux reçus<br/>⏳ ${rapportsEnAttente} rapport(s) diaspora en attente<br/>📈 Bonne dynamique générale d'activités</div>
+        </div>
+      `;
+      mFooter.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="closeRapportModal()">Annuler</button><button class="btn btn-primary btn-sm" onclick="nextRapportStep()">Suivant</button>`;
+    }
+    else if (s.step === 2) {
+      mTitle.textContent = `Étape 2 — Notes et observations`;
+      mBody.innerHTML = stepsHtml + `
+        <div class="field">
+          <label class="field-label">Observations du mois</label>
+          <textarea class="field-input" id="notesRapport" style="height:150px;resize:vertical;font-family:inherit;padding:12px;" placeholder="Entrez vos observations, défis, succès et recommandations…" oninput="rapportState.notes = this.value">${s.notes}</textarea>
+          <div class="field-hint">Ces notes seront incluses dans votre rapport mensuel</div>
+        </div>
+        <div style="padding:12px;background:var(--bg-soft);border-radius:var(--radius-sm);margin-top:16px;">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:8px;">💡 À inclure</div>
+          <div style="font-size:12px;color:var(--text);">• Avancées clés · • Défis rencontrés · • Coordination · • Recommandations</div>
+        </div>
+      `;
+      mFooter.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="prevRapportStep()">Retour</button><button class="btn btn-primary btn-sm" onclick="nextRapportStep()">Continuer</button>`;
+    }
+    else if (s.step === 3) {
+      mTitle.textContent = `Étape 3 — Confirmer et envoyer`;
+      const periodeLabel = new Date(s.mois + '-01').toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+      mBody.innerHTML = stepsHtml + `
+        <div style="padding:14px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:700;color:var(--pastef-green-dark);margin-bottom:12px;">✅ Prêt à envoyer</div>
+          <div style="font-size:12px;color:var(--pastef-green);line-height:1.6;">Rapport pour <strong>${periodeLabel}</strong> destiné aux coordinateurs régionaux.<br/><br/><strong>Contenu :</strong> Stats nationales · Rapports reçus · Historique · Observations</div>
+        </div>
+        <div style="padding:12px;background:var(--bg-soft);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">FORMAT</div>
+          <div style="display:flex;gap:8px;">
+            <label style="flex:1;"><input type="radio" name="fmt" value="pdf" checked onchange="rapportState.format=this.value" /><span style="margin-left:6px;font-size:12px;">📄 PDF</span></label>
+            <label style="flex:1;"><input type="radio" name="fmt" value="excel" onchange="rapportState.format=this.value" /><span style="margin-left:6px;font-size:12px;">📊 Excel</span></label>
+            <label style="flex:1;"><input type="radio" name="fmt" value="both" onchange="rapportState.format=this.value" /><span style="margin-left:6px;font-size:12px;">📦 Les deux</span></label>
+          </div>
+        </div>
+      `;
+      mFooter.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="prevRapportStep()">Retour</button><button class="btn btn-primary btn-sm" onclick="envoyerRapport()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Envoyer</button>`;
+    }
+  }
+
+  window.nextRapportStep = function () { rapportState.step++; renderRapportStep(); };
+  window.prevRapportStep = function () { rapportState.step--; renderRapportStep(); };
+
+  window.envoyerRapport = function () {
+    const periodeLabel = new Date(rapportState.mois + '-01').toLocaleDateString('fr-FR', {month: 'long', year: 'numeric'});
+    if (confirm(`Envoyer votre rapport pour ${periodeLabel} ?`)) {
+      closeRapportModal();
+      alert(`✅ Rapport envoyé !\n\n${periodeLabel}\nFormat: ${rapportState.format}\n\nTODO: Supabase Storage + Email`);
+    }
+  };
+
+
+})();
+</script>
+
+</body>
+</html>

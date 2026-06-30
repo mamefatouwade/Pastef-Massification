@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coordinateurs — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Coordinateurs — Styles spécifiques
+     ============================================ */
+
+  /* KPI strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; overflow: hidden; }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; }
+  .kpi-green::before { background: var(--pastef-green); }
+  .kpi-or::before    { background: var(--pastef-or); }
+  .kpi-red::before   { background: var(--pastef-red); }
+  .kpi-ink::before   { background: var(--ink); }
+  .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -0.5px; }
+  .kpi-sub   { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Header actions */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    height: 38px;
+    min-width: 240px;
+  }
+
+  .search-box svg { flex-shrink: 0; color: var(--text-muted); }
+
+  .search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text);
+    width: 100%;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--pastef-green);
+    box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
+  }
+
+  .btn-designate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 18px;
+    background: var(--pastef-green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-designate:hover { background: var(--pastef-green-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+
+  /* Table coordinateurs */
+  .coord-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .coord-table thead tr { border-bottom: 1px solid var(--border); background: var(--bg-soft); }
+  .coord-table th { padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .coord-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+  .coord-table tr:last-child td { border-bottom: none; }
+  .coord-table tr:hover td { background: var(--bg-soft); }
+
+  .coord-name { font-weight: 600; color: var(--ink); }
+  .coord-phone { font-size: 12px; color: var(--text-muted); margin-top: 1px; font-family: var(--font-mono); }
+  .coord-lieu  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  .coord-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .avatar-green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .avatar-or    { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .avatar-ink   { background: var(--bg); color: var(--text-muted); }
+
+  .coord-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge-green  { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .badge-or     { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .badge-red    { background: var(--pastef-red-soft); color: var(--pastef-red); }
+  .badge-neutral { background: var(--bg); color: var(--text-muted); }
+
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .coord-actions { display: flex; gap: 4px; }
+  .coord-actions button {
+    width: 30px; height: 30px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.15s;
+  }
+  .coord-actions button:hover { background: var(--bg); color: var(--pastef-green); }
+  .coord-actions button.danger:hover { color: var(--pastef-red); }
+
+  .last-login { font-size: 11px; color: var(--text-muted); }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(15,26,20,0.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--ink); }
+
+  .modal-body { padding: 20px 24px; }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* Steps indicator */
+  .steps { display: flex; gap: 4px; margin-bottom: 24px; }
+
+  .step {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-light);
+    transition: background 0.3s;
+  }
+
+  .step.done { background: var(--pastef-green); }
+  .step.active { background: var(--pastef-green-light); }
+
+  /* Form fields */
+  .field { margin-bottom: 18px; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+  .field-hint  { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .field-input, .field-select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--card);
+    transition: border-color 0.15s;
+  }
+
+  .field-input:focus, .field-select:focus {
+    outline: none;
+    border-color: var(--pastef-green);
+    box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
+  }
+
+  .field-select { appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7B72' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 30px;
+  }
+
+  /* Radio cards */
+  .radio-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .radio-card {
+    position: relative;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+
+  .radio-card:hover { border-color: var(--pastef-green); }
+
+  .radio-card.selected {
+    border-color: var(--pastef-green);
+    background: var(--pastef-green-soft);
+  }
+
+  .radio-card input { position: absolute; opacity: 0; pointer-events: none; }
+
+  .radio-card-icon { font-size: 20px; margin-bottom: 4px; }
+  .radio-card-label { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .radio-card-desc  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Search results */
+  .search-results {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 6px;
+  }
+
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--pastef-green-soft); }
+  .search-result-item.selected { background: var(--pastef-green-soft); border-left: 3px solid var(--pastef-green); }
+
+  .search-result-name  { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .search-result-info  { font-size: 11px; color: var(--text-muted); }
+
+  /* Credentials card */
+  .creds-card {
+    background: var(--pastef-green-soft);
+    border: 1.5px solid var(--pastef-green);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+
+  .creds-icon { font-size: 32px; margin-bottom: 8px; }
+  .creds-title { font-size: 15px; font-weight: 700; color: var(--pastef-green-dark); margin-bottom: 16px; }
+
+  .creds-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+
+  .creds-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .creds-value { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--ink); user-select: all; }
+
+  .creds-copy {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--pastef-green); transition: all 0.15s;
+  }
+  .creds-copy:hover { background: var(--pastef-green-soft); }
+
+  .creds-warning {
+    font-size: 11px;
+    color: var(--pastef-red);
+    margin-top: 12px;
+    font-weight: 500;
+  }
+
+  /* Empty state */
+  .empty-search {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .radio-cards { grid-template-columns: 1fr; }
+    .modal { max-width: 100%; margin: 10px; }
+    .search-box { min-width: 160px; }
+    .page-header { flex-direction: column; align-items: stretch; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="page-loader"><div class="spinner"></div>Chargement des coordinateurs…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal désignation -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Désigner un coordinateur</div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../js/data.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'coordinateurs');
+  PASTEF.topbar.render({ session, title: 'Coordinateurs', breadcrumb: 'Gestion des coordinateurs' });
+
+  /* ============================================
+     DONNÉES MOCK
+     ============================================ */
+  const COORDINATEURS = [
+    { id: 'c1', prenom: 'Abdoulaye', nom: 'Diallo', phone: '+221 77 123 45 67', email: 'abdoulaye@pastef.sn', role: 'departemental', lieu: 'Dakar', region: 'Dakar', active: true, lastLogin: '2026-06-29', createdAt: '2026-03-15' },
+    { id: 'c2', prenom: 'Fatou', nom: 'Ndiaye', phone: '+221 78 234 56 78', email: 'fatou@pastef.sn', role: 'departemental', lieu: 'Thiès', region: 'Thiès', active: true, lastLogin: '2026-06-28', createdAt: '2026-04-01' },
+    { id: 'c3', prenom: 'Moussa', nom: 'Sow', phone: '+221 76 345 67 89', email: 'moussa@pastef.sn', role: 'departemental', lieu: 'Saint-Louis', region: 'Saint-Louis', active: true, lastLogin: '2026-06-25', createdAt: '2026-04-10' },
+    { id: 'c4', prenom: 'Aïssatou', nom: 'Ba', phone: '+221 77 456 78 90', email: 'aissatou@pastef.sn', role: 'communal', lieu: 'Médina', region: 'Dakar', active: true, lastLogin: '2026-06-30', createdAt: '2026-05-02' },
+    { id: 'c5', prenom: 'Ibrahima', nom: 'Fall', phone: '+221 78 567 89 01', email: 'ibrahima@pastef.sn', role: 'communal', lieu: 'Parcelles Assainies', region: 'Dakar', active: true, lastLogin: '2026-06-27', createdAt: '2026-05-15' },
+    { id: 'c6', prenom: 'Mariama', nom: 'Diop', phone: '+221 77 678 90 12', email: 'mariama@pastef.sn', role: 'communal', lieu: 'Pikine Nord', region: 'Dakar', active: false, lastLogin: '2026-05-10', createdAt: '2026-04-20' },
+    { id: 'c7', prenom: 'Ousmane', nom: 'Sarr', phone: '+33 6 12 34 56 78', email: 'ousmane@pastef.sn', role: 'diaspora', lieu: 'Paris', region: 'France', active: true, lastLogin: '2026-06-30', createdAt: '2026-03-01' },
+    { id: 'c8', prenom: 'Aminata', nom: 'Touré', phone: '+39 345 678 9012', email: 'aminata@pastef.sn', role: 'diaspora', lieu: 'Milan', region: 'Italie', active: true, lastLogin: '2026-06-29', createdAt: '2026-03-20' },
+    { id: 'c9', prenom: 'Cheikh', nom: 'Mbaye', phone: '+1 202 555 0147', email: 'cheikh@pastef.sn', role: 'diaspora', lieu: 'New York', region: 'États-Unis', active: true, lastLogin: '2026-06-26', createdAt: '2026-04-05' },
+    { id: 'c10', prenom: 'Khady', nom: 'Gueye', phone: '+221 76 789 01 23', email: 'khady@pastef.sn', role: 'communal', lieu: 'Thiès Ville', region: 'Thiès', active: true, lastLogin: '2026-06-24', createdAt: '2026-05-28' },
+  ];
+
+  // Faux inscrits pour la recherche
+  const INSCRITS_MOCK = [
+    { id: 'e1', prenom: 'Modou', nom: 'Kane', phone: '+221 77 111 22 33', cellule: 'Cellule Dakar-Plateau', region: 'Dakar' },
+    { id: 'e2', prenom: 'Sokhna', nom: 'Dieng', phone: '+221 78 222 33 44', cellule: 'Cellule Médina', region: 'Dakar' },
+    { id: 'e3', prenom: 'Pape', nom: 'Thiam', phone: '+221 76 333 44 55', cellule: 'Cellule Thiès Ville', region: 'Thiès' },
+    { id: 'e4', prenom: 'Rama', nom: 'Sy', phone: '+221 77 444 55 66', cellule: 'Cellule Pikine', region: 'Dakar' },
+    { id: 'e5', prenom: 'Boubacar', nom: 'Diagne', phone: '+221 78 555 66 77', cellule: 'Cellule Saint-Louis Ville', region: 'Saint-Louis' },
+    { id: 'e6', prenom: 'Ndèye', nom: 'Mbow', phone: '+221 76 666 77 88', cellule: 'Cellule Kaolack Ville', region: 'Kaolack' },
+    { id: 'e7', prenom: 'Aliou', nom: 'Cissé', phone: '+221 77 777 88 99', cellule: 'Cellule Ziguinchor Ville', region: 'Ziguinchor' },
+    { id: 'e8', prenom: 'Daba', nom: 'Faye', phone: '+33 6 88 99 00 11', cellule: 'Cellule Paris', region: 'France' },
+    { id: 'e9', prenom: 'Mamadou', nom: 'Niang', phone: '+39 320 111 2233', cellule: 'Cellule Rome', region: 'Italie' },
+    { id: 'e10', prenom: 'Awa', nom: 'Sall', phone: '+221 77 888 99 00', cellule: 'Cellule Mbour', region: 'Thiès' },
+  ];
+
+  /* ============================================
+     STATS
+     ============================================ */
+  const stats = {
+    total: COORDINATEURS.length,
+    dept: COORDINATEURS.filter(c => c.role === 'departemental').length,
+    comm: COORDINATEURS.filter(c => c.role === 'communal').length,
+    diaspora: COORDINATEURS.filter(c => c.role === 'diaspora').length,
+    actifs: COORDINATEURS.filter(c => c.active).length,
+    inactifs: COORDINATEURS.filter(c => !c.active).length,
+  };
+
+  /* ============================================
+     RENDER PAGE
+     ============================================ */
+  const fmt = n => n.toLocaleString('fr-FR');
+
+  function roleLabel(role) {
+    return { departemental: 'Départemental', communal: 'Communal', diaspora: 'Diaspora' }[role] || role;
+  }
+
+  function roleBadge(role) {
+    const cls = { departemental: 'badge-green', communal: 'badge-or', diaspora: 'badge-neutral' }[role] || 'badge-neutral';
+    return `<span class="badge ${cls}">${roleLabel(role)}</span>`;
+  }
+
+  function avatarCls(role) {
+    return { departemental: 'avatar-green', communal: 'avatar-or', diaspora: 'avatar-ink' }[role] || 'avatar-ink';
+  }
+
+  function timeAgo(dateStr) {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 86400000);
+    if (diff === 0) return "Aujourd'hui";
+    if (diff === 1) return 'Hier';
+    if (diff < 7) return `Il y a ${diff} jours`;
+    if (diff < 30) return `Il y a ${Math.floor(diff/7)} sem.`;
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  }
+
+  function renderTable(data) {
+    return data.map(c => `
+      <tr data-id="${c.id}">
+        <td>
+          <div class="coord-cell">
+            <div class="coord-avatar ${avatarCls(c.role)}">${c.prenom[0]}${c.nom[0]}</div>
+            <div>
+              <div class="coord-name">${c.prenom} ${c.nom}</div>
+              <div class="coord-phone">${c.phone}</div>
+            </div>
+          </div>
+        </td>
+        <td>${roleBadge(c.role)}</td>
+        <td>
+          <div style="font-weight:500;">${c.lieu}</div>
+          <div class="coord-lieu">${c.region}</div>
+        </td>
+        <td><span class="badge ${c.active ? 'badge-green' : 'badge-red'}"><span class="badge-dot"></span>${c.active ? 'Actif' : 'Inactif'}</span></td>
+        <td><span class="last-login">${timeAgo(c.lastLogin)}</span></td>
+        <td>
+          <div class="coord-actions">
+            <button title="Modifier" onclick="editCoord('${c.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button title="${c.active ? 'Désactiver' : 'Réactiver'}" class="${c.active ? 'danger' : ''}" onclick="toggleCoord('${c.id}')">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${c.active
+                ? '<path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/>'
+                : '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'
+              }</svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="kpi-strip">
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Total coordinateurs</div>
+        <div class="kpi-value">${stats.total}</div>
+        <div class="kpi-sub">${stats.actifs} actifs · ${stats.inactifs} inactif${stats.inactifs > 1 ? 's' : ''}</div>
+      </div>
+      <div class="kpi kpi-green">
+        <div class="kpi-label">Départementaux</div>
+        <div class="kpi-value">${stats.dept}</div>
+      </div>
+      <div class="kpi kpi-or">
+        <div class="kpi-label">Communaux</div>
+        <div class="kpi-value">${stats.comm}</div>
+      </div>
+      <div class="kpi kpi-ink">
+        <div class="kpi-label">Diaspora</div>
+        <div class="kpi-value">${stats.diaspora}</div>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="search-box">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchCoord" placeholder="Chercher un coordinateur…" oninput="filterCoords(this.value)" />
+        </div>
+        <select class="field-select" style="height:38px;width:auto;" onchange="filterRole(this.value)">
+          <option value="">Tous les rôles</option>
+          <option value="departemental">Départemental</option>
+          <option value="communal">Communal</option>
+          <option value="diaspora">Diaspora</option>
+        </select>
+      </div>
+      <button class="btn-designate" onclick="openDesignation()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Désigner un coordinateur
+      </button>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="coord-table">
+          <thead>
+            <tr>
+              <th>Coordinateur</th>
+              <th>Rôle</th>
+              <th>Affectation</th>
+              <th>Statut</th>
+              <th>Dernière connexion</th>
+              <th style="width:80px;"></th>
+            </tr>
+          </thead>
+          <tbody id="coordBody">${renderTable(COORDINATEURS)}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  /* ============================================
+     FILTRAGE TABLE
+     ============================================ */
+  let currentFilter = '';
+  let currentRole = '';
+
+  window.filterCoords = function (q) {
+    currentFilter = q.toLowerCase();
+    applyFilters();
+  };
+
+  window.filterRole = function (role) {
+    currentRole = role;
+    applyFilters();
+  };
+
+  function applyFilters() {
+    let data = COORDINATEURS;
+    if (currentRole) data = data.filter(c => c.role === currentRole);
+    if (currentFilter) data = data.filter(c =>
+      (c.prenom + ' ' + c.nom).toLowerCase().includes(currentFilter) ||
+      c.phone.includes(currentFilter) ||
+      c.lieu.toLowerCase().includes(currentFilter)
+    );
+    document.getElementById('coordBody').innerHTML = data.length
+      ? renderTable(data)
+      : '<tr><td colspan="6" class="empty-search">Aucun coordinateur trouvé</td></tr>';
+  }
+
+  /* ============================================
+     ACTIONS COORDINATEUR
+     ============================================ */
+  window.editCoord = function (id) {
+    alert('Édition du coordinateur ' + id + ' — à connecter à Supabase');
+  };
+
+  window.toggleCoord = function (id) {
+    const c = COORDINATEURS.find(x => x.id === id);
+    if (!c) return;
+    const action = c.active ? 'désactiver' : 'réactiver';
+    if (confirm(`Voulez-vous ${action} ${c.prenom} ${c.nom} ?`)) {
+      c.active = !c.active;
+      applyFilters();
+    }
+  };
+
+  /* ============================================
+     MODAL — FLOW DE DÉSIGNATION
+     ============================================ */
+  const overlay = document.getElementById('modalOverlay');
+  const mBody = document.getElementById('modalBody');
+  const mFooter = document.getElementById('modalFooter');
+  const mTitle = document.getElementById('modalTitle');
+
+  let designState = { step: 1, role: '', lieu: '', pays: '', region: '', inscrit: null, email: '' };
+
+  window.openDesignation = function () {
+    designState = { step: 1, role: '', lieu: '', pays: '', region: '', inscrit: null, email: '' };
+    renderStep();
+    overlay.classList.add('open');
+  };
+
+  window.closeModal = function () {
+    overlay.classList.remove('open');
+  };
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+  function renderStep() {
+    const s = designState;
+
+    const stepsHtml = `
+      <div class="steps">
+        <div class="step ${s.step >= 1 ? 'done' : ''} ${s.step === 1 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 2 ? 'done' : ''} ${s.step === 2 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 3 ? 'done' : ''} ${s.step === 3 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 4 ? 'done' : ''} ${s.step === 4 ? 'active' : ''}"></div>
+        <div class="step ${s.step >= 5 ? 'done' : ''} ${s.step === 5 ? 'active' : ''}"></div>
+      </div>
+    `;
+
+    if (s.step === 1) {
+      mTitle.textContent = 'Étape 1 — Choisir le niveau';
+      mBody.innerHTML = stepsHtml + `
+        <div class="field">
+          <label class="field-label">Type de coordinateur à désigner</label>
+        </div>
+        <div class="radio-cards">
+          <label class="radio-card ${s.role === 'departemental' ? 'selected' : ''}" onclick="selectRole('departemental')">
+            <input type="radio" name="role" value="departemental" />
+            <div class="radio-card-icon">🏛️</div>
+            <div class="radio-card-label">Départemental</div>
+            <div class="radio-card-desc">Gère un département</div>
+          </label>
+          <label class="radio-card ${s.role === 'communal' ? 'selected' : ''}" onclick="selectRole('communal')">
+            <input type="radio" name="role" value="communal" />
+            <div class="radio-card-icon">🏘️</div>
+            <div class="radio-card-label">Communal</div>
+            <div class="radio-card-desc">Gère une commune</div>
+          </label>
+          <label class="radio-card ${s.role === 'diaspora' ? 'selected' : ''}" onclick="selectRole('diaspora')">
+            <input type="radio" name="role" value="diaspora" />
+            <div class="radio-card-icon">🌍</div>
+            <div class="radio-card-label">Diaspora</div>
+            <div class="radio-card-desc">Cellule d'un pays</div>
+          </label>
+        </div>
+      `;
+      mFooter.innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary btn-sm" onclick="nextStep()" ${!s.role ? 'disabled' : ''}>Suivant</button>
+      `;
+    }
+
+    else if (s.step === 2) {
+      mTitle.textContent = 'Étape 2 — Choisir le lieu';
+      let fieldsHtml = '';
+
+      if (s.role === 'departemental' || s.role === 'communal') {
+        const regions = DATA.regions['Sénégal'] || [];
+        fieldsHtml = `
+          <div class="field">
+            <label class="field-label">Région</label>
+            <select class="field-select" id="selRegion" onchange="onRegionChange(this.value)">
+              <option value="">Sélectionner une région</option>
+              ${regions.map(r => `<option value="${r}" ${s.region === r ? 'selected' : ''}>${r}</option>`).join('')}
+            </select>
+          </div>
+        `;
+        if (s.role === 'communal') {
+          fieldsHtml += `
+            <div class="field">
+              <label class="field-label">Commune / Cellule</label>
+              <select class="field-select" id="selLieu" onchange="designState.lieu = this.value">
+                <option value="">Choisir d'abord une région</option>
+              </select>
+              <div class="field-hint">La commune sera affectée à ce coordinateur</div>
+            </div>
+          `;
+        }
+      } else {
+        const pays = DATA.pays.filter(p => p !== 'Sénégal' && !p.startsWith('—'));
+        fieldsHtml = `
+          <div class="field">
+            <label class="field-label">Pays</label>
+            <select class="field-select" id="selPays" onchange="onPaysChange(this.value)">
+              <option value="">Sélectionner un pays</option>
+              ${pays.map(p => `<option value="${p}" ${s.pays === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Cellule / Ville</label>
+            <select class="field-select" id="selCellule" onchange="designState.lieu = this.value">
+              <option value="">Choisir d'abord un pays</option>
+            </select>
+          </div>
+        `;
+      }
+
+      mBody.innerHTML = stepsHtml + fieldsHtml;
+      mFooter.innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary btn-sm" onclick="nextStep()" id="btnNext2">Suivant</button>
+      `;
+
+      // Pre-fill cascading selects
+      if (s.region && s.role === 'communal') setTimeout(() => onRegionChange(s.region), 50);
+      if (s.pays && s.role === 'diaspora') setTimeout(() => onPaysChange(s.pays), 50);
+    }
+
+    else if (s.step === 3) {
+      mTitle.textContent = 'Étape 3 — Chercher un inscrit';
+      mBody.innerHTML = stepsHtml + `
+        <div class="field">
+          <label class="field-label">Rechercher par nom ou téléphone</label>
+          <input class="field-input" type="text" id="searchInscrit" placeholder="Ex: Modou Kane ou 77 111…" oninput="searchInscrits(this.value)" autofocus />
+          <div class="field-hint">L'inscrit doit déjà être enregistré sur la plateforme</div>
+        </div>
+        <div id="searchResultsContainer"></div>
+        ${s.inscrit ? `
+          <div style="margin-top:12px;padding:12px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);">
+            <div style="font-size:13px;font-weight:600;color:var(--pastef-green-dark);">Sélectionné : ${s.inscrit.prenom} ${s.inscrit.nom}</div>
+            <div style="font-size:11px;color:var(--pastef-green);margin-top:2px;">${s.inscrit.phone} · ${s.inscrit.cellule}</div>
+          </div>
+        ` : ''}
+      `;
+      mFooter.innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary btn-sm" onclick="nextStep()" ${!s.inscrit ? 'disabled' : ''}>Suivant</button>
+      `;
+    }
+
+    else if (s.step === 4) {
+      mTitle.textContent = 'Étape 4 — Email et confirmation';
+      mBody.innerHTML = stepsHtml + `
+        <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;">
+          <div style="font-weight:700;color:var(--ink);margin-bottom:8px;">Récapitulatif</div>
+          <div style="display:grid;grid-template-columns:100px 1fr;gap:4px 12px;color:var(--text-muted);">
+            <span>Niveau</span><span style="font-weight:600;color:var(--text);">${roleLabel(s.role)}</span>
+            <span>Lieu</span><span style="font-weight:600;color:var(--text);">${s.lieu || s.region || s.pays}</span>
+            <span>Inscrit</span><span style="font-weight:600;color:var(--text);">${s.inscrit.prenom} ${s.inscrit.nom}</span>
+            <span>Téléphone</span><span style="font-weight:600;color:var(--text);">${s.inscrit.phone}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Email du coordinateur</label>
+          <input class="field-input" type="email" id="emailCoord" placeholder="prenom.nom@email.com" value="${s.email}" oninput="designState.email = this.value" />
+          <div class="field-hint">Un mot de passe temporaire sera envoyé à cette adresse</div>
+        </div>
+      `;
+      mFooter.innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary btn-sm" onclick="executeDesignation()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Confirmer la désignation
+        </button>
+      `;
+    }
+
+    else if (s.step === 5) {
+      const pw = generatePassword();
+      mTitle.textContent = 'Coordinateur désigné';
+      mBody.innerHTML = `
+        <div class="creds-card">
+          <div class="creds-icon">✅</div>
+          <div class="creds-title">${s.inscrit.prenom} ${s.inscrit.nom} est maintenant ${roleLabel(s.role)}</div>
+          <div class="creds-row">
+            <div><div class="creds-label">Email</div><div class="creds-value">${s.email}</div></div>
+            <button class="creds-copy" onclick="copyText('${s.email}')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div class="creds-row">
+            <div><div class="creds-label">Mot de passe temporaire</div><div class="creds-value">${pw}</div></div>
+            <button class="creds-copy" onclick="copyText('${pw}')">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <div class="creds-row">
+            <div><div class="creds-label">Affectation</div><div class="creds-value" style="font-family:inherit;">${s.lieu || s.region || s.pays}</div></div>
+          </div>
+          <div class="creds-warning">Transmettez ces identifiants au coordinateur. Le mot de passe devra être changé à la première connexion.</div>
+        </div>
+      `;
+      mFooter.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal()">Fermer</button>`;
+
+      // Add to local list
+      COORDINATEURS.unshift({
+        id: 'c' + Date.now(),
+        prenom: s.inscrit.prenom,
+        nom: s.inscrit.nom,
+        phone: s.inscrit.phone,
+        email: s.email,
+        role: s.role,
+        lieu: s.lieu || s.region || s.pays,
+        region: s.region || s.pays,
+        active: true,
+        lastLogin: 'Jamais',
+        createdAt: new Date().toISOString().slice(0, 10),
+      });
+      document.getElementById('coordBody').innerHTML = renderTable(COORDINATEURS);
+    }
+  }
+
+  window.selectRole = function (role) {
+    designState.role = role;
+    renderStep();
+  };
+
+  window.nextStep = function () {
+    if (designState.step === 2) {
+      const s = designState;
+      if (s.role === 'departemental' && !s.region) return alert('Choisissez une région');
+      if (s.role === 'communal' && !s.lieu) return alert('Choisissez une commune');
+      if (s.role === 'diaspora' && !s.lieu) return alert('Choisissez une cellule');
+    }
+    designState.step++;
+    renderStep();
+  };
+
+  window.prevStep = function () {
+    designState.step--;
+    renderStep();
+  };
+
+  /* ── Cascading selects ── */
+  window.onRegionChange = function (region) {
+    designState.region = region;
+    if (designState.role === 'departemental') {
+      designState.lieu = region;
+      return;
+    }
+    const sel = document.getElementById('selLieu');
+    if (!sel) return;
+    const cellules = (DATA.cellules['Sénégal'] || []).filter(c => {
+      if (c.startsWith('—')) return c.includes(region);
+      return true;
+    });
+    // Filter cellules near the selected region
+    let inRegion = false;
+    const filtered = [];
+    for (const c of DATA.cellules['Sénégal'] || []) {
+      if (c.startsWith('—')) { inRegion = c.includes(region); continue; }
+      if (inRegion) filtered.push(c);
+    }
+    sel.innerHTML = `<option value="">Sélectionner</option>` +
+      (filtered.length ? filtered : ['Autre cellule (préciser)']).map(c =>
+        `<option value="${c}" ${designState.lieu === c ? 'selected' : ''}>${c.replace('Cellule ', '')}</option>`
+      ).join('');
+  };
+
+  window.onPaysChange = function (pays) {
+    designState.pays = pays;
+    designState.region = pays;
+    const sel = document.getElementById('selCellule');
+    if (!sel) return;
+    const cells = DATA.cellules[pays] || DATA.cellulesDefaut;
+    sel.innerHTML = `<option value="">Sélectionner</option>` +
+      cells.map(c => `<option value="${c}" ${designState.lieu === c ? 'selected' : ''}>${c.replace('Cellule ', '')}</option>`).join('');
+  };
+
+  /* ── Search inscrits ── */
+  window.searchInscrits = function (q) {
+    const container = document.getElementById('searchResultsContainer');
+    if (!q || q.length < 2) { container.innerHTML = ''; return; }
+
+    const results = INSCRITS_MOCK.filter(i =>
+      (i.prenom + ' ' + i.nom).toLowerCase().includes(q.toLowerCase()) ||
+      i.phone.includes(q)
+    );
+
+    if (!results.length) {
+      container.innerHTML = '<div class="empty-search">Aucun inscrit trouvé</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="search-results">
+        ${results.map(r => `
+          <div class="search-result-item ${designState.inscrit?.id === r.id ? 'selected' : ''}" onclick="selectInscrit('${r.id}')">
+            <div class="coord-avatar avatar-green" style="width:30px;height:30px;font-size:11px;">${r.prenom[0]}${r.nom[0]}</div>
+            <div>
+              <div class="search-result-name">${r.prenom} ${r.nom}</div>
+              <div class="search-result-info">${r.phone} · ${r.cellule}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  };
+
+  window.selectInscrit = function (id) {
+    designState.inscrit = INSCRITS_MOCK.find(i => i.id === id);
+    renderStep();
+  };
+
+  /* ── Execute designation ── */
+  window.executeDesignation = function () {
+    if (!designState.email || !designState.email.includes('@')) {
+      return alert('Entrez un email valide');
+    }
+    // TODO: Supabase Auth + coordinator_accounts + audit_log
+    designState.step = 5;
+    renderStep();
+  };
+
+  /* ── Utils ── */
+  function generatePassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+    let pw = '';
+    for (let i = 0; i < 14; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    return pw;
+  }
+
+  window.copyText = function (text) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.currentTarget;
+      btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="var(--pastef-green)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      setTimeout(() => {
+        btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      }, 1500);
+    });
+  };
+
+})();
+</script>
+
+</body>
+</html>
