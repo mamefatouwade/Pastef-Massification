@@ -5,6 +5,7 @@
    - Stockage hors-ligne (LocalStorage)
    - Synchronisation Supabase
    - Validation téléphone par pays
+   - 🆕 Cellules chargées depuis Supabase
    ============================================ */
 
 (function() {
@@ -18,6 +19,9 @@
 
   let isOnline = navigator.onLine;
   let isSubmitting = false;
+
+  // Cache des cellules pour éviter trop d'appels API
+  let celluleCache = {};
 
   // ============================================
   // FORMATS TÉLÉPHONE PAR PAYS
@@ -65,8 +69,6 @@
   function $(selector) { return document.querySelector(selector); }
   function $$(selector) { return document.querySelectorAll(selector); }
 
-  // getClientId est défini dans audio.js — on utilise la même clé LocalStorage
-  // pour partager le même identifiant entre les deux modules.
   function getClientId() {
     let id = localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
@@ -84,6 +86,53 @@
     const m = today.getMonth() - birth.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     return age;
+  }
+
+  function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+  }
+
+  // ============================================
+  // 🆕 CHARGER LES CELLULES DEPUIS SUPABASE
+  // ============================================
+  async function loadCellulesFromDB(pays) {
+    try {
+      // Vérifier que Supabase est initialisé
+      if (!window.supabase) {
+        console.warn('[PASTEF] Supabase non initialisé');
+        return [];
+      }
+
+      // Vérifier le cache
+      if (celluleCache[pays]) {
+        console.log(`[PASTEF] Cellules du cache: ${pays}`);
+        return celluleCache[pays];
+      }
+
+      console.log(`[PASTEF] Chargement cellules depuis BD pour: ${pays}`);
+
+      const { data, error } = await window.supabase
+        .from('cellules')
+        .select('id, nom, type, pays')
+        .eq('pays', pays)
+        .eq('active', true)
+        .order('nom', { ascending: true });
+
+      if (error) {
+        console.error('[PASTEF] Erreur Supabase cellules:', error);
+        return [];
+      }
+
+      // Mettre en cache
+      celluleCache[pays] = data || [];
+      console.log(`[PASTEF] ${(data || []).length} cellule(s) trouvée(s) pour ${pays}`);
+
+      return data || [];
+    } catch (err) {
+      console.error('[PASTEF] Erreur chargement cellules:', err);
+      return [];
+    }
   }
 
   // ============================================
@@ -269,19 +318,21 @@
       }
     });
 
-    // Pays → Région + Cellule + Indicatif tél
-    $('#pays').addEventListener('change', e => {
+    // 🆕 Pays → Région + Cellule (depuis Supabase) + Indicatif tél
+    $('#pays').addEventListener('change', async (e) => {
       const pays = e.target.value;
       const regionSel = $('#region');
       const celluleSel = $('#cellule');
       const dialSel = $('#dialCode');
 
+      // Auto-update indicatif téléphonique (GARDE CETTE PARTIE)
       const dialCode = PASTEF_DATA.paysToDialCode[pays];
       if (dialCode && dialSel) {
         const exists = Array.from(dialSel.options).some(o => o.value === dialCode);
         if (exists) dialSel.value = dialCode;
       }
 
+      // Régions depuis JS (GARDE CETTE PARTIE — c'est bon)
       const regions = PASTEF_DATA.regions[pays];
       if (regions && regions.length) {
         fillSelect(regionSel, regions, 'Sélectionnez votre région');
@@ -295,15 +346,40 @@
         regionSel.disabled = true;
       }
 
-      const cellules = PASTEF_DATA.cellules[pays] || PASTEF_DATA.cellulesDefaut;
-      fillSelect(celluleSel, cellules, 'Sélectionnez votre cellule');
+      // 🆕 CELLULES DEPUIS SUPABASE (REMPLACE LA PARTIE STATIQUE)
+      if (!pays || pays === '— Diaspora —') {
+        celluleSel.innerHTML = '<option value="">Sélectionnez d\'abord un vrai pays</option>';
+        celluleSel.disabled = true;
+        return;
+      }
+
+      celluleSel.innerHTML = '<option value="">Chargement des cellules...</option>';
+      celluleSel.disabled = true;
+
+      const cellules = await loadCellulesFromDB(pays);
+
+      if (cellules.length === 0) {
+        celluleSel.innerHTML = '<option value="">Aucune cellule pour ce pays</option>';
+        celluleSel.disabled = true;
+        return;
+      }
+
+      let html = '<option value="">Sélectionnez votre cellule</option>';
+      cellules.forEach(c => {
+        // Stocker l'UUID dans value, le nom dans data-nom pour récupération plus tard
+        html += `<option value="${escapeHtml(c.id)}" data-nom="${escapeHtml(c.nom)}">${escapeHtml(c.nom)}</option>`;
+      });
+      html += '<option value="autre">Autre cellule (préciser)</option>';
+
+      celluleSel.innerHTML = html;
+      celluleSel.disabled = false;
     });
 
     // Cellule → Autre
     $('#cellule').addEventListener('change', e => {
       const wrap = $('#celluleAutreWrap');
       const input = $('#celluleAutre');
-      if (e.target.value.startsWith('Autre')) {
+      if (e.target.value === 'autre') {
         wrap.hidden = false;
         input.required = true;
       } else {
@@ -440,7 +516,7 @@
   }
 
   // ============================================
-  // COLLECTE DES DONNÉES
+  // 🆕 COLLECTE DES DONNÉES (avec cellule_id)
   // ============================================
   function collectFormData() {
     const form = $('#enrolmentForm');
@@ -449,6 +525,17 @@
     const dialCode = fd.get('dialCode') || '+221';
     const telLocal = (fd.get('telephone') || '').replace(/\s+/g, ' ').trim();
     const telephoneComplet = `${dialCode} ${telLocal}`.trim();
+
+    // 🆕 Récupérer cellule_id (UUID) et nom
+    const celluleSel = $('#cellule');
+    const celluleValue = celluleSel.value;
+    let celluleId = null;
+    let celluleNom = null;
+
+    if (celluleValue && celluleValue !== 'autre') {
+      celluleId = celluleValue; // C'est l'UUID maintenant
+      celluleNom = celluleSel.options[celluleSel.selectedIndex].dataset.nom;
+    }
 
     return {
       prenom: fd.get('prenom')?.trim(),
@@ -470,7 +557,8 @@
       quartier: fd.get('quartier')?.trim(),
 
       appartient_cellule: fd.get('appartientCellule'),
-      cellule: fd.get('cellule') || null,
+      cellule_id: celluleId,          // 🆕 UUID depuis Supabase
+      cellule: celluleNom,             // Nom pour rétro-compatibilité
       cellule_autre: fd.get('celluleAutre')?.trim() || null,
       fonction_cellule: fd.get('fonctionCellule') || null,
 
@@ -998,7 +1086,7 @@
     $('#dateNaissance').setAttribute('max', today);
     $('#dateNaissance').setAttribute('min', '1900-01-01');
 
-    console.log('[PASTEF] Formulaire initialisé — v5');
+    console.log('[PASTEF] Formulaire initialisé — v6 (avec cellules Supabase)');
     console.log('[PASTEF] Mode :', navigator.onLine ? 'En ligne' : 'Hors-ligne');
     console.log('[PASTEF] En attente texte :', getPending().length);
     PASTEF_AUDIO.countRecordings().then(n => console.log('[PASTEF] En attente audio :', n));

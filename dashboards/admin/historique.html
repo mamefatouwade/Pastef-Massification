@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mon historique — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Page Mon Historique — Timeline des actions
+     ============================================ */
+
+  .historique-hero {
+    background:
+      linear-gradient(120deg, rgba(15,26,20,0.92), rgba(27,124,61,0.85)),
+      url('../../assets/couverture.png') center/cover;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .historique-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom,
+      var(--pastef-green-light) 0%, var(--pastef-green-light) 33%,
+      var(--pastef-red) 33%, var(--pastef-red) 66%,
+      var(--pastef-or) 66%, var(--pastef-or) 100%);
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pastef-or-light);
+    margin-bottom: 8px;
+  }
+
+  .hero-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .hero-download {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .download-btn {
+    padding: 10px 18px;
+    background: var(--pastef-or);
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+
+  .download-btn:hover {
+    background: var(--pastef-or-light);
+    transform: translateY(-1px);
+  }
+
+  .download-btn.secondary {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+
+  .download-btn.secondary:hover {
+    background: rgba(255,255,255,0.25);
+  }
+
+  /* Statistiques */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    position: relative;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .stat-card.create::before { background: var(--pastef-green); }
+  .stat-card.update::before { background: var(--pastef-or); }
+  .stat-card.delete::before { background: var(--pastef-red); }
+  .stat-card.total::before { background: var(--ink); }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.6px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Toolbar */
+  .toolbar-hist {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select {
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 28px 0 12px;
+    font-size: 13px;
+    background: var(--card);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    min-width: 140px;
+  }
+
+  .filter-select:focus { outline: none; border-color: var(--pastef-green); }
+
+  .count-badge {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .count-badge strong { color: var(--ink); font-weight: 800; }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: linear-gradient(to bottom,
+      var(--pastef-green-soft),
+      var(--border),
+      var(--pastef-red-soft)
+    );
+  }
+
+  .timeline-group {
+    margin-bottom: 24px;
+  }
+
+  .timeline-date {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: -40px;
+  }
+
+  .timeline-date-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pastef-or);
+  }
+
+  .timeline-date-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+  }
+
+  .timeline-item {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    transition: all 0.15s;
+  }
+
+  .timeline-item:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    transform: translateX(2px);
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 3px solid var(--pastef-green);
+    z-index: 1;
+  }
+
+  .timeline-item[data-action="update"]::before { border-color: var(--pastef-or); }
+  .timeline-item[data-action="delete"]::before { border-color: var(--pastef-red); }
+  .timeline-item[data-action="publish"]::before { border-color: var(--ink); }
+
+  .timeline-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 6px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .timeline-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .action-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .action-badge.create { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .action-badge.update { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .action-badge.delete { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .action-badge.publish { background: var(--bg); color: var(--ink); }
+  .action-badge.login { background: #e0f2fe; color: #0369a1; }
+
+  .entity-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .timeline-description {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  .timeline-description strong {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .timeline-metadata {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .timeline-metadata span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Empty state */
+  .hist-empty {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .hist-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .info-strip {
+    background: var(--pastef-or-soft);
+    border-left: 3px solid var(--pastef-or);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .historique-hero { padding: 20px 22px; }
+    .hero-title { font-size: 19px; }
+    .hero-flex { flex-direction: column; align-items: stretch; }
+    .hero-download { width: 100%; }
+    .download-btn { flex: 1; justify-content: center; }
+
+    .toolbar-hist { flex-direction: column; align-items: stretch; }
+    .filter-select { width: 100%; }
+    .count-badge { text-align: center; margin-left: 0; }
+
+    .timeline { padding-left: 32px; }
+    .timeline::before { left: 15px; }
+    .timeline-item::before { left: -24px; width: 14px; height: 14px; }
+    .timeline-date { margin-left: -32px; }
+
+    .timeline-item-head { flex-direction: column; align-items: flex-start; }
+    .timeline-time { align-self: flex-end; margin-top: -20px; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .historique-hero { padding: 18px; }
+    .hero-title { font-size: 17px; }
+    .hero-sub { font-size: 12px; }
+
+    .timeline-item { padding: 12px 14px; }
+    .timeline-badges { gap: 4px; }
+    .action-badge { font-size: 9px; padding: 2px 7px; }
+    .entity-badge { font-size: 9px; padding: 2px 6px; }
+    .timeline-metadata { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement de l'historique…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allHistory = [];
+let currentUserId = null;
+let currentSession = null;
+
+(async function () {
+  'use strict';
+
+  currentSession = await PASTEF.auth.requireAuth(['admin']);
+  if (!currentSession) return;
+  currentUserId = currentSession.user.id;
+
+  PASTEF.sidebar.render(currentSession, 'historique');
+  PASTEF.topbar.render({
+    session: currentSession,
+    title: 'Mon historique',
+    breadcrumb: 'Journal de mes actions',
+  });
+
+  await loadAndRender();
+})();
+
+async function loadAndRender() {
+  try {
+    // Tentative de charger la vraie table user_history (n'existe pas encore)
+    const { data, error } = await PASTEF.supabase
+      .from('user_history')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .order('created_at', { ascending: false })
+      .limit(500);
+
+    if (error && error.code !== 'PGRST106' && error.code !== '42P01') throw error;
+    allHistory = data || [];
+
+    // Fallback : si la table n'existe pas encore ou est vide,
+    // on affiche l'historique reconstitué à partir des données disponibles
+    if (allHistory.length === 0) {
+      await generateFallbackHistory();
+    }
+
+    render();
+  } catch (err) {
+    console.log('Table user_history non créée — fallback');
+    await generateFallbackHistory();
+    render();
+  }
+}
+
+/**
+ * Reconstruit un historique basique à partir des données disponibles
+ * En attendant que la vraie table soit créée en Phase 1
+ */
+async function generateFallbackHistory() {
+  allHistory = [];
+  const now = new Date();
+
+  // Ajoute l'événement de connexion actuel
+  allHistory.push({
+    id: 'login-current',
+    user_id: currentUserId,
+    action_type: 'login',
+    entity_type: 'session',
+    entity_name: 'Connexion',
+    description: `Connexion réussie à l'espace administrateur.`,
+    metadata: {
+      email: currentSession.user.email,
+      user_agent: navigator.userAgent.substring(0, 80),
+    },
+    created_at: now.toISOString(),
+  });
+
+  // Note explicative
+  allHistory.push({
+    id: 'system-note',
+    user_id: currentUserId,
+    action_type: 'system',
+    entity_type: 'systeme',
+    entity_name: 'Notification système',
+    description: `L'historique complet des actions sera disponible dès la mise en place de la base de données (Phase 1). Toutes vos actions passées et futures seront alors tracées automatiquement.`,
+    metadata: {},
+    created_at: new Date(now.getTime() - 60000).toISOString(),
+  });
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const stats = computeStats(allHistory);
+
+  content.innerHTML = `
+    <!-- HERO -->
+    <div class="historique-hero">
+      <div class="hero-eyebrow">Traçabilité personnelle</div>
+      <div class="hero-flex">
+        <div>
+          <h1 class="hero-title">Mon historique d'actions</h1>
+          <p class="hero-sub">Journal de toutes vos créations, modifications et suppressions.</p>
+        </div>
+        <div class="hero-download">
+          <button class="download-btn secondary" onclick="downloadReport('excel')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Excel
+          </button>
+          <button class="download-btn" onclick="downloadReport('pdf')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Télécharger PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    ${allHistory.some((h) => h.id === 'system-note') ? `
+      <div class="info-strip">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span><strong>Historique en cours de mise en place</strong> — La table de traçabilité sera activée en Phase 1. À partir de ce moment, chaque action (création, modification, suppression) sera tracée automatiquement avec date, heure et détails.</span>
+      </div>
+    ` : ''}
+
+    <!-- Statistiques -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/>
+          </svg>
+          Total actions
+        </div>
+        <div class="stat-value">${PASTEF.utils.formatNumber(stats.total)}</div>
+      </div>
+      <div class="stat-card create">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Créations
+        </div>
+        <div class="stat-value">${PASTEF.utils.formatNumber(stats.creates)}</div>
+      </div>
+      <div class="stat-card update">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Modifications
+        </div>
+        <div class="stat-value">${PASTEF.utils.formatNumber(stats.updates)}</div>
+      </div>
+      <div class="stat-card delete">
+        <div class="stat-label">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+          </svg>
+          Suppressions
+        </div>
+        <div class="stat-value">${PASTEF.utils.formatNumber(stats.deletes)}</div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="toolbar-hist">
+      <select class="filter-select" id="filterAction" onchange="applyFilters()">
+        <option value="all">Toutes actions</option>
+        <option value="create">Créations</option>
+        <option value="update">Modifications</option>
+        <option value="delete">Suppressions</option>
+        <option value="publish">Publications</option>
+        <option value="login">Connexions</option>
+      </select>
+
+      <select class="filter-select" id="filterEntity" onchange="applyFilters()">
+        <option value="all">Tous types</option>
+        <option value="inscrit">Inscrits</option>
+        <option value="coordinateur">Coordinateurs</option>
+        <option value="activite">Activités</option>
+        <option value="document">Documents</option>
+        <option value="cellule">Cellules</option>
+        <option value="session">Sessions</option>
+      </select>
+
+      <select class="filter-select" id="filterPeriod" onchange="applyFilters()">
+        <option value="all">Toutes périodes</option>
+        <option value="today">Aujourd'hui</option>
+        <option value="week">7 derniers jours</option>
+        <option value="month">Ce mois</option>
+        <option value="quarter">3 derniers mois</option>
+      </select>
+
+      <span class="count-badge" id="countBadge"></span>
+    </div>
+
+    <div id="timelineContainer"></div>
+  `;
+
+  applyFilters();
+}
+
+function applyFilters() {
+  const action = document.getElementById('filterAction')?.value || 'all';
+  const entity = document.getElementById('filterEntity')?.value || 'all';
+  const period = document.getElementById('filterPeriod')?.value || 'all';
+
+  const now = new Date();
+  const filtered = allHistory.filter((h) => {
+    if (action !== 'all' && h.action_type !== action) return false;
+    if (entity !== 'all' && h.entity_type !== entity) return false;
+
+    if (period !== 'all') {
+      const d = new Date(h.created_at);
+      const diff = (now - d) / (1000 * 60 * 60 * 24);
+      if (period === 'today' && diff > 1) return false;
+      if (period === 'week' && diff > 7) return false;
+      if (period === 'month' && diff > 30) return false;
+      if (period === 'quarter' && diff > 90) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('countBadge').innerHTML = `<strong>${filtered.length}</strong> action${filtered.length > 1 ? 's' : ''}`;
+
+  renderTimeline(filtered);
+}
+
+function renderTimeline(list) {
+  const container = document.getElementById('timelineContainer');
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="hist-empty">
+        <div class="hist-empty-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 14"/>
+          </svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucune action trouvée</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:360px;margin:0 auto">
+          ${allHistory.length === 0
+            ? 'Vos actions apparaîtront ici au fur et à mesure que vous les effectuez.'
+            : 'Aucune action ne correspond aux filtres sélectionnés.'}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Grouper par date
+  const groups = {};
+  list.forEach((h) => {
+    const date = new Date(h.created_at);
+    const key = date.toDateString();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(h);
+  });
+
+  const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
+
+  container.innerHTML = `
+    <div class="timeline">
+      ${sortedDates.map((dateKey) => renderGroup(dateKey, groups[dateKey])).join('')}
+    </div>
+  `;
+}
+
+function renderGroup(dateKey, items) {
+  const date = new Date(dateKey);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const isYesterday = date.toDateString() === new Date(now - 86400000).toDateString();
+
+  let dateLabel = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (isToday) dateLabel = 'Aujourd\'hui · ' + dateLabel;
+  else if (isYesterday) dateLabel = 'Hier · ' + dateLabel;
+
+  return `
+    <div class="timeline-group">
+      <div class="timeline-date">
+        <span class="timeline-date-dot"></span>
+        <span>${dateLabel}</span>
+        <span class="timeline-date-line"></span>
+        <span>${items.length} action${items.length > 1 ? 's' : ''}</span>
+      </div>
+      ${items.map(renderTimelineItem).join('')}
+    </div>
+  `;
+}
+
+function renderTimelineItem(h) {
+  const actionLabels = {
+    create: 'Création',
+    update: 'Modification',
+    delete: 'Suppression',
+    publish: 'Publication',
+    login: 'Connexion',
+    system: 'Système',
+  };
+
+  const entityLabels = {
+    inscrit: 'Inscrit',
+    coordinateur: 'Coordinateur',
+    activite: 'Activité',
+    document: 'Document',
+    cellule: 'Cellule',
+    session: 'Session',
+    systeme: 'Système',
+  };
+
+  const time = new Date(h.created_at).toLocaleTimeString('fr-FR', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+
+  return `
+    <div class="timeline-item" data-action="${h.action_type}">
+      <div class="timeline-item-head">
+        <div class="timeline-badges">
+          <span class="action-badge ${h.action_type}">
+            ${actionLabels[h.action_type] || h.action_type}
+          </span>
+          <span class="entity-badge">${entityLabels[h.entity_type] || h.entity_type}</span>
+        </div>
+        <span class="timeline-time">${time}</span>
+      </div>
+      <div class="timeline-description">${PASTEF.utils.escapeHtml(h.description || '')}</div>
+      ${h.metadata && Object.keys(h.metadata).length > 0 ? renderMetadata(h.metadata) : ''}
+    </div>
+  `;
+}
+
+function renderMetadata(meta) {
+  const entries = Object.entries(meta).slice(0, 3);
+  if (entries.length === 0) return '';
+
+  return `
+    <div class="timeline-metadata">
+      ${entries.map(([k, v]) => `
+        <span>
+          <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <strong>${PASTEF.utils.escapeHtml(k)}:</strong> ${PASTEF.utils.escapeHtml(String(v).substring(0, 60))}
+        </span>
+      `).join('')}
+    </div>
+  `;
+}
+
+function computeStats(list) {
+  return {
+    total: list.length,
+    creates: list.filter((h) => h.action_type === 'create').length,
+    updates: list.filter((h) => h.action_type === 'update').length,
+    deletes: list.filter((h) => h.action_type === 'delete').length,
+  };
+}
+
+/**
+ * Génère et télécharge le rapport en PDF ou Excel
+ */
+function downloadReport(format) {
+  if (format === 'pdf') {
+    generatePDF();
+  } else {
+    generateExcel();
+  }
+}
+
+function generateExcel() {
+  const headers = ['Date', 'Heure', 'Action', 'Type', 'Description', 'Détails'];
+  const rows = allHistory.map((h) => {
+    const d = new Date(h.created_at);
+    return [
+      d.toLocaleDateString('fr-FR'),
+      d.toLocaleTimeString('fr-FR'),
+      h.action_type,
+      h.entity_type,
+      h.description || '',
+      h.metadata ? JSON.stringify(h.metadata) : '',
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pastef_historique_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  PASTEF.utils.toast('Export Excel terminé', `${allHistory.length} actions exportées`);
+}
+
+function generatePDF() {
+  // Génération d'un PDF via HTML → impression navigateur
+  const stats = computeStats(allHistory);
+  const user = currentSession.user.email;
+  const now = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Rapport d'historique — PASTEF</title>
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; color: #1A2E22; padding: 40px; }
+        .header {
+          border-bottom: 4px solid #1B7C3D;
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
+        .header-brand {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+        .logo {
+          font-size: 26px;
+          font-weight: 900;
+          color: #1B7C3D;
+          letter-spacing: -1px;
+        }
+        .logo-sub {
+          font-size: 11px;
+          color: #C42528;
+          font-weight: 700;
+          letter-spacing: 2px;
+        }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #0F1A14; }
+        .subtitle { font-size: 13px; color: #6B7B72; }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin: 30px 0;
+        }
+        .stat {
+          padding: 16px;
+          background: #F4F6F4;
+          border-left: 4px solid #1B7C3D;
+          border-radius: 8px;
+        }
+        .stat-l { font-size: 10px; color: #6B7B72; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-v { font-size: 22px; font-weight: 800; color: #0F1A14; margin-top: 4px; }
+        h2 {
+          font-size: 15px;
+          margin: 30px 0 12px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid #1B7C3D;
+          color: #1B7C3D;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th {
+          background: #0F1A14;
+          color: white;
+          padding: 10px 12px;
+          text-align: left;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        td { padding: 10px 12px; border-bottom: 1px solid #E5E9E7; font-size: 12px; }
+        tr:nth-child(even) { background: #FAFBFA; }
+        .action-tag {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+        .create { background: #E8F5E9; color: #135A2C; }
+        .update { background: #FFF8E1; color: #D4900A; }
+        .delete { background: #FFEBEE; color: #9E1E20; }
+        .footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 2px solid #E5E9E7;
+          font-size: 11px;
+          color: #6B7B72;
+          text-align: center;
+        }
+        @media print { body { padding: 20px; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="header-brand">
+          <div>
+            <div class="logo">PASTEF</div>
+            <div class="logo-sub">PATRIOTES DU SÉNÉGAL</div>
+          </div>
+        </div>
+        <h1>Rapport d'historique des actions</h1>
+        <div class="subtitle">Généré le ${now} · Compte : ${user}</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-l">Total actions</div>
+          <div class="stat-v">${stats.total}</div>
+        </div>
+        <div class="stat" style="border-color:#1B7C3D">
+          <div class="stat-l">Créations</div>
+          <div class="stat-v">${stats.creates}</div>
+        </div>
+        <div class="stat" style="border-color:#D4900A">
+          <div class="stat-l">Modifications</div>
+          <div class="stat-v">${stats.updates}</div>
+        </div>
+        <div class="stat" style="border-color:#C42528">
+          <div class="stat-l">Suppressions</div>
+          <div class="stat-v">${stats.deletes}</div>
+        </div>
+      </div>
+
+      <h2>Journal détaillé des actions</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px">Date/Heure</th>
+            <th style="width:80px">Action</th>
+            <th style="width:100px">Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allHistory.map((h) => {
+            const d = new Date(h.created_at);
+            return `
+              <tr>
+                <td>${d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                <td><span class="action-tag ${h.action_type}">${h.action_type}</span></td>
+                <td>${h.entity_type}</td>
+                <td>${PASTEF.utils.escapeHtml(h.description || '')}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <strong>PASTEF — Patriotes du Sénégal</strong><br>
+        Plateforme d'enrôlement · Rapport confidentiel<br>
+        © ${new Date().getFullYear()} · Tous droits réservés
+      </div>
+    </body>
+    </html>
+  `;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+
+  PASTEF.utils.toast('Rapport PDF prêt', 'Utilisez la boîte d\'impression pour enregistrer en PDF');
+}
+</script>
+
+</body>
+</html>

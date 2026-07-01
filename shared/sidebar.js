@@ -178,7 +178,7 @@
           ${I.logout}
           <span>Déconnexion</span>
         </button>
-        <div class="sidebar-version">v1.0 · © 2026 PASTEF</div>
+        <div class="sidebar-version">MameFatouWade © 2026 PASTEF</div>
       </div>
     `;
 

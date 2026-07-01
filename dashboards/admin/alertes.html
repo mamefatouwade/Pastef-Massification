@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alertes — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Page Alertes système
+     ============================================ */
+
+  /* Hero */
+  .alertes-hero {
+    background:
+      linear-gradient(120deg, rgba(15,26,20,0.92), rgba(196,37,40,0.82)),
+      url('../../assets/couverture.png') center/cover;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .alertes-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom,
+      var(--pastef-red) 0%, var(--pastef-red) 33%,
+      var(--pastef-or) 33%, var(--pastef-or) 66%,
+      var(--pastef-green-light) 66%, var(--pastef-green-light) 100%);
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pastef-or-light);
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 18px;
+  }
+
+  .hero-counts {
+    display: flex;
+    gap: 22px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    flex-wrap: wrap;
+  }
+
+  .hero-count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-count-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .hero-count-dot.critical { background: #ff5252; }
+  .hero-count-dot.warning { background: var(--pastef-or-light); }
+  .hero-count-dot.info { background: var(--pastef-green-light); }
+  .hero-count-dot.resolved { background: rgba(255,255,255,0.4); animation: none; }
+
+  .hero-count-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-count-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Onglets de filtre */
+  .alerts-tabs {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 16px;
+  }
+
+  .alerts-tabs::-webkit-scrollbar { display: none; }
+
+  .alert-tab {
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .alert-tab:hover { border-color: var(--pastef-red); color: var(--text); }
+
+  .alert-tab.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .alert-tab-count {
+    display: inline-block;
+    padding: 1px 7px;
+    background: var(--bg);
+    color: var(--text-muted);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .alert-tab.active .alert-tab-count {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* Liste des alertes */
+  .alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .alert-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 16px;
+    align-items: start;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+
+  .alert-card:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .alert-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .alert-card[data-severity="critical"]::before { background: var(--pastef-red); }
+  .alert-card[data-severity="warning"]::before { background: var(--pastef-or); }
+  .alert-card[data-severity="info"]::before { background: var(--pastef-green); }
+  .alert-card[data-severity="resolved"] { opacity: 0.55; }
+  .alert-card[data-severity="resolved"]::before { background: var(--text-soft); }
+
+  .alert-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .alert-icon.critical { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .alert-icon.warning { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .alert-icon.info { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .alert-icon.resolved { background: var(--bg); color: var(--text-soft); }
+
+  .alert-body { min-width: 0; }
+
+  .alert-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .alert-severity-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+
+  .alert-severity-badge.critical { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .alert-severity-badge.warning { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .alert-severity-badge.info { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .alert-severity-badge.resolved { background: var(--bg); color: var(--text-muted); }
+
+  .alert-type {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .alert-date {
+    font-size: 11px;
+    color: var(--text-soft);
+    margin-left: auto;
+  }
+
+  .alert-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    letter-spacing: -0.1px;
+  }
+
+  .alert-message {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .alert-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .alert-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .alert-action-btn {
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .alert-action-btn:hover {
+    background: var(--pastef-green);
+    color: #fff;
+    border-color: var(--pastef-green);
+  }
+
+  .alert-action-btn.secondary:hover {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--text-soft);
+  }
+
+  /* Empty state */
+  .alerts-empty {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .alerts-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Info bandeau */
+  .info-strip {
+    background: var(--pastef-or-soft);
+    border-left: 3px solid var(--pastef-or);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 1024px) {
+    .alert-card { padding: 14px 16px; }
+  }
+
+  @media (max-width: 768px) {
+    .alertes-hero { padding: 20px 22px; }
+    .hero-title { font-size: 19px; }
+    .hero-counts { gap: 16px; }
+    .hero-count-value { font-size: 16px; }
+
+    .alert-card {
+      grid-template-columns: 40px 1fr;
+      gap: 12px;
+    }
+    .alert-icon { width: 40px; height: 40px; }
+    .alert-actions {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: flex-end;
+      margin-top: 6px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .alertes-hero { padding: 18px; }
+    .hero-title { font-size: 17px; }
+    .hero-counts { gap: 12px; }
+    .hero-count { gap: 6px; }
+    .hero-count-value { font-size: 14px; }
+
+    .alert-card { padding: 12px 14px; }
+    .alert-meta { gap: 6px; }
+    .alert-date { width: 100%; margin-left: 0; }
+    .alert-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .alert-action-btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Analyse des alertes…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allAlerts = [];
+let currentFilter = 'all';
+
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'alertes');
+  PASTEF.topbar.render({
+    session,
+    title: 'Alertes',
+    breadcrumb: 'Surveillance du système',
+  });
+
+  await loadAndRender();
+})();
+
+async function loadAndRender() {
+  try {
+    // Tentative de charger la vraie table alertes (n'existe pas encore)
+    const { data, error } = await PASTEF.supabase
+      .from('alertes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (error && error.code !== 'PGRST106' && error.code !== '42P01') throw error;
+    allAlerts = data || [];
+
+    if (allAlerts.length === 0) {
+      // Fallback : génère les alertes en analysant les données actuelles
+      await generateAlerts();
+    }
+
+    render();
+  } catch (err) {
+    console.log('Table alertes non créée — génération dynamique');
+    await generateAlerts();
+    render();
+  }
+}
+
+/**
+ * Génère automatiquement des alertes basées sur l'état actuel des données
+ * En attendant que la vraie table soit créée en Phase 1
+ */
+async function generateAlerts() {
+  allAlerts = [];
+
+  try {
+    const { data: members, error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .select('*')
+      .limit(5000);
+
+    if (error) throw error;
+    if (!members || members.length === 0) return;
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // 1. Cellules avec beaucoup de membres mais sans coordinateur identifié
+    const cellulesMap = {};
+    members.forEach((m) => {
+      if (!m.cellule) return;
+      if (!cellulesMap[m.cellule]) {
+        cellulesMap[m.cellule] = { members: [], coord: null };
+      }
+      cellulesMap[m.cellule].members.push(m);
+      if (m.fonction_cellule === 'Coordinateur' || m.fonction_cellule === 'Coordinateur Adjoint') {
+        cellulesMap[m.cellule].coord = m;
+      }
+    });
+
+    Object.entries(cellulesMap).forEach(([nom, info]) => {
+      if (info.members.length >= 5 && !info.coord) {
+        allAlerts.push({
+          id: `no-coord-${nom}`,
+          type: 'coordinateur_manquant',
+          severity: 'warning',
+          title: 'Cellule sans coordinateur',
+          message: `La cellule "${nom}" compte ${info.members.length} patriotes mais n'a pas de coordinateur désigné.`,
+          target_name: nom,
+          target_link: 'coordinateurs.html',
+          created_at: now.toISOString(),
+          resolved: false,
+        });
+      }
+    });
+
+    // 2. Départements sans coordinateur départemental
+    const deptsMap = {};
+    members.filter((m) => m.pays === 'Sénégal' && m.region).forEach((m) => {
+      if (!deptsMap[m.region]) {
+        deptsMap[m.region] = { members: [], coord: null };
+      }
+      deptsMap[m.region].members.push(m);
+      if (m.fonction_cellule === 'Coordinateur') {
+        deptsMap[m.region].coord = m;
+      }
+    });
+
+    Object.entries(deptsMap).forEach(([region, info]) => {
+      if (info.members.length >= 20 && !info.coord) {
+        allAlerts.push({
+          id: `no-dept-coord-${region}`,
+          type: 'coordinateur_manquant',
+          severity: 'critical',
+          title: 'Département sans coordinateur',
+          message: `Le département de ${region} compte ${info.members.length} patriotes mais aucun coordinateur départemental désigné.`,
+          target_name: region,
+          target_link: 'coordinateurs.html',
+          created_at: now.toISOString(),
+          resolved: false,
+        });
+      }
+    });
+
+    // 3. Cellules diaspora sans coordinateur
+    const paysMap = {};
+    members.filter((m) => m.pays && m.pays !== 'Sénégal').forEach((m) => {
+      if (!paysMap[m.pays]) {
+        paysMap[m.pays] = { members: [], coord: null };
+      }
+      paysMap[m.pays].members.push(m);
+      if (m.fonction_cellule === 'Coordinateur') {
+        paysMap[m.pays].coord = m;
+      }
+    });
+
+    Object.entries(paysMap).forEach(([pays, info]) => {
+      if (info.members.length >= 5 && !info.coord) {
+        allAlerts.push({
+          id: `no-diaspora-coord-${pays}`,
+          type: 'coordinateur_manquant',
+          severity: 'warning',
+          title: 'Cellule diaspora sans coordinateur',
+          message: `La cellule diaspora ${pays} compte ${info.members.length} patriotes sans coordinateur désigné.`,
+          target_name: pays,
+          target_link: 'coordinateurs.html',
+          created_at: now.toISOString(),
+          resolved: false,
+        });
+      }
+    });
+
+    // 4. Rapports mensuels manquants (info générale)
+    const currentMonth = now.toISOString().substring(0, 7);
+    const activeCells = Object.keys(cellulesMap).filter((c) => cellulesMap[c].coord).length;
+    if (activeCells > 0) {
+      allAlerts.push({
+        id: `report-reminder-${currentMonth}`,
+        type: 'rapport_manquant',
+        severity: 'info',
+        title: 'Rappel rapports mensuels',
+        message: `${activeCells} cellule${activeCells > 1 ? 's' : ''} avec coordinateur${activeCells > 1 ? 's' : ''} - Les rapports mensuels seront collectés à partir du système en Phase 4.`,
+        target_name: currentMonth,
+        target_link: 'rapports.html',
+        created_at: now.toISOString(),
+        resolved: false,
+      });
+    }
+
+    // 5. Inscrits sans cellule (patriotes non affectés)
+    const sansCell = members.filter((m) => m.appartient_cellule !== 'Oui' || !m.cellule).length;
+    if (sansCell > 20) {
+      allAlerts.push({
+        id: `unaffected-${now.getTime()}`,
+        type: 'patriotes_non_affectes',
+        severity: 'warning',
+        title: 'Patriotes non affectés',
+        message: `${sansCell} patriotes n'ont pas encore été affectés à une cellule. Les coordinateurs communaux devraient s'en occuper.`,
+        target_name: `${sansCell} patriotes`,
+        target_link: 'inscriptions.html',
+        created_at: now.toISOString(),
+        resolved: false,
+      });
+    }
+
+    // 6. Croissance rapide (info positive)
+    const thisMonth = members.filter((m) => new Date(m.created_at) >= new Date(now.getFullYear(), now.getMonth(), 1)).length;
+    if (thisMonth >= 50) {
+      allAlerts.push({
+        id: `growth-${now.getTime()}`,
+        type: 'croissance',
+        severity: 'info',
+        title: 'Forte croissance ce mois',
+        message: `${thisMonth} nouveaux patriotes inscrits ce mois-ci. Excellente dynamique !`,
+        target_name: `+${thisMonth}`,
+        target_link: 'statistiques.html',
+        created_at: now.toISOString(),
+        resolved: false,
+      });
+    }
+
+  } catch (err) {
+    console.error('generateAlerts error:', err);
+  }
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const counts = countBySeverity(allAlerts);
+
+  content.innerHTML = `
+    <!-- HERO -->
+    <div class="alertes-hero">
+      <div class="hero-eyebrow">Centre de surveillance</div>
+      <h1 class="hero-title">Alertes système</h1>
+      <p class="hero-sub">Suivez les points d'attention et actions à mener sur le réseau PASTEF.</p>
+
+      <div class="hero-counts">
+        <div class="hero-count">
+          <span class="hero-count-dot critical"></span>
+          <div>
+            <div class="hero-count-value">${counts.critical}</div>
+            <div class="hero-count-label">Critiques</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot warning"></span>
+          <div>
+            <div class="hero-count-value">${counts.warning}</div>
+            <div class="hero-count-label">Avertissements</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot info"></span>
+          <div>
+            <div class="hero-count-value">${counts.info}</div>
+            <div class="hero-count-label">Informations</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot resolved"></span>
+          <div>
+            <div class="hero-count-value">${counts.resolved}</div>
+            <div class="hero-count-label">Résolues</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${allAlerts.some((a) => a.id?.startsWith('no-')) ? `
+      <div class="info-strip">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span><strong>Alertes automatiques</strong> — Ces alertes sont générées en temps réel à partir de l'état actuel des données. Le vrai système d'alertes persistantes sera activé lors de la mise en place de la base de données (Phase 1).</span>
+      </div>
+    ` : ''}
+
+    <!-- Onglets de filtre -->
+    <div class="alerts-tabs">
+      <div class="alert-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">
+        Toutes <span class="alert-tab-count">${counts.total}</span>
+      </div>
+      <div class="alert-tab ${currentFilter === 'critical' ? 'active' : ''}" onclick="setFilter('critical')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        Critiques <span class="alert-tab-count">${counts.critical}</span>
+      </div>
+      <div class="alert-tab ${currentFilter === 'warning' ? 'active' : ''}" onclick="setFilter('warning')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Avertissements <span class="alert-tab-count">${counts.warning}</span>
+      </div>
+      <div class="alert-tab ${currentFilter === 'info' ? 'active' : ''}" onclick="setFilter('info')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        Informations <span class="alert-tab-count">${counts.info}</span>
+      </div>
+      <div class="alert-tab ${currentFilter === 'resolved' ? 'active' : ''}" onclick="setFilter('resolved')">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Résolues <span class="alert-tab-count">${counts.resolved}</span>
+      </div>
+    </div>
+
+    <div id="alertsContainer"></div>
+  `;
+
+  renderAlerts();
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  render();
+}
+
+function countBySeverity(list) {
+  const active = list.filter((a) => !a.resolved);
+  return {
+    total: active.length,
+    critical: active.filter((a) => a.severity === 'critical').length,
+    warning: active.filter((a) => a.severity === 'warning').length,
+    info: active.filter((a) => a.severity === 'info').length,
+    resolved: list.filter((a) => a.resolved).length,
+  };
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alertsContainer');
+
+  let filtered = allAlerts;
+
+  if (currentFilter === 'resolved') {
+    filtered = allAlerts.filter((a) => a.resolved);
+  } else if (currentFilter !== 'all') {
+    filtered = allAlerts.filter((a) => !a.resolved && a.severity === currentFilter);
+  } else {
+    filtered = allAlerts.filter((a) => !a.resolved);
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="alerts-empty">
+        <div class="alerts-empty-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px">
+          ${currentFilter === 'resolved' ? 'Aucune alerte résolue' : 'Tout est en ordre'}
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:360px;margin:0 auto">
+          ${currentFilter === 'all'
+            ? 'Aucune alerte active en ce moment. Le système fonctionne normalement.'
+            : `Aucune alerte de ce type actuellement.`}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Tri : critical > warning > info, puis par date décroissante
+  const severityOrder = { critical: 0, warning: 1, info: 2, resolved: 3 };
+  filtered.sort((a, b) => {
+    const sevDiff = severityOrder[a.severity] - severityOrder[b.severity];
+    if (sevDiff !== 0) return sevDiff;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  container.innerHTML = `
+    <div class="alerts-list">
+      ${filtered.map(renderAlertCard).join('')}
+    </div>
+  `;
+}
+
+function renderAlertCard(alert) {
+  const severity = alert.resolved ? 'resolved' : alert.severity;
+  const iconMap = {
+    critical: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    warning: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+    resolved: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  };
+
+  const severityLabels = {
+    critical: 'Critique',
+    warning: 'Avertissement',
+    info: 'Information',
+    resolved: 'Résolue',
+  };
+
+  const typeLabels = {
+    coordinateur_manquant: 'Coordinateur manquant',
+    rapport_manquant: 'Rapport mensuel',
+    patriotes_non_affectes: 'Affectation',
+    croissance: 'Croissance',
+    cellule_inactive: 'Cellule inactive',
+    coordinateur_inactif: 'Coordinateur inactif',
+  };
+
+  return `
+    <div class="alert-card" data-severity="${severity}">
+      <div class="alert-icon ${severity}">
+        ${iconMap[severity]}
+      </div>
+
+      <div class="alert-body">
+        <div class="alert-meta">
+          <span class="alert-severity-badge ${severity}">${severityLabels[severity]}</span>
+          <span class="alert-type">${typeLabels[alert.type] || alert.type}</span>
+          <span class="alert-date">${PASTEF.utils.formatDateTime(alert.created_at)}</span>
+        </div>
+        <div class="alert-title">${PASTEF.utils.escapeHtml(alert.title)}</div>
+        <div class="alert-message">${PASTEF.utils.escapeHtml(alert.message)}</div>
+        ${alert.target_name ? `
+          <div class="alert-target">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            ${PASTEF.utils.escapeHtml(alert.target_name)}
+          </div>
+        ` : ''}
+      </div>
+
+      ${!alert.resolved ? `
+        <div class="alert-actions">
+          ${alert.target_link ? `
+            <a href="${PASTEF.utils.escapeHtml(alert.target_link)}" class="alert-action-btn">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>
+              </svg>
+              Voir
+            </a>
+          ` : ''}
+          <button class="alert-action-btn secondary" onclick="markResolved('${alert.id}')">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Résoudre
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function markResolved(id) {
+  const alert = allAlerts.find((a) => a.id === id);
+  if (!alert) return;
+
+  alert.resolved = true;
+  alert.resolved_at = new Date().toISOString();
+
+  PASTEF.utils.toast('Alerte marquée résolue', PASTEF.utils.escapeHtml(alert.title));
+  render();
+}
+</script>
+
+</body>
+</html>

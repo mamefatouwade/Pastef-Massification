@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Annuaire — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Page Annuaire des Coordinateurs
+     ============================================ */
+
+  /* Header avec statistiques */
+  .annuaire-hero {
+    background:
+      linear-gradient(120deg, rgba(15,26,20,0.92), rgba(27,124,61,0.82)),
+      url('../../assets/couverture.png') center/cover;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .annuaire-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(to bottom,
+      var(--pastef-green-light) 0%, var(--pastef-green-light) 33%,
+      var(--pastef-red) 33%, var(--pastef-red) 66%,
+      var(--pastef-or) 66%, var(--pastef-or) 100%);
+  }
+
+  .annuaire-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pastef-or-light);
+    margin-bottom: 8px;
+  }
+
+  .annuaire-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .annuaire-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px;
+  }
+
+  .hero-counts {
+    display: flex;
+    gap: 22px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    flex-wrap: wrap;
+  }
+
+  .hero-count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-count-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .hero-count-dot.red { background: var(--pastef-red-light); }
+  .hero-count-dot.green { background: var(--pastef-green-light); }
+  .hero-count-dot.or { background: var(--pastef-or-light); }
+
+  .hero-count-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hero-count-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Toolbar */
+  .toolbar-annuaire {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  .filter-select {
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 28px 0 12px;
+    font-size: 13px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    min-width: 150px;
+  }
+
+  .filter-select:focus { outline: none; border-color: var(--pastef-green); }
+
+  /* Onglets par type */
+  .type-tabs {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .type-tabs::-webkit-scrollbar { display: none; }
+
+  .type-tab {
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .type-tab:hover { border-color: var(--pastef-green); color: var(--text); }
+
+  .type-tab.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .type-tab-count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    background: var(--bg);
+    color: var(--text-muted);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .type-tab.active .type-tab-count {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* Grille des cartes coordinateurs */
+  .coord-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+
+  .coord-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+
+  .coord-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--pastef-green);
+  }
+
+  .coord-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--pastef-green);
+  }
+
+  .coord-card[data-role="departemental"]::before { background: var(--pastef-red); }
+  .coord-card[data-role="communal"]::before { background: var(--pastef-or); }
+  .coord-card[data-role="diaspora"]::before { background: var(--ink); }
+  .coord-card[data-role="admin"]::before { background: linear-gradient(90deg, var(--pastef-green), var(--pastef-red), var(--pastef-or)); }
+
+  .coord-role-tag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green-dark);
+  }
+
+  .coord-card[data-role="departemental"] .coord-role-tag { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
+  .coord-card[data-role="communal"] .coord-role-tag { background: var(--pastef-or-soft); color: var(--pastef-or); }
+  .coord-card[data-role="diaspora"] .coord-role-tag { background: var(--bg); color: var(--ink); }
+  .coord-card[data-role="admin"] .coord-role-tag { background: var(--ink); color: #fff; }
+
+  .coord-header {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    padding-right: 100px;
+  }
+
+  .coord-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark));
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .coord-avatar.female { background: linear-gradient(135deg, var(--pastef-or), #B57607); }
+
+  .coord-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+
+  .coord-territoire {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .coord-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .coord-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .coord-contact-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .coord-contact-value {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .coord-contact-value.phone { font-family: var(--font-mono); font-size: 12px; }
+  .coord-contact-value.email { font-size: 12px; }
+
+  .coord-contact-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .contact-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .contact-action-btn:hover {
+    background: var(--pastef-green);
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  .contact-action-btn.wa { background: #e7f5e7; color: #25D366; }
+  .contact-action-btn.wa:hover { background: #25D366; color: #fff; }
+
+  /* État vide */
+  .annuaire-empty {
+    background: var(--card);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 60px 24px;
+    text-align: center;
+  }
+
+  .annuaire-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--pastef-green-soft);
+    color: var(--pastef-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Placeholder si table pas prête */
+  .info-strip {
+    background: var(--pastef-or-soft);
+    border-left: 3px solid var(--pastef-or);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink);
+    display: flex;
+    align-items: start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 1024px) {
+    .coord-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  }
+
+  @media (max-width: 768px) {
+    .annuaire-hero { padding: 20px 22px; }
+    .annuaire-title { font-size: 19px; }
+    .hero-counts { gap: 16px; }
+    .hero-count-value { font-size: 16px; }
+
+    .toolbar-annuaire {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .search-box { width: 100%; min-width: 0; }
+    .filter-select { width: 100%; }
+
+    .coord-grid { grid-template-columns: 1fr; }
+
+    .coord-header { padding-right: 90px; }
+    .coord-avatar { width: 46px; height: 46px; font-size: 16px; }
+    .coord-name { font-size: 15px; }
+  }
+
+  @media (max-width: 480px) {
+    .annuaire-hero { padding: 18px; }
+    .annuaire-title { font-size: 17px; }
+    .annuaire-sub { font-size: 12px; }
+    .hero-counts { gap: 12px; }
+    .hero-count { gap: 6px; }
+    .hero-count-value { font-size: 14px; }
+    .hero-count-label { font-size: 10px; }
+
+    .coord-card { padding: 16px; }
+    .coord-header { padding-right: 0; }
+    .coord-role-tag {
+      position: static;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .coord-contact-value.email {
+      font-size: 11px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement de l'annuaire…
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+let allCoords = [];
+let currentType = 'all';
+
+(async function () {
+  'use strict';
+
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'annuaire');
+  PASTEF.topbar.render({
+    session,
+    title: 'Annuaire',
+    breadcrumb: 'Contacts de tous les coordinateurs',
+  });
+
+  await loadAndRender();
+})();
+
+async function loadAndRender() {
+  try {
+    // Tentative de charger la table coordinator_accounts (n'existe pas encore)
+    const { data, error } = await PASTEF.supabase
+      .from('coordinator_accounts')
+      .select(`
+        id, role, email, active, created_at,
+        enrolment:enrolment_id(prenom, nom, sexe, telephone, quartier, region, pays),
+        cellule:cellule_id(nom, type, region, departement, commune, pays)
+      `)
+      .eq('active', true);
+
+    if (error && error.code !== 'PGRST106' && error.code !== '42P01') throw error;
+    allCoords = data || [];
+
+    // Fallback : si la table n'existe pas encore, on tente de trouver les coordinateurs
+    // depuis la colonne fonction_cellule dans enrolments
+    if (allCoords.length === 0) {
+      await loadFallbackCoords();
+    }
+
+    render();
+  } catch (err) {
+    console.log('Table coordinator_accounts non créée — fallback');
+    await loadFallbackCoords();
+    render();
+  }
+}
+
+async function loadFallbackCoords() {
+  // Reconstruction depuis enrolments en attendant la vraie table
+  try {
+    const { data, error } = await PASTEF.supabase
+      .from(PASTEF.TABLE)
+      .select('id, prenom, nom, sexe, telephone, quartier, region, pays, fonction_cellule, cellule')
+      .in('fonction_cellule', ['Coordinateur', 'Coordinateur Adjoint']);
+
+    if (error) throw error;
+
+    allCoords = (data || []).map((m) => ({
+      id: m.id,
+      email: null, // pas encore de compte
+      active: true,
+      role: inferRole(m),
+      isFromFallback: true,
+      enrolment: {
+        prenom: m.prenom,
+        nom: m.nom,
+        sexe: m.sexe,
+        telephone: m.telephone,
+        quartier: m.quartier,
+        region: m.region,
+        pays: m.pays,
+      },
+      cellule: {
+        nom: m.cellule || '—',
+        type: m.pays === 'Sénégal' ? 'communale' : 'diaspora',
+        region: m.region,
+        commune: m.quartier,
+        pays: m.pays,
+      },
+    }));
+  } catch (err) {
+    console.error(err);
+    allCoords = [];
+  }
+}
+
+function inferRole(m) {
+  if (m.pays !== 'Sénégal') return 'diaspora';
+  return 'communal'; // par défaut, sera précisé plus tard
+}
+
+function render() {
+  const content = document.getElementById('content');
+  const counts = countByType(allCoords);
+
+  content.innerHTML = `
+    <!-- HERO -->
+    <div class="annuaire-hero">
+      <div class="annuaire-eyebrow">Répertoire national</div>
+      <h1 class="annuaire-title">Annuaire des coordinateurs</h1>
+      <p class="annuaire-sub">Coordonnées de tous les responsables PASTEF à tous les niveaux.</p>
+
+      <div class="hero-counts">
+        <div class="hero-count">
+          <span class="hero-count-dot red"></span>
+          <div>
+            <div class="hero-count-value">${counts.departemental}</div>
+            <div class="hero-count-label">Départementaux</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot or"></span>
+          <div>
+            <div class="hero-count-value">${counts.communal}</div>
+            <div class="hero-count-label">Communaux</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot green"></span>
+          <div>
+            <div class="hero-count-value">${counts.diaspora}</div>
+            <div class="hero-count-label">Diaspora</div>
+          </div>
+        </div>
+        <div class="hero-count">
+          <span class="hero-count-dot" style="background:#fff"></span>
+          <div>
+            <div class="hero-count-value">${counts.total}</div>
+            <div class="hero-count-label">Total actifs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${allCoords.some((c) => c.isFromFallback) ? `
+      <div class="info-strip">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span><strong>Données temporaires</strong> — L'annuaire affiche pour l'instant les inscrits marqués comme "Coordinateur" dans le formulaire. La vraie table dédiée sera créée lors de la mise en place de la base (Phase 1). Les emails de connexion n'existent pas encore.</span>
+      </div>
+    ` : ''}
+
+    <!-- Onglets par type -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="type-tabs">
+        <div class="type-tab ${currentType === 'all' ? 'active' : ''}" onclick="setType('all')">
+          Tous <span class="type-tab-count">${counts.total}</span>
+        </div>
+        <div class="type-tab ${currentType === 'departemental' ? 'active' : ''}" onclick="setType('departemental')">
+          Départementaux <span class="type-tab-count">${counts.departemental}</span>
+        </div>
+        <div class="type-tab ${currentType === 'communal' ? 'active' : ''}" onclick="setType('communal')">
+          Communaux <span class="type-tab-count">${counts.communal}</span>
+        </div>
+        <div class="type-tab ${currentType === 'diaspora' ? 'active' : ''}" onclick="setType('diaspora')">
+          Diaspora <span class="type-tab-count">${counts.diaspora}</span>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exporter CSV
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar-annuaire">
+      <div class="search-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Chercher par nom, téléphone ou territoire…" oninput="applyFilters()" />
+      </div>
+
+      <select class="filter-select" id="paysFilter" onchange="applyFilters()">
+        <option value="all">Tous pays</option>
+        ${[...new Set(allCoords.map((c) => c.enrolment?.pays).filter(Boolean))].sort().map((p) =>
+          `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)}</option>`
+        ).join('')}
+      </select>
+
+      <select class="filter-select" id="regionFilter" onchange="applyFilters()">
+        <option value="all">Toutes régions</option>
+        ${[...new Set(allCoords.map((c) => c.enrolment?.region).filter(Boolean))].sort().map((r) =>
+          `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`
+        ).join('')}
+      </select>
+
+      <select class="filter-select" id="sortFilter" onchange="applyFilters()">
+        <option value="name">Ordre alphabétique</option>
+        <option value="role">Par rôle</option>
+        <option value="territoire">Par territoire</option>
+      </select>
+    </div>
+
+    <div id="coordContainer"></div>
+  `;
+
+  applyFilters();
+}
+
+function setType(type) {
+  currentType = type;
+  render();
+}
+
+function countByType(list) {
+  return {
+    total: list.length,
+    admin: list.filter((c) => c.role === 'admin').length,
+    departemental: list.filter((c) => c.role === 'departemental').length,
+    communal: list.filter((c) => c.role === 'communal').length,
+    diaspora: list.filter((c) => c.role === 'diaspora').length,
+  };
+}
+
+function applyFilters() {
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  const pays = document.getElementById('paysFilter')?.value || 'all';
+  const region = document.getElementById('regionFilter')?.value || 'all';
+  const sort = document.getElementById('sortFilter')?.value || 'name';
+
+  let filtered = allCoords.filter((c) => {
+    if (currentType !== 'all' && c.role !== currentType) return false;
+    if (pays !== 'all' && c.enrolment?.pays !== pays) return false;
+    if (region !== 'all' && c.enrolment?.region !== region) return false;
+
+    if (search) {
+      const hay = `${c.enrolment?.prenom || ''} ${c.enrolment?.nom || ''} ${c.enrolment?.telephone || ''} ${c.cellule?.nom || ''} ${c.enrolment?.region || ''} ${c.enrolment?.quartier || ''}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (sort === 'name') {
+    filtered.sort((a, b) =>
+      `${a.enrolment?.prenom} ${a.enrolment?.nom}`.localeCompare(`${b.enrolment?.prenom} ${b.enrolment?.nom}`)
+    );
+  } else if (sort === 'role') {
+    const order = { admin: 0, departemental: 1, communal: 2, diaspora: 3 };
+    filtered.sort((a, b) => (order[a.role] ?? 9) - (order[b.role] ?? 9));
+  } else if (sort === 'territoire') {
+    filtered.sort((a, b) =>
+      `${a.enrolment?.pays} ${a.enrolment?.region}`.localeCompare(`${b.enrolment?.pays} ${b.enrolment?.region}`)
+    );
+  }
+
+  renderCards(filtered);
+}
+
+function renderCards(list) {
+  const container = document.getElementById('coordContainer');
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="annuaire-empty">
+        <div class="annuaire-empty-icon">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--ink);margin-bottom:6px">Aucun coordinateur trouvé</div>
+        <div style="font-size:13px;color:var(--text-muted);max-width:360px;margin:0 auto">
+          ${allCoords.length === 0
+            ? 'Aucun coordinateur n\'est encore désigné. Rendez-vous dans "Gestion coordinateurs" pour en désigner.'
+            : 'Aucun résultat ne correspond aux filtres sélectionnés.'}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `<div class="coord-grid">${list.map(renderCoordCard).join('')}</div>`;
+}
+
+function renderCoordCard(c) {
+  const e = c.enrolment || {};
+  const cell = c.cellule || {};
+  const isFemale = e.sexe === 'Femme';
+  const roleLabel = {
+    admin: 'Admin Principal',
+    departemental: 'Départemental',
+    communal: 'Communal',
+    diaspora: 'Diaspora',
+  }[c.role] || c.role;
+
+  const territoire = buildTerritoire(c);
+  const phone = e.telephone || '';
+  const email = c.email || '';
+  const initials = PASTEF.utils.initials(e.prenom, e.nom);
+
+  // Nettoie le numéro pour les liens
+  const phoneClean = phone.replace(/[\s\-()]/g, '');
+  const isDiaspora = c.role === 'diaspora' || (e.pays && e.pays !== 'Sénégal');
+
+  return `
+    <div class="coord-card" data-role="${c.role}">
+      <span class="coord-role-tag">${roleLabel}</span>
+
+      <div class="coord-header">
+        <div class="coord-avatar ${isFemale ? 'female' : ''}">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <div class="coord-name">${PASTEF.utils.escapeHtml(e.prenom || '')} ${PASTEF.utils.escapeHtml(e.nom || '')}</div>
+          <div class="coord-territoire">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            ${PASTEF.utils.escapeHtml(territoire)}
+          </div>
+        </div>
+      </div>
+
+      <div class="coord-contact-list">
+        ${phone ? `
+          <div class="coord-contact-item">
+            <div class="coord-contact-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="coord-contact-value phone">${PASTEF.utils.escapeHtml(phone)}</div>
+            <div class="coord-contact-actions">
+              <a href="tel:${PASTEF.utils.escapeHtml(phoneClean)}" class="contact-action-btn" title="Appeler">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+              </a>
+              ${isDiaspora ? `
+                <a href="https://wa.me/${PASTEF.utils.escapeHtml(phoneClean.replace(/^\+/, ''))}" target="_blank" class="contact-action-btn wa" title="WhatsApp">
+                  <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                  </svg>
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        ` : ''}
+
+        ${email ? `
+          <div class="coord-contact-item">
+            <div class="coord-contact-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="coord-contact-value email">${PASTEF.utils.escapeHtml(email)}</div>
+            <div class="coord-contact-actions">
+              <a href="mailto:${PASTEF.utils.escapeHtml(email)}" class="contact-action-btn" title="Envoyer un email">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        ` : ''}
+
+        ${cell.nom && cell.nom !== '—' ? `
+          <div class="coord-contact-item">
+            <div class="coord-contact-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4"/><path d="M9 22V12h6v10"/>
+              </svg>
+            </div>
+            <div class="coord-contact-value">${PASTEF.utils.escapeHtml(cell.nom)}</div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function buildTerritoire(c) {
+  const e = c.enrolment || {};
+  const cell = c.cellule || {};
+
+  if (c.role === 'diaspora' || (e.pays && e.pays !== 'Sénégal')) {
+    return e.region ? `${e.region}, ${e.pays}` : e.pays || 'International';
+  }
+
+  const parts = [];
+  if (e.quartier) parts.push(e.quartier);
+  if (e.region) parts.push(e.region);
+  return parts.length > 0 ? parts.join(' · ') : 'Sénégal';
+}
+
+function exportCSV() {
+  if (!allCoords.length) {
+    PASTEF.utils.toast('Rien à exporter', '', { color: 'var(--pastef-or)' });
+    return;
+  }
+
+  const headers = ['Rôle', 'Prénom', 'Nom', 'Sexe', 'Téléphone', 'Email', 'Territoire', 'Cellule', 'Pays', 'Région'];
+  const rows = allCoords.map((c) => {
+    const e = c.enrolment || {};
+    return [
+      c.role,
+      e.prenom || '',
+      e.nom || '',
+      e.sexe || '',
+      e.telephone || '',
+      c.email || '',
+      buildTerritoire(c),
+      c.cellule?.nom || '',
+      e.pays || '',
+      e.region || '',
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pastef_annuaire_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  PASTEF.utils.toast('Export terminé', `${allCoords.length} coordinateurs exportés`);
+}
+</script>
+
+</body>
+</html>
