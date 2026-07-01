@@ -96,43 +96,73 @@
   // ============================================
   // 🆕 CHARGER LES CELLULES DEPUIS SUPABASE
   // ============================================
-  async function loadCellulesFromDB(pays) {
+  async function loadCellulesFromDB(pays, commune = null) {
     try {
-      // Vérifier que Supabase est initialisé
-      if (!window.supabase) {
-        console.warn('[PASTEF] Supabase non initialisé');
-        return [];
+      // Vérifier que la config Supabase est présente
+      if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url) {
+        console.warn('[PASTEF] SUPABASE_CONFIG manquant');
+        return getFallbackCellules(pays);
       }
 
+      // Clé cache incluant la commune si spécifiée
+      const cacheKey = commune ? `${pays}::${commune}` : pays;
+      
       // Vérifier le cache
-      if (celluleCache[pays]) {
-        console.log(`[PASTEF] Cellules du cache: ${pays}`);
-        return celluleCache[pays];
+      if (celluleCache[cacheKey]) {
+        console.log(`[PASTEF] Cellules du cache: ${cacheKey}`);
+        return celluleCache[cacheKey];
       }
 
-      console.log(`[PASTEF] Chargement cellules depuis BD pour: ${pays}`);
+      console.log(`[PASTEF] Chargement cellules depuis BD pour: ${cacheKey}`);
 
-      const { data, error } = await window.supabase
-        .from('cellules')
-        .select('id, nom, type, pays')
-        .eq('pays', pays)
-        .eq('active', true)
-        .order('nom', { ascending: true });
-
-      if (error) {
-        console.error('[PASTEF] Erreur Supabase cellules:', error);
-        return [];
+      const cfg = window.SUPABASE_CONFIG;
+      // Appel REST direct (comme sendToSupabase) — pas besoin du client JS
+      let url = `${cfg.url}/rest/v1/cellules?select=id,nom,type,pays,commune`
+        + `&pays=eq.${encodeURIComponent(pays)}`
+        + `&active=eq.true`;
+      
+      // 🆕 Filtrer par commune si spécifié (pour Sénégal)
+      if (commune) {
+        url += `&commune=eq.${encodeURIComponent(commune)}`;
       }
+      
+      url += `&order=nom.asc`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': `Bearer ${cfg.anonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        console.error(`[PASTEF] Erreur REST cellules (${response.status}):`, text);
+        return getFallbackCellules(pays);
+      }
+
+      const data = await response.json();
 
       // Mettre en cache
-      celluleCache[pays] = data || [];
-      console.log(`[PASTEF] ${(data || []).length} cellule(s) trouvée(s) pour ${pays}`);
+      celluleCache[cacheKey] = data || [];
+      console.log(`[PASTEF] ${(data || []).length} cellule(s) trouvée(s) pour ${cacheKey}`);
 
       return data || [];
     } catch (err) {
       console.error('[PASTEF] Erreur chargement cellules:', err);
-      return [];
+      return getFallbackCellules(pays);
     }
+  }
+
+  // Fallback : données locales si la BD est inaccessible (hors-ligne, etc.)
+  function getFallbackCellules(pays) {
+    const liste = PASTEF_DATA.cellules[pays] || PASTEF_DATA.cellulesDefaut;
+    // Transformer en objets {id, nom} pour garder le même format
+    return liste
+      .filter(nom => !nom.startsWith('—') && nom !== 'Autre cellule (préciser)')
+      .map(nom => ({ id: nom, nom: nom, type: 'base', pays: pays }));
   }
 
   // ============================================
@@ -322,6 +352,12 @@
     $('#pays').addEventListener('change', async (e) => {
       const pays = e.target.value;
       const regionSel = $('#region');
+      const departementField = $('#departementField');
+      const departementSel = $('#departement');
+      const communeSelectField = $('#communeSelectField');
+      const communeSel = $('#commune');
+      const communeTextField = $('#communeTextField');
+      const communeText = $('#communeText');
       const celluleSel = $('#cellule');
       const dialSel = $('#dialCode');
 
@@ -332,13 +368,41 @@
         if (exists) dialSel.value = dialCode;
       }
 
+      // 🆕 Sénégal : afficher Département + Commune (select)
+      //    Autres pays : masquer Département, afficher Localité (texte libre)
+      if (pays === 'Sénégal') {
+        departementField.hidden = false;
+        departementSel.required = true;
+        departementSel.disabled = true;
+        departementSel.innerHTML = '<option value="">Sélectionnez d\'abord la région</option>';
+
+        communeSelectField.hidden = false;
+        communeSel.required = true;
+        communeSel.disabled = true;
+        communeSel.innerHTML = '<option value="">Sélectionnez d\'abord le département</option>';
+
+        communeTextField.hidden = true;
+        communeText.required = false;
+        communeText.value = '';
+      } else {
+        departementField.hidden = true;
+        departementSel.required = false;
+        departementSel.value = '';
+
+        communeSelectField.hidden = true;
+        communeSel.required = false;
+
+        communeTextField.hidden = false;
+        communeText.required = true;
+      }
+
       // Régions depuis JS (GARDE CETTE PARTIE — c'est bon)
       const regions = PASTEF_DATA.regions[pays];
       if (regions && regions.length) {
         fillSelect(regionSel, regions, 'Sélectionnez votre région');
         regionSel.disabled = false;
       } else if (pays && pays !== '— Diaspora —') {
-        regionSel.innerHTML = '<option value="Autre">Préciser dans le quartier</option>';
+        regionSel.innerHTML = '<option value="Autre">Préciser dans la localité</option>';
         regionSel.value = 'Autre';
         regionSel.disabled = false;
       } else {
@@ -359,14 +423,14 @@
       const cellules = await loadCellulesFromDB(pays);
 
       if (cellules.length === 0) {
-        celluleSel.innerHTML = '<option value="">Aucune cellule pour ce pays</option>';
-        celluleSel.disabled = true;
+        celluleSel.innerHTML = '<option value="">Aucune cellule pré-définie</option>'
+          + '<option value="autre">Autre cellule (préciser)</option>';
+        celluleSel.disabled = false;
         return;
       }
 
       let html = '<option value="">Sélectionnez votre cellule</option>';
       cellules.forEach(c => {
-        // Stocker l'UUID dans value, le nom dans data-nom pour récupération plus tard
         html += `<option value="${escapeHtml(c.id)}" data-nom="${escapeHtml(c.nom)}">${escapeHtml(c.nom)}</option>`;
       });
       html += '<option value="autre">Autre cellule (préciser)</option>';
@@ -374,6 +438,100 @@
       celluleSel.innerHTML = html;
       celluleSel.disabled = false;
     });
+
+    // 🆕 RÉGION → DÉPARTEMENT (seulement pour Sénégal)
+    $('#region').addEventListener('change', e => {
+      const pays = $('#pays').value;
+      const region = e.target.value;
+      const departementSel = $('#departement');
+      const communeSel = $('#commune');
+
+      // Reset commune & département
+      communeSel.innerHTML = '<option value="">Sélectionnez d\'abord le département</option>';
+      communeSel.disabled = true;
+
+      if (pays !== 'Sénégal' || !region) {
+        departementSel.innerHTML = '<option value="">Pas de département pour ce pays</option>';
+        departementSel.disabled = true;
+        return;
+      }
+
+      // Charger les départements de cette région
+      const senegalStruct = PASTEF_DATA.senegalStructure[region];
+      if (senegalStruct) {
+        const departments = Object.keys(senegalStruct).sort();
+        fillSelect(departementSel, departments, 'Sélectionnez votre département');
+        departementSel.disabled = false;
+      } else {
+        departementSel.innerHTML = '<option value="">Aucun département trouvé</option>';
+        departementSel.disabled = true;
+      }
+    });
+
+    // 🆕 DÉPARTEMENT → COMMUNE (seulement pour Sénégal)
+    $('#departement').addEventListener('change', e => {
+      const pays = $('#pays').value;
+      const region = $('#region').value;
+      const departement = e.target.value;
+      const communeSel = $('#commune');
+
+      if (pays !== 'Sénégal' || !region || !departement) {
+        communeSel.innerHTML = '<option value="">Sélectionnez d\'abord le département</option>';
+        communeSel.disabled = true;
+        return;
+      }
+
+      // Charger les communes de ce département dans le select
+      const senegalStruct = PASTEF_DATA.senegalStructure[region];
+      const communes = senegalStruct?.[departement] || [];
+
+      if (communes.length > 0) {
+        let html = '<option value="">Sélectionnez votre commune</option>';
+        communes.forEach(c => {
+          html += `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`;
+        });
+        communeSel.innerHTML = html;
+        communeSel.disabled = false;
+        console.log(`[PASTEF] ${communes.length} commune(s) chargée(s) pour ${departement}`);
+      } else {
+        communeSel.innerHTML = '<option value="">Aucune commune trouvée</option>';
+        communeSel.disabled = true;
+      }
+    });
+
+    // 🆕 COMMUNE → CELLULES (recharger les cellules de cette commune)
+    $('#commune').addEventListener('change', async (e) => {
+      const pays = $('#pays').value;
+      const commune = e.target.value;
+      const celluleSel = $('#cellule');
+
+      if (!pays || !commune) return;
+
+      // Recharger les cellules filtrées par cette commune
+      celluleSel.innerHTML = '<option value="">Chargement des cellules...</option>';
+      celluleSel.disabled = true;
+      const cellules = await loadCellulesFromDB(pays, commune);
+      renderCelluleOptions(cellules, celluleSel);
+    });
+
+    // 🆕 Fonction utilitaire pour rendre les options du select des cellules
+    function renderCelluleOptions(cellules, celluleSel) {
+      if (cellules.length === 0) {
+        celluleSel.innerHTML = '<option value="">Aucune cellule dans cette commune</option>'
+          + '<option value="autre">Autre cellule (préciser)</option>';
+        celluleSel.disabled = false;
+        return;
+      }
+
+      let html = '<option value="">Sélectionnez votre cellule</option>';
+      cellules.forEach(c => {
+        html += `<option value="${escapeHtml(c.id)}" data-nom="${escapeHtml(c.nom)}">${escapeHtml(c.nom)}</option>`;
+      });
+      html += '<option value="autre">Autre cellule (préciser)</option>';
+
+      celluleSel.innerHTML = html;
+      celluleSel.disabled = false;
+    }
 
     // Cellule → Autre
     $('#cellule').addEventListener('change', e => {
@@ -397,7 +555,7 @@
         const celluleSel = $('#cellule');
         const fonctionSel = $('#fonctionCellule');
 
-        if (e.target.value === 'oui') {
+        if (e.target.value === 'Oui') {
           ouiBlock.hidden = false;
           nonBlock.hidden = true;
           celluleSel.required = true;
@@ -533,8 +691,15 @@
     let celluleNom = null;
 
     if (celluleValue && celluleValue !== 'autre') {
-      celluleId = celluleValue; // C'est l'UUID maintenant
-      celluleNom = celluleSel.options[celluleSel.selectedIndex].dataset.nom;
+      // Vérifier si c'est un UUID (depuis la BD) ou un nom (fallback hors-ligne)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(celluleValue);
+      if (isUUID) {
+        celluleId = celluleValue;
+        celluleNom = celluleSel.options[celluleSel.selectedIndex].dataset.nom;
+      } else {
+        celluleId = null;
+        celluleNom = celluleValue;
+      }
     }
 
     return {
@@ -554,7 +719,10 @@
 
       pays: fd.get('pays'),
       region: fd.get('region'),
-      quartier: fd.get('quartier')?.trim(),
+      // La colonne BD s'appelle 'quartier' → on y met la commune choisie
+      quartier: fd.get('pays') === 'Sénégal'
+        ? fd.get('commune')
+        : fd.get('communeText')?.trim(),
 
       appartient_cellule: fd.get('appartientCellule'),
       cellule_id: celluleId,          // 🆕 UUID depuis Supabase
@@ -738,6 +906,16 @@
     $('#ageHint').textContent = '';
     $('#region').disabled = true;
     $('#region').innerHTML = '<option value="">Sélectionnez d\'abord le pays</option>';
+    // 🆕 Reset département et commune
+    $('#departementField').hidden = true;
+    $('#departement').disabled = true;
+    $('#departement').innerHTML = '<option value="">Sélectionnez d\'abord la région</option>';
+    $('#communeSelectField').hidden = true;
+    $('#commune').disabled = true;
+    $('#commune').innerHTML = '<option value="">Sélectionnez d\'abord le département</option>';
+    $('#communeTextField').hidden = false;
+    $('#communeText').required = true;
+
     $('#dialCode').value = '+221';
     clearPhoneError('telephone');
   }

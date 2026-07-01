@@ -470,7 +470,7 @@ function applyFilters() {
     if (sexe !== 'Tous' && m.sexe !== sexe) return false;
 
     if (cellule !== 'Tous') {
-      const hasCell = m.appartient_cellule === 'Oui' && m.cellule;
+      const hasCell = m.appartient_cellule?.toLowerCase() === 'oui' && m.cellule;
       if (cellule === '__with__' && !hasCell) return false;
       if (cellule === '__without__' && hasCell) return false;
       if (cellule !== '__with__' && cellule !== '__without__' && m.cellule !== cellule) return false;
@@ -521,7 +521,7 @@ function renderTable(list) {
   tbody.innerHTML = visible.map((m) => {
     const isFemale = m.sexe === 'Femme';
     const inits = PASTEF.utils.initials(m.prenom, m.nom);
-    const cellDisplay = (m.appartient_cellule === 'Oui' && m.cellule)
+    const cellDisplay = (m.appartient_cellule?.toLowerCase() === 'oui' && m.cellule)
       ? `<span class="cell-tag"><span class="cell-tag-dot"></span>${PASTEF.utils.escapeHtml(m.cellule)}</span>`
       : `<span class="cell-tag no"><span class="cell-tag-dot"></span><em style="color:var(--text-soft)">Non affecté</em></span>`;
 
@@ -728,7 +728,7 @@ function computeStats(data) {
     thisMonth: data.filter((m) => new Date(m.created_at) >= startMonth).length,
     senegal: data.filter((m) => m.pays === 'Sénégal').length,
     diaspora: data.filter((m) => m.pays !== 'Sénégal').length,
-    sansCellule: data.filter((m) => m.appartient_cellule !== 'Oui' || !m.cellule).length,
+    sansCellule: data.filter((m) => m.appartient_cellule?.toLowerCase() !== 'oui' || !m.cellule).length,
   };
 }
 

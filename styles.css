@@ -1123,3 +1123,124 @@ button:focus-visible {
     display: none !important;
   }
 }
+/* ============================================
+   Fix ciblé : dropdown "Domaine d'activité"
+   ============================================ */
+
+.domaine-cs-wrap {
+  position: relative;
+}
+
+/* Select natif conservé mais invisible : le trigger
+   custom prend sa place visuellement */
+select.domaine-cs-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.domaine-cs-trigger {
+  width: 100%;
+  padding: 12px 38px 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background-color: var(--input-bg);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  display: block;
+  transition: all 0.15s ease;
+}
+
+.domaine-cs-trigger::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--green);
+  border-bottom: 2px solid var(--green);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.domaine-cs-trigger.is-open::after {
+  transform: translateY(-35%) rotate(-135deg);
+}
+
+.domaine-cs-trigger.is-placeholder {
+  color: var(--text-soft);
+}
+
+.domaine-cs-trigger:hover {
+  border-color: var(--green-light);
+}
+
+.domaine-cs-trigger.is-open {
+  border-color: var(--green);
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(27, 124, 61, 0.1);
+}
+
+.domaine-cs-trigger.is-disabled {
+  background-color: #F3F4F6;
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
+.field.has-error .domaine-cs-trigger {
+  border-color: var(--red);
+  background-color: #FEF2F2;
+}
+
+/* Panneau ancré sous le trigger : top: 100% = TOUJOURS
+   vers le bas, jamais vers le haut */
+.domaine-cs-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 60;
+  -webkit-overflow-scrolling: touch;
+}
+
+.domaine-cs-panel.is-open {
+  display: block;
+}
+
+.domaine-cs-option {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.domaine-cs-option:hover {
+  background-color: var(--info-bg);
+}
+
+.domaine-cs-option.is-selected {
+  background-color: var(--info-bg);
+  color: var(--green-dark);
+  font-weight: 700;
+}

@@ -17,6 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="domaine-dropdown-fix.css">
 </head>
 <body>
 
@@ -166,9 +167,23 @@
             </select>
           </div>
 
-          <div class="field">
-            <label for="quartier">Quartier / Localité <span class="req">*</span></label>
-            <input type="text" id="quartier" name="quartier" required placeholder="Ex : Sacré-Cœur, Médina...">
+          <div class="field" id="departementField" hidden>
+            <label for="departement">Département <span class="req">*</span></label>
+            <select id="departement" name="departement" disabled>
+              <option value="">Sélectionnez d'abord la région</option>
+            </select>
+          </div>
+
+          <div class="field" id="communeSelectField" hidden>
+            <label for="commune">Commune <span class="req">*</span></label>
+            <select id="commune" name="commune" disabled>
+              <option value="">Sélectionnez d'abord le département</option>
+            </select>
+          </div>
+
+          <div class="field" id="communeTextField">
+            <label for="communeText">Quartier / Localité <span class="req">*</span></label>
+            <input type="text" id="communeText" name="communeText" required placeholder="Ex : Sacré-Cœur, Médina...">
           </div>
         </div>
       </section>
@@ -191,11 +206,11 @@
           <p class="field-question">Faites-vous déjà partie d'une cellule PASTEF ? <span class="req">*</span></p>
           <div class="radio-group">
             <label class="radio-label">
-              <input type="radio" name="appartientCellule" value="oui" required>
+              <input type="radio" name="appartientCellule" value="Oui" required>
               <span>Oui, je suis déjà membre d'une cellule</span>
             </label>
             <label class="radio-label">
-              <input type="radio" name="appartientCellule" value="non" required>
+              <input type="radio" name="appartientCellule" value="Non" required>
               <span>Non, je souhaite être affecté à une cellule</span>
             </label>
           </div>
@@ -432,6 +447,7 @@
   <script src="js/supabase-config.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/app.js"></script>
+  <script src="domaine-dropdown-fix.js"></script>
 
   <script>
     // Enregistrement du Service Worker + mise à jour automatique
