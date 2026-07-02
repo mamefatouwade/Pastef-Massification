@@ -863,12 +863,12 @@
       layers.cellules.addLayer(cellMarker);
     }
 
-    // --- Couche Jeunesse : halo vert pour zones à forte jeunesse ---
+    // --- Couche Jeunesse : halo rouge pour zones à forte jeunesse ---
     if (youthPct >= 60) {
       const youthHalo = L.circleMarker([geo.lat, geo.lng], {
         radius: radius + 10,
-        fillColor: '#2E9B52',
-        color: '#2E9B52',
+        fillColor: '#DC2626',
+        color: '#DC2626',
         weight: 1.5,
         opacity: 0.3,
         fillOpacity: 0.08,
@@ -994,7 +994,7 @@
       labels: ['18-25 ans', '26-35 ans', '36-50 ans', '50+ ans'],
       datasets: [{
         data: [GLOBAL.total18_25, GLOBAL.total26_35, GLOBAL.total36_50, GLOBAL.total50p],
-        backgroundColor: ['#2E9B52', '#1B7C3D', '#135A2C', '#9CA8A2'],
+        backgroundColor: ['#DC2626', '#1B7C3D', '#135A2C', '#9CA8A2'],
         borderWidth: 0,
         spacing: 2,
         borderRadius: 3,
@@ -1010,7 +1010,7 @@
       labels: ['Jeunes (18-35)', 'Seniors (36+)'],
       datasets: [{
         data: [GLOBAL.total18_25 + GLOBAL.total26_35, GLOBAL.total36_50 + GLOBAL.total50p],
-        backgroundColor: ['#1B7C3D', '#E5E9E7'],
+        backgroundColor: ['#DC2626', '#E5E9E7'],
         borderWidth: 0,
         spacing: 2,
         borderRadius: 3,
