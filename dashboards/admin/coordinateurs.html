@@ -834,7 +834,11 @@
 
     else if (s.step === 5) {
       mTitle.textContent = 'Coordinateur désigné';
+      const emailBanner = s.result.emailSent
+        ? `<div style="background:var(--pastef-green-soft);color:var(--pastef-green-dark);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">✅ Email envoyé automatiquement à ${PASTEF.utils.escapeHtml(s.result.email)}</div>`
+        : `<div style="background:var(--pastef-or-soft);color:var(--pastef-or);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">⚠️ L'email automatique n'a pas pu être envoyé (${PASTEF.utils.escapeHtml(s.result.emailError || 'raison inconnue')}) — transmettez les identifiants ci-dessous vous-même.</div>`;
       mBody.innerHTML = `
+        ${emailBanner}
         <div class="creds-card">
           <div class="creds-icon">✅</div>
           <div class="creds-title">${PASTEF.utils.escapeHtml(s.result.prenom)} ${PASTEF.utils.escapeHtml(s.result.nom)} est maintenant ${roleLabel(s.role)}</div>
@@ -853,12 +857,13 @@
           <div class="creds-row">
             <div><div class="creds-label">Affectation</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(s.celluleNom || '—')}</div></div>
           </div>
-          <div class="creds-warning">Transmettez ces identifiants au coordinateur. Conservez-les précieusement : le mot de passe ne sera plus jamais affiché.</div>
+          <div class="creds-warning">Conservez ces identifiants précieusement : le mot de passe ne sera plus jamais affiché après fermeture de cette fenêtre.</div>
         </div>
       `;
       mFooter.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal()">Fermer</button>`;
     }
   }
+
 
   window.selectRole = function (role) {
     designState.role = role;
