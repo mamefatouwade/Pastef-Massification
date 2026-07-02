@@ -419,12 +419,25 @@
   PASTEF.sidebar.render(session, 'coordinateurs');
   PASTEF.topbar.render({ session, title: 'Coordinateurs', breadcrumb: 'Gestion des coordinateurs' });
 
-  // 🆕 Mapping rôle → type de cellule (colonne `cellules.type`)
-  const ROLE_TO_CELLULE_TYPE = {
-    departemental: 'departementale',
-    communal: 'communale',
-    diaspora: 'diaspora',
+  // 🆕 Un coordinateur communal/départemental/diaspora est rattaché à un
+  // LIEU réel (commune, département ou pays) — pas à une "cellule" à
+  // sélectionner dans une liste qui n'existe pas encore. La fiche de
+  // coordination correspondante est créée automatiquement côté serveur
+  // si elle n'existe pas déjà (voir l'Edge Function).
+  const CONTINENTS = {
+    'Afrique': ['Algérie','Bénin','Burkina Faso','Cameroun','Cap-Vert',"Côte d'Ivoire",'Gabon','Gambie','Ghana','Guinée','Guinée-Bissau','Mali','Maroc','Mauritanie','Niger','Nigéria','Tunisie'],
+    'Amérique': ['Canada','États-Unis'],
+    'Asie': ['Chine'],
+    'Europe': ['Allemagne','Belgique','Espagne','France','Italie','Pays-Bas','Portugal','Royaume-Uni','Suisse'],
+    'Moyen-Orient': ['Arabie Saoudite','Émirats Arabes Unis','Turquie'],
   };
+
+  // 🆕 Caches basés sur les vraies tables regions/departements/communes
+  // (plus de "SELECT DISTINCT sur du texte" — une seule ligne canonique
+  // possible par région/département, donc plus de doublons d'accent/casse)
+  let regionsCache = null;               // [{id,nom}]
+  let departementsCache = {};            // regionId -> [{id,nom}]
+  let communesParDeptCache = {};         // departementId -> [{id,commune}]
 
   let allCoordinators = [];
 
@@ -718,11 +731,10 @@
   const mFooter = document.getElementById('modalFooter');
   const mTitle = document.getElementById('modalTitle');
 
-  let designState = { step: 1, role: '', region: '', departement: '', pays: '', celluleId: '', celluleNom: '', inscrit: null, email: '', error: '' };
-  let celluleOptionsCache = [];
+  let designState = { step: 1, role: '', continent: '', regionId: '', region: '', departementId: '', departement: '', commune: '', pays: '', inscrit: null, email: '', error: '' };
 
   window.openDesignation = function () {
-    designState = { step: 1, role: '', region: '', departement: '', pays: '', celluleId: '', celluleNom: '', inscrit: null, email: '', error: '' };
+    designState = { step: 1, role: '', continent: '', regionId: '', region: '', departementId: '', departement: '', commune: '', pays: '', inscrit: null, email: '', error: '' };
     renderStep();
     overlay.classList.add('open');
   };
@@ -732,6 +744,14 @@
   };
 
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  // 🆕 Résumé lisible du lieu choisi, selon le rôle
+  function localisationSummary(s) {
+    if (s.role === 'diaspora') return s.pays || '—';
+    if (s.role === 'communal') return s.commune ? `${s.commune}, ${s.departement} (${s.region})` : '—';
+    if (s.role === 'departemental') return s.departement ? `${s.departement} (${s.region})` : '—';
+    return '—';
+  }
 
   function renderStep() {
     const s = designState;
@@ -767,7 +787,7 @@
             <input type="radio" name="role" value="diaspora" />
             <div class="radio-card-icon">🌍</div>
             <div class="radio-card-label">Diaspora</div>
-            <div class="radio-card-desc">Cellule d'un pays</div>
+            <div class="radio-card-desc">Coordination d'un pays</div>
           </label>
         </div>
       `;
@@ -778,23 +798,27 @@
     }
 
     else if (s.step === 2) {
-      mTitle.textContent = 'Étape 2 — Choisir la cellule à rattacher';
+      mTitle.textContent = s.role === 'diaspora' ? 'Étape 2 — Choisir le pays' : 'Étape 2 — Choisir la localisation';
       renderLieuStep();
     }
 
     else if (s.step === 3) {
-      mTitle.textContent = 'Étape 3 — Chercher un inscrit';
+      mTitle.textContent = 'Étape 3 — Choisir le patriote';
+      const selectedAge = s.inscrit ? PASTEF.utils.computeAge(s.inscrit.date_naissance) : null;
       mBody.innerHTML = stepsHtml + `
         <div class="field">
-          <label class="field-label">Rechercher par nom ou téléphone</label>
-          <input class="field-input" type="text" id="searchInscrit" placeholder="Ex: Modou Kane ou 77 111…" oninput="onSearchInscrit(this.value)" autofocus />
-          <div class="field-hint">L'inscrit doit déjà être enregistré sur la plateforme</div>
+          <label class="field-label">Patriote de cette zone</label>
+          <button class="btn btn-secondary btn-sm" style="width:100%" onclick="loadInscritsForZone()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;vertical-align:-2px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Choisir un patriote
+          </button>
+          <div class="field-hint">Seuls les patriotes déjà inscrits dans cette zone sont proposés</div>
         </div>
-        <div id="searchResultsContainer"></div>
+        <div id="inscritPickerBox" style="margin-top:10px"></div>
         ${s.inscrit ? `
           <div style="margin-top:12px;padding:12px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);">
-            <div style="font-size:13px;font-weight:600;color:var(--pastef-green-dark);">Sélectionné : ${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</div>
-            <div style="font-size:11px;color:var(--pastef-green);margin-top:2px;">${PASTEF.utils.escapeHtml(s.inscrit.telephone || '')}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--pastef-green-dark);">${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</div>
+            <div style="font-size:11px;color:var(--pastef-green);margin-top:2px;">(${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}${selectedAge ? `, ${selectedAge} ans` : ''})</div>
           </div>
         ` : ''}
       `;
@@ -812,7 +836,7 @@
           <div style="font-weight:700;color:var(--ink);margin-bottom:8px;">Récapitulatif</div>
           <div style="display:grid;grid-template-columns:100px 1fr;gap:4px 12px;color:var(--text-muted);">
             <span>Niveau</span><span style="font-weight:600;color:var(--text);">${roleLabel(s.role)}</span>
-            <span>Cellule</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.celluleNom || '—')}</span>
+            <span>Localisation</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(localisationSummary(s))}</span>
             <span>Inscrit</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</span>
             <span>Téléphone</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}</span>
           </div>
@@ -855,7 +879,7 @@
             </button>
           </div>
           <div class="creds-row">
-            <div><div class="creds-label">Affectation</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(s.celluleNom || '—')}</div></div>
+            <div><div class="creds-label">Localisation</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(s.result.localisation || '—')}</div></div>
           </div>
           <div class="creds-warning">Conservez ces identifiants précieusement : le mot de passe ne sera plus jamais affiché après fermeture de cette fenêtre.</div>
         </div>
@@ -864,22 +888,24 @@
     }
   }
 
-
   window.selectRole = function (role) {
     designState.role = role;
+    designState.continent = '';
+    designState.regionId = '';
     designState.region = '';
+    designState.departementId = '';
     designState.departement = '';
+    designState.commune = '';
     designState.pays = '';
-    designState.celluleId = '';
-    designState.celluleNom = '';
     renderStep();
   };
 
   window.nextStep = function () {
     const s = designState;
-    if (s.step === 2 && !s.celluleId) {
-      alert("Choisissez une cellule (ou continuez sans cellule si aucune n'existe encore pour cette zone)");
-      return;
+    if (s.step === 2) {
+      if (s.role === 'communal' && !s.commune) { alert('Choisissez une région, un département et une commune'); return; }
+      if (s.role === 'departemental' && !s.departement) { alert('Choisissez une région et un département'); return; }
+      if (s.role === 'diaspora' && !s.pays) { alert('Choisissez un continent et un pays'); return; }
     }
     s.step++;
     renderStep();
@@ -891,56 +917,145 @@
   };
 
   /* ============================================
-     🆕 ÉTAPE 2 — sélection d'une cellule RÉELLE
-     (table `cellules`, filtrée par type selon le rôle)
+     🆕 ÉTAPE 2 — LOCALISATION RÉELLE
+     Communal   : Région → Département → Commune
+     Départemental : Région → Département
+     Diaspora   : Continent → Pays
+     Les menus Région/Département viennent maintenant des vraies
+     tables `regions`/`departements` — une seule ligne canonique
+     possible par nom, donc plus de doublons d'accent/casse dans les
+     listes. Pas de "cellule" à choisir : la fiche de coordination
+     correspondante est créée automatiquement côté serveur si elle
+     n'existe pas encore (voir l'Edge Function).
      ============================================ */
+  async function ensureRegions() {
+    if (regionsCache) return regionsCache;
+    const { data, error } = await PASTEF.supabase.from('regions').select('id,nom').eq('actif', true).order('nom', { ascending: true });
+    if (error) throw error;
+    regionsCache = data || [];
+    return regionsCache;
+  }
+
+  async function loadDepartementsForRegion(regionId) {
+    if (departementsCache[regionId]) return departementsCache[regionId];
+    const { data, error } = await PASTEF.supabase.from('departements').select('id,nom').eq('region_id', regionId).eq('actif', true).order('nom', { ascending: true });
+    if (error) throw error;
+    departementsCache[regionId] = data || [];
+    return departementsCache[regionId];
+  }
+
+  async function loadCommunesForDepartement(departementId) {
+    if (communesParDeptCache[departementId]) return communesParDeptCache[departementId];
+    const { data, error } = await PASTEF.supabase.from('communes').select('id,commune').eq('departement_id', departementId).eq('active', true).order('commune', { ascending: true });
+    if (error) throw error;
+    communesParDeptCache[departementId] = data || [];
+    return communesParDeptCache[departementId];
+  }
+
   async function renderLieuStep() {
     const s = designState;
-    const stepsHtml = document.querySelector('.steps') ? '' : ''; // no-op, steps re-rendered below
-    const celluleType = ROLE_TO_CELLULE_TYPE[s.role];
 
-    let scopeFieldHtml = '';
-    if (s.role === 'departemental' || s.role === 'communal') {
-      // Régions officielles depuis la table `communes`
-      let regions = [];
-      try {
-        const { data, error } = await PASTEF.supabase.from('communes').select('region').eq('active', true);
-        if (!error) regions = [...new Set((data || []).map((r) => r.region))].sort();
-      } catch (e) { console.warn(e); }
-
-      scopeFieldHtml = `
-        <div class="field">
-          <label class="field-label">Région</label>
-          <select class="field-select" id="selRegion" onchange="onScopeRegionChange(this.value)">
-            <option value="">Sélectionner une région</option>
-            ${regions.map((r) => `<option value="${PASTEF.utils.escapeHtml(r)}" ${s.region === r ? 'selected' : ''}>${PASTEF.utils.escapeHtml(r)}</option>`).join('')}
-          </select>
-        </div>
-      `;
-    } else {
-      const pays = PASTEF_DATA_PAYS_FALLBACK();
-      scopeFieldHtml = `
-        <div class="field">
-          <label class="field-label">Pays</label>
-          <select class="field-select" id="selPays" onchange="onScopePaysChange(this.value)">
-            <option value="">Sélectionner un pays</option>
-            ${pays.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}" ${s.pays === p ? 'selected' : ''}>${PASTEF.utils.escapeHtml(p)}</option>`).join('')}
-          </select>
-        </div>
-      `;
+    if (s.role === 'diaspora') {
+      renderDiasporaScope();
+      return;
     }
 
     mBody.innerHTML = `
-      <div class="steps">
-        <div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div>
-      </div>
-      ${scopeFieldHtml}
+      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+      <div class="field-hint">Chargement des régions…</div>
+    `;
+    mFooter.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>`;
+
+    try {
+      await ensureRegions();
+    } catch (err) {
+      mBody.innerHTML += `<div class="form-error">Erreur de chargement des régions : ${PASTEF.utils.escapeHtml(err.message)}</div>`;
+      return;
+    }
+
+    await renderRegionDeptScope();
+  }
+
+  async function renderRegionDeptScope() {
+    const s = designState;
+    const departements = s.regionId ? await loadDepartementsForRegion(s.regionId) : [];
+    const communes = (s.role === 'communal' && s.departementId) ? await loadCommunesForDepartement(s.departementId) : [];
+
+    mBody.innerHTML = `
+      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
       <div class="field">
-        <label class="field-label">Cellule (type "${celluleType}")</label>
-        <select class="field-select" id="selCellule" onchange="onCelluleChange(this.value)" disabled>
-          <option value="">${s.role === 'communal' ? "Sélectionnez d'abord une région" : "Sélectionnez d'abord un pays/une région"}</option>
+        <label class="field-label">Région</label>
+        <select class="field-select" id="selRegion" onchange="onRegionPick(this.value)">
+          <option value="">Sélectionner une région</option>
+          ${regionsCache.map((r) => `<option value="${r.id}" ${s.regionId === r.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(r.nom)}</option>`).join('')}
         </select>
-        <div class="field-hint" id="celluleHint"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Département</label>
+        <select class="field-select" id="selDepartement" onchange="onDepartementPick(this.value)" ${!s.regionId ? 'disabled' : ''}>
+          <option value="">${s.regionId ? 'Sélectionner un département' : "Choisissez d'abord une région"}</option>
+          ${departements.map((d) => `<option value="${d.id}" ${s.departementId === d.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(d.nom)}</option>`).join('')}
+        </select>
+      </div>
+      ${s.role === 'communal' ? `
+      <div class="field">
+        <label class="field-label">Commune</label>
+        <select class="field-select" id="selCommune" onchange="onCommunePick(this.value)" ${!s.departementId ? 'disabled' : ''}>
+          <option value="">${s.departementId ? 'Sélectionner une commune' : "Choisissez d'abord un département"}</option>
+          ${communes.map((c) => `<option value="${PASTEF.utils.escapeHtml(c.commune)}" ${s.commune === c.commune ? 'selected' : ''}>${PASTEF.utils.escapeHtml(c.commune)}</option>`).join('')}
+        </select>
+      </div>
+      ` : ''}
+    `;
+
+    mFooter.innerHTML = `
+      <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
+      <button class="btn btn-primary btn-sm" onclick="nextStep()">Suivant</button>
+    `;
+  }
+
+  window.onRegionPick = async function (regionId) {
+    const s = designState;
+    s.regionId = regionId;
+    s.region = regionsCache.find((r) => r.id === regionId)?.nom || '';
+    s.departementId = '';
+    s.departement = '';
+    s.commune = '';
+    await renderRegionDeptScope();
+  };
+
+  window.onDepartementPick = async function (departementId) {
+    const s = designState;
+    s.departementId = departementId;
+    s.departement = (departementsCache[s.regionId] || []).find((d) => d.id === departementId)?.nom || '';
+    s.commune = '';
+    await renderRegionDeptScope();
+  };
+
+  window.onCommunePick = function (commune) {
+    designState.commune = commune;
+  };
+
+  function renderDiasporaScope() {
+    const s = designState;
+    const continents = Object.keys(CONTINENTS).sort();
+    const paysList = s.continent ? (CONTINENTS[s.continent] || []).slice().sort() : [];
+
+    mBody.innerHTML = `
+      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
+      <div class="field">
+        <label class="field-label">Continent</label>
+        <select class="field-select" id="selContinent" onchange="onContinentPick(this.value)">
+          <option value="">Sélectionner un continent</option>
+          ${continents.map((c) => `<option value="${PASTEF.utils.escapeHtml(c)}" ${s.continent === c ? 'selected' : ''}>${PASTEF.utils.escapeHtml(c)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Pays</label>
+        <select class="field-select" id="selPays" onchange="onPaysPick(this.value)" ${!s.continent ? 'disabled' : ''}>
+          <option value="">${s.continent ? 'Sélectionner un pays' : "Choisissez d'abord un continent"}</option>
+          ${paysList.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}" ${s.pays === p ? 'selected' : ''}>${PASTEF.utils.escapeHtml(p)}</option>`).join('')}
+        </select>
       </div>
     `;
 
@@ -948,145 +1063,123 @@
       <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
       <button class="btn btn-primary btn-sm" onclick="nextStep()">Suivant</button>
     `;
-
-    // Pré-remplissage si on revient en arrière puis en avant
-    if (s.role === 'departemental' && s.region) setTimeout(() => onScopeRegionChange(s.region), 30);
-    if (s.role === 'communal' && s.region) setTimeout(() => onScopeRegionChange(s.region), 30);
-    if (s.role === 'diaspora' && s.pays) setTimeout(() => onScopePaysChange(s.pays), 30);
   }
 
-  function PASTEF_DATA_PAYS_FALLBACK() {
-    // Liste des pays diaspora (hors Sénégal) — reprend la même liste
-    // que le formulaire public, sans dépendance à data.js ici
-    return [
-      'Algérie','Allemagne','Arabie Saoudite','Belgique','Bénin','Burkina Faso','Cameroun','Canada',
-      'Cap-Vert','Chine',"Côte d'Ivoire",'Émirats Arabes Unis','Espagne','États-Unis','France','Gabon',
-      'Gambie','Ghana','Guinée','Guinée-Bissau','Italie','Mali','Maroc','Mauritanie','Niger','Nigéria',
-      'Pays-Bas','Portugal','Royaume-Uni','Suisse','Tunisie','Turquie',
-    ];
-  }
-
-  window.onScopeRegionChange = async function (region) {
-    designState.region = region;
-    designState.celluleId = '';
-    designState.celluleNom = '';
-    await loadCellulesForScope();
+  window.onContinentPick = function (continent) {
+    designState.continent = continent;
+    designState.pays = '';
+    renderDiasporaScope();
   };
 
-  window.onScopePaysChange = async function (pays) {
+  window.onPaysPick = function (pays) {
     designState.pays = pays;
-    designState.celluleId = '';
-    designState.celluleNom = '';
-    await loadCellulesForScope();
-  };
-
-  async function loadCellulesForScope() {
-    const s = designState;
-    const sel = document.getElementById('selCellule');
-    const hint = document.getElementById('celluleHint');
-    if (!sel) return;
-
-    const celluleType = ROLE_TO_CELLULE_TYPE[s.role];
-    sel.disabled = true;
-    sel.innerHTML = '<option value="">Chargement…</option>';
-
-    try {
-      let q = PASTEF.supabase.from('cellules').select('id,nom,region,departement,commune,pays,ville_diaspora')
-        .eq('type', celluleType)
-        .eq('active', true);
-
-      if (s.role === 'departemental' || s.role === 'communal') {
-        q = q.eq('pays', 'Sénégal').eq('region', s.region);
-      } else {
-        q = q.ilike('pays', s.pays);
-      }
-
-      const { data, error } = await q.order('nom', { ascending: true });
-      if (error) throw error;
-
-      celluleOptionsCache = data || [];
-
-      if (!celluleOptionsCache.length) {
-        sel.innerHTML = '<option value="">Aucune cellule de ce type dans cette zone</option>';
-        sel.disabled = true;
-        hint.textContent = `Aucune cellule "${celluleType}" trouvée ici. Créez-la d'abord dans la gestion des cellules, ou continuez sans cellule (l'affectation pourra être faite plus tard).`;
-        return;
-      }
-
-      sel.innerHTML = '<option value="">Sélectionner une cellule</option>' +
-        celluleOptionsCache.map((c) => `<option value="${c.id}">${PASTEF.utils.escapeHtml(c.nom)}</option>`).join('');
-      sel.disabled = false;
-      hint.textContent = `${celluleOptionsCache.length} cellule(s) disponible(s)`;
-    } catch (err) {
-      console.error(err);
-      sel.innerHTML = '<option value="">Erreur de chargement</option>';
-      hint.textContent = err.message;
-    }
-  }
-
-  window.onCelluleChange = function (celluleId) {
-    designState.celluleId = celluleId;
-    const found = celluleOptionsCache.find((c) => c.id === celluleId);
-    designState.celluleNom = found ? found.nom : '';
   };
 
   /* ============================================
-     🆕 ÉTAPE 3 — recherche RÉELLE d'inscrits (table enrolments)
+     🆕 ÉTAPE 3 — patriotes DE LA ZONE choisie à l'étape 2
+     (pas de recherche libre : seuls les inscrits déjà rattachés à
+     cette commune / ce département / ce pays sont proposés)
+
+     🩹 On récupère toute la région puis on compare en mémoire de façon
+     NORMALISÉE (casse + accents ignorés). Une comparaison exacte en base
+     (eq) rate silencieusement des inscriptions dès qu'un accent ou une
+     majuscule diffère légèrement — déjà vu avec "pays" plus tôt dans ce
+     projet. Le filtrage normalisé évite ce piège.
      ============================================ */
-  let searchDebounce = null;
+  let inscritOptionsCache = [];
 
-  window.onSearchInscrit = function (q) {
-    clearTimeout(searchDebounce);
-    const container = document.getElementById('searchResultsContainer');
-    if (!q || q.trim().length < 2) {
-      container.innerHTML = '';
-      return;
-    }
-    container.innerHTML = '<div class="empty-search">Recherche…</div>';
-    searchDebounce = setTimeout(() => runSearchInscrit(q.trim()), 300);
-  };
+  function normalizeStr(v) {
+    return (v || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
 
-  async function runSearchInscrit(q) {
-    const container = document.getElementById('searchResultsContainer');
-    if (!container) return; // l'utilisateur a changé d'étape entre-temps
+  async function fetchInscritsForZone() {
+    const s = designState;
 
-    try {
+    if (s.role === 'diaspora') {
       const { data, error } = await PASTEF.supabase
         .from('enrolments')
-        .select('id,prenom,nom,telephone,pays,region,commune,quartier')
-        .or(`prenom.ilike.%${q}%,nom.ilike.%${q}%,telephone.ilike.%${q}%`)
-        .limit(15);
-
+        .select('id,prenom,nom,telephone,date_naissance,region,departement,commune,quartier,pays')
+        .ilike('pays', s.pays)
+        .order('nom', { ascending: true })
+        .limit(500);
       if (error) throw error;
+      return data || [];
+    }
 
-      if (!data || !data.length) {
-        container.innerHTML = '<div class="empty-search">Aucun inscrit trouvé</div>';
+    // Sénégal : on charge toute la région (ilike = insensible à la
+    // casse/aux accents dès la requête), puis on affine en mémoire
+    const { data, error } = await PASTEF.supabase
+      .from('enrolments')
+      .select('id,prenom,nom,telephone,date_naissance,region,departement,commune,quartier,pays')
+      .eq('pays', 'Sénégal')
+      .ilike('region', s.region)
+      .order('nom', { ascending: true })
+      .limit(2000);
+
+    if (error) throw error;
+    const rows = data || [];
+    console.log(`[PASTEF] ${rows.length} inscrit(s) dans la région ${s.region} avant filtrage précis`);
+    console.table(rows.map((r) => ({
+      nom: `${r.prenom} ${r.nom}`,
+      departement_stocke: r.departement || '(vide)',
+      commune_stockee: r.commune || '(vide)',
+      quartier_stocke: r.quartier || '(vide)',
+    })));
+
+    if (s.role === 'communal') {
+      const target = normalizeStr(s.commune);
+      console.log(`[PASTEF] Commune recherchée : "${s.commune}" (normalisée : "${target}")`);
+      return rows.filter((r) => normalizeStr(r.commune) === target || normalizeStr(r.quartier) === target);
+    }
+
+    // Départemental : departement direct, OU commune/quartier appartenant
+    // à ce département selon le référentiel officiel. Pour le rôle
+    // "communal" ces communes sont déjà en cache (étape 2) ; pour
+    // "departemental" on ne les avait pas encore chargées, on le fait ici.
+    const communesDuDeptRows = await loadCommunesForDepartement(s.departementId);
+    const communesDuDept = communesDuDeptRows.map((c) => normalizeStr(c.commune));
+    const targetDept = normalizeStr(s.departement);
+    console.log(`[PASTEF] Département recherché : "${s.departement}" (normalisé : "${targetDept}")`);
+    console.log('[PASTEF] Communes attendues pour ce département :', communesDuDeptRows.map((c) => c.commune));
+    return rows.filter((r) => {
+      if (normalizeStr(r.departement) === targetDept) return true;
+      const c = normalizeStr(r.commune) || normalizeStr(r.quartier);
+      return communesDuDept.includes(c);
+    });
+  }
+
+  window.loadInscritsForZone = async function () {
+    const box = document.getElementById('inscritPickerBox');
+    if (!box) return;
+    box.innerHTML = '<div class="empty-search">Chargement des patriotes de cette zone…</div>';
+
+    try {
+      const data = await fetchInscritsForZone();
+      inscritOptionsCache = data;
+
+      if (!data.length) {
+        box.innerHTML = '<div class="empty-search">Aucun patriote trouvé pour cette zone précise. Ouvrez la console du navigateur (F12) : la ligne "[PASTEF] X inscrit(s) dans la région..." vous dit si la région contient du monde mais que la commune/département ne correspond pas exactement.</div>';
         return;
       }
 
-      container.innerHTML = `
-        <div class="search-results">
-          ${data.map((r) => `
-            <div class="search-result-item ${designState.inscrit?.id === r.id ? 'selected' : ''}" onclick="selectInscrit('${r.id}')">
-              <div class="coord-avatar avatar-green" style="width:30px;height:30px;font-size:11px;">${(r.prenom?.[0] || '?').toUpperCase()}${(r.nom?.[0] || '').toUpperCase()}</div>
-              <div>
-                <div class="search-result-name">${PASTEF.utils.escapeHtml(r.prenom || '')} ${PASTEF.utils.escapeHtml(r.nom || '')}</div>
-                <div class="search-result-info">${PASTEF.utils.escapeHtml(r.telephone || '')} · ${PASTEF.utils.escapeHtml(r.commune || r.quartier || r.region || r.pays || '')}</div>
-              </div>
-            </div>
-          `).join('')}
-        </div>
+      box.innerHTML = `
+        <select class="field-select" id="selInscrit" onchange="onInscritPick(this.value)">
+          <option value="">${data.length} patriote${data.length > 1 ? 's' : ''} trouvé${data.length > 1 ? 's' : ''} — sélectionner</option>
+          ${data.map((r) => {
+            const age = PASTEF.utils.computeAge(r.date_naissance);
+            const label = `${r.prenom || ''} ${r.nom || ''} — ${r.telephone || '\u2014'}${age ? ` (${age} ans)` : ''}`;
+            return `<option value="${r.id}" ${designState.inscrit?.id === r.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(label)}</option>`;
+          }).join('')}
+        </select>
       `;
-
-      window.__searchInscritResults = data;
     } catch (err) {
       console.error(err);
-      container.innerHTML = `<div class="empty-search">Erreur : ${PASTEF.utils.escapeHtml(err.message)}</div>`;
+      box.innerHTML = `<div class="empty-search">Erreur : ${PASTEF.utils.escapeHtml(err.message)}</div>`;
     }
-  }
+  };
 
-  window.selectInscrit = function (id) {
-    const found = (window.__searchInscritResults || []).find((i) => i.id === id);
+  window.onInscritPick = function (id) {
+    const found = inscritOptionsCache.find((i) => i.id === id);
     if (!found) return;
     designState.inscrit = found;
     designState.email = designState.email || '';
@@ -1121,8 +1214,11 @@
         body: {
           email: s.email.trim(),
           role: s.role,
-          cellule_id: s.celluleId || null,
           enrolment_id: s.inscrit.id,
+          region: s.region || null,
+          departement: s.departement || null,
+          commune: s.commune || null,
+          pays: s.pays || null,
         },
       });
 

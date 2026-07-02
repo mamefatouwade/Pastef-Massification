@@ -16,17 +16,12 @@
   // ============================================
   const STORAGE_KEY = 'pastef_pending_enrolments';
   const CLIENT_ID_KEY = 'pastef_client_id';
-  const SNAPSHOT_KEY = 'pastef_sync_snapshot'; // 🆕 fallback auto-régénéré (remplace les copies en dur)
 
   let isOnline = navigator.onLine;
   let isSubmitting = false;
 
   // Cache des cellules pour éviter trop d'appels API
   let celluleCache = {};
-
-  // 🆕 Cache des départements / communes (remplace senegalStructure en dur)
-  let departementCache = {};
-  let communeCache = {};
 
   // ============================================
   // FORMATS TÉLÉPHONE PAR PAYS
@@ -99,59 +94,20 @@
   }
 
   // ============================================
-  // 🆕 SNAPSHOT LOCAL (fallback auto-régénéré)
-  // À chaque appel réussi à Supabase, on sauvegarde le résultat
-  // dans localStorage. C'est CE snapshot qui sert de repli
-  // hors-ligne — plus une copie codée en dur qui se désynchronise
-  // silencieusement de la base. Les tableaux statiques dans
-  // data.js (cellules, cellulesDefaut, senegalStructure) ne
-  // servent plus que de « graine » avant la toute première
-  // synchronisation (premier lancement, jamais été en ligne).
-  // ============================================
-  function readSnapshotStore() {
-    try {
-      const raw = localStorage.getItem(SNAPSHOT_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.warn('[PASTEF] Snapshot local illisible, réinitialisation', e);
-      return {};
-    }
-  }
-
-  function writeSnapshotEntry(section, key, data) {
-    try {
-      const store = readSnapshotStore();
-      if (!store[section]) store[section] = {};
-      store[section][key] = { data, updated_at: new Date().toISOString() };
-      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(store));
-    } catch (e) {
-      console.warn(`[PASTEF] Impossible d'écrire le snapshot (${section}::${key})`, e);
-    }
-  }
-
-  function readSnapshotEntry(section, key) {
-    const store = readSnapshotStore();
-    const entry = store[section] && store[section][key];
-    return entry && Array.isArray(entry.data) && entry.data.length ? entry : null;
-  }
-
-  // ============================================
   // 🆕 CHARGER LES CELLULES DEPUIS SUPABASE
   // ============================================
-  async function loadCellulesFromDB(pays, filters = {}) {
-    const { region = null, departement = null, commune = null } = filters;
-
-    // Clé cache incluant tous les filtres actifs
-    const cacheKey = [pays, region, departement, commune].filter(Boolean).join('::');
-
+  async function loadCellulesFromDB(pays, commune = null) {
     try {
       // Vérifier que la config Supabase est présente
       if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url) {
         console.warn('[PASTEF] SUPABASE_CONFIG manquant');
-        return getFallbackCellules(pays, commune);
+        return getFallbackCellules(pays);
       }
 
-      // Vérifier le cache mémoire
+      // Clé cache incluant la commune si spécifiée
+      const cacheKey = commune ? `${pays}::${commune}` : pays;
+      
+      // Vérifier le cache
       if (celluleCache[cacheKey]) {
         console.log(`[PASTEF] Cellules du cache: ${cacheKey}`);
         return celluleCache[cacheKey];
@@ -161,14 +117,15 @@
 
       const cfg = window.SUPABASE_CONFIG;
       // Appel REST direct (comme sendToSupabase) — pas besoin du client JS
-      let url = `${cfg.url}/rest/v1/cellules?select=id,nom,type,pays,region,departement,commune`
+      let url = `${cfg.url}/rest/v1/cellules?select=id,nom,type,pays,commune`
         + `&pays=eq.${encodeURIComponent(pays)}`
         + `&active=eq.true`;
-
-      if (region) url += `&region=eq.${encodeURIComponent(region)}`;
-      if (departement) url += `&departement=eq.${encodeURIComponent(departement)}`;
-      if (commune) url += `&commune=eq.${encodeURIComponent(commune)}`;
-
+      
+      // 🆕 Filtrer par commune si spécifié (pour Sénégal)
+      if (commune) {
+        url += `&commune=eq.${encodeURIComponent(commune)}`;
+      }
+      
       url += `&order=nom.asc`;
 
       const response = await fetch(url, {
@@ -183,199 +140,29 @@
       if (!response.ok) {
         const text = await response.text().catch(() => '');
         console.error(`[PASTEF] Erreur REST cellules (${response.status}):`, text);
-        return getFallbackCellules(pays, commune);
+        return getFallbackCellules(pays);
       }
 
       const data = await response.json();
 
-      // Mettre en cache mémoire + snapshot local (= fallback hors-ligne
-      // toujours à jour, régénéré automatiquement à chaque succès)
+      // Mettre en cache
       celluleCache[cacheKey] = data || [];
-      if (data && data.length) writeSnapshotEntry('cellules', cacheKey, data);
       console.log(`[PASTEF] ${(data || []).length} cellule(s) trouvée(s) pour ${cacheKey}`);
 
       return data || [];
     } catch (err) {
       console.error('[PASTEF] Erreur chargement cellules:', err);
-      return getFallbackCellules(pays, commune);
+      return getFallbackCellules(pays);
     }
   }
 
-  // Fallback : d'abord le snapshot local (auto-régénéré à chaque sync
-  // réussie), et seulement si aucun snapshot n'existe encore (tout
-  // premier lancement, jamais eu de connexion) on retombe sur la
-  // graine statique embarquée dans data.js.
-  function getFallbackCellules(pays, commune = null) {
-    const cacheKey = commune ? `${pays}::${commune}` : pays;
-
-    const snap = readSnapshotEntry('cellules', cacheKey);
-    if (snap) {
-      console.log(`[PASTEF] Fallback cellules (snapshot local, sync. le ${snap.updated_at}) : ${cacheKey}`);
-      return snap.data;
-    }
-
-    console.warn(`[PASTEF] Aucun snapshot local pour ${cacheKey} — repli sur la graine statique (data.js)`);
+  // Fallback : données locales si la BD est inaccessible (hors-ligne, etc.)
+  function getFallbackCellules(pays) {
     const liste = PASTEF_DATA.cellules[pays] || PASTEF_DATA.cellulesDefaut;
     // Transformer en objets {id, nom} pour garder le même format
     return liste
       .filter(nom => !nom.startsWith('—') && nom !== 'Autre cellule (préciser)')
       .map(nom => ({ id: nom, nom: nom, type: 'base', pays: pays }));
-  }
-
-  // 🆕 ÉLARGISSEMENT AUTOMATIQUE : toutes les communes n'ont pas encore
-  // leur propre cellule. Plutôt que d'afficher "aucune cellule" et de
-  // bloquer le patriote, on élargit progressivement la recherche :
-  // commune → département → région → pays. Cohérent avec le message
-  // déjà affiché ailleurs dans le formulaire ("la cellule la plus
-  // proche de votre zone de résidence").
-  async function loadCellulesWithFallbackChain(pays, region, departement, commune) {
-    if (commune) {
-      const exact = await loadCellulesFromDB(pays, { region, departement, commune });
-      if (exact && exact.length) return { cellules: exact, level: 'commune' };
-    }
-    if (departement) {
-      const dep = await loadCellulesFromDB(pays, { region, departement });
-      if (dep && dep.length) return { cellules: dep, level: 'departement' };
-    }
-    if (region) {
-      const reg = await loadCellulesFromDB(pays, { region });
-      if (reg && reg.length) return { cellules: reg, level: 'region' };
-    }
-    const base = await loadCellulesFromDB(pays, {});
-    return { cellules: base, level: 'pays' };
-  }
-
-
-  // ============================================
-  // 🆕 CHARGER LES DÉPARTEMENTS DEPUIS SUPABASE
-  // (remplace Object.keys(PASTEF_DATA.senegalStructure[region]))
-  // ============================================
-  async function loadDepartementsFromDB(region) {
-    try {
-      if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url) {
-        console.warn('[PASTEF] SUPABASE_CONFIG manquant');
-        return getFallbackDepartements(region);
-      }
-
-      if (departementCache[region]) {
-        console.log(`[PASTEF] Départements du cache: ${region}`);
-        return departementCache[region];
-      }
-
-      console.log(`[PASTEF] Chargement départements depuis BD pour: ${region}`);
-
-      const cfg = window.SUPABASE_CONFIG;
-      const url = `${cfg.url}/rest/v1/communes?select=departement`
-        + `&region=eq.${encodeURIComponent(region)}`
-        + `&active=eq.true`
-        + `&order=departement.asc`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        console.error(`[PASTEF] Erreur REST départements (${response.status}):`, text);
-        return getFallbackDepartements(region);
-      }
-
-      const rows = await response.json();
-      // Dédupliquer (plusieurs communes partagent le même département)
-      const departements = [...new Set((rows || []).map(r => r.departement))].sort();
-
-      departementCache[region] = departements;
-      if (departements.length) writeSnapshotEntry('departements', region, departements);
-      console.log(`[PASTEF] ${departements.length} département(s) trouvé(s) pour ${region}`);
-
-      return departements;
-    } catch (err) {
-      console.error('[PASTEF] Erreur chargement départements:', err);
-      return getFallbackDepartements(region);
-    }
-  }
-
-  function getFallbackDepartements(region) {
-    const snap = readSnapshotEntry('departements', region);
-    if (snap) {
-      console.log(`[PASTEF] Fallback départements (snapshot local, sync. le ${snap.updated_at}) : ${region}`);
-      return snap.data;
-    }
-    console.warn(`[PASTEF] Aucun snapshot local pour départements/${region} — repli sur la graine statique (data.js)`);
-    const struct = PASTEF_DATA.senegalStructure[region];
-    return struct ? Object.keys(struct).sort() : [];
-  }
-
-  // ============================================
-  // 🆕 CHARGER LES COMMUNES DEPUIS SUPABASE
-  // (remplace PASTEF_DATA.senegalStructure[region][departement])
-  // ============================================
-  async function loadCommunesFromDB(region, departement) {
-    try {
-      if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url) {
-        console.warn('[PASTEF] SUPABASE_CONFIG manquant');
-        return getFallbackCommunes(region, departement);
-      }
-
-      const cacheKey = `${region}::${departement}`;
-      if (communeCache[cacheKey]) {
-        console.log(`[PASTEF] Communes du cache: ${cacheKey}`);
-        return communeCache[cacheKey];
-      }
-
-      console.log(`[PASTEF] Chargement communes depuis BD pour: ${cacheKey}`);
-
-      const cfg = window.SUPABASE_CONFIG;
-      const url = `${cfg.url}/rest/v1/communes?select=commune`
-        + `&region=eq.${encodeURIComponent(region)}`
-        + `&departement=eq.${encodeURIComponent(departement)}`
-        + `&active=eq.true`
-        + `&order=commune.asc`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        console.error(`[PASTEF] Erreur REST communes (${response.status}):`, text);
-        return getFallbackCommunes(region, departement);
-      }
-
-      const rows = await response.json();
-      const communes = (rows || []).map(r => r.commune);
-
-      communeCache[cacheKey] = communes;
-      if (communes.length) writeSnapshotEntry('communes', cacheKey, communes);
-      console.log(`[PASTEF] ${communes.length} commune(s) trouvée(s) pour ${cacheKey}`);
-
-      return communes;
-    } catch (err) {
-      console.error('[PASTEF] Erreur chargement communes:', err);
-      return getFallbackCommunes(region, departement);
-    }
-  }
-
-  function getFallbackCommunes(region, departement) {
-    const cacheKey = `${region}::${departement}`;
-    const snap = readSnapshotEntry('communes', cacheKey);
-    if (snap) {
-      console.log(`[PASTEF] Fallback communes (snapshot local, sync. le ${snap.updated_at}) : ${cacheKey}`);
-      return snap.data;
-    }
-    console.warn(`[PASTEF] Aucun snapshot local pour communes/${cacheKey} — repli sur la graine statique (data.js)`);
-    const struct = PASTEF_DATA.senegalStructure[region];
-    return struct?.[departement] || [];
   }
 
   // ============================================
@@ -487,91 +274,6 @@
   }
 
   // ============================================
-  // 🆕 CHARGER PROFESSIONS / DOMAINES DEPUIS SUPABASE
-  // (remplace PASTEF_DATA.professions / PASTEF_DATA.domaines)
-  // Listes plates, faible volume : un seul appel, mis en cache mémoire.
-  // ============================================
-  let professionsCache = null;
-  let domainesCache = null;
-
-  async function loadFlatListFromDB(table) {
-    try {
-      if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url) {
-        console.warn('[PASTEF] SUPABASE_CONFIG manquant');
-        return getFallbackFlatList(table);
-      }
-
-      const cfg = window.SUPABASE_CONFIG;
-      const url = `${cfg.url}/rest/v1/${table}?select=nom`
-        + `&active=eq.true`
-        + `&order=ordre.asc`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'apikey': cfg.anonKey,
-          'Authorization': `Bearer ${cfg.anonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => '');
-        console.error(`[PASTEF] Erreur REST ${table} (${response.status}):`, text);
-        return getFallbackFlatList(table);
-      }
-
-      const rows = await response.json();
-      const liste = (rows || []).map(r => r.nom);
-
-      if (liste.length) writeSnapshotEntry(table, 'all', liste);
-      console.log(`[PASTEF] ${liste.length} entrée(s) chargée(s) pour ${table}`);
-
-      return liste;
-    } catch (err) {
-      console.error(`[PASTEF] Erreur chargement ${table}:`, err);
-      return getFallbackFlatList(table);
-    }
-  }
-
-  // Correspondance nom de table Supabase → clé dans PASTEF_DATA
-  // (les noms ne matchent pas toujours : fonctions_cellule / fonctionsCellule)
-  const FLAT_LIST_DATA_KEY = {
-    professions: 'professions',
-    domaines: 'domaines',
-    fonctions_cellule: 'fonctionsCellule'
-  };
-
-  function getFallbackFlatList(table) {
-    const snap = readSnapshotEntry(table, 'all');
-    if (snap) {
-      console.log(`[PASTEF] Fallback ${table} (snapshot local, sync. le ${snap.updated_at})`);
-      return snap.data;
-    }
-    console.warn(`[PASTEF] Aucun snapshot local pour ${table} — repli sur la graine statique (data.js)`);
-    return PASTEF_DATA[FLAT_LIST_DATA_KEY[table] || table] || [];
-  }
-
-  async function loadProfessionsFromDB() {
-    if (professionsCache) return professionsCache;
-    professionsCache = await loadFlatListFromDB('professions');
-    return professionsCache;
-  }
-
-  async function loadDomainesFromDB() {
-    if (domainesCache) return domainesCache;
-    domainesCache = await loadFlatListFromDB('domaines');
-    return domainesCache;
-  }
-
-  let fonctionsCelluleCache = null;
-  async function loadFonctionsCelluleFromDB() {
-    if (fonctionsCelluleCache) return fonctionsCelluleCache;
-    fonctionsCelluleCache = await loadFlatListFromDB('fonctions_cellule');
-    return fonctionsCelluleCache;
-  }
-
-  // ============================================
   // REMPLISSAGE DES SELECTS
   // ============================================
   function fillSelect(selectEl, items, placeholder) {
@@ -593,43 +295,10 @@
   }
 
   function initSelects() {
-    // Affichage immédiat depuis la graine locale (zéro latence au chargement)
     fillSelect($('#profession'), PASTEF_DATA.professions, 'Sélectionnez votre profession');
     fillSelect($('#domaine'), PASTEF_DATA.domaines, 'Sélectionnez votre domaine');
     fillSelect($('#pays'), PASTEF_DATA.pays, 'Sélectionnez votre pays');
-    fillSelect($('#fonctionCellule'), PASTEF_DATA.fonctionsCellule, 'Sélectionnez votre fonction');
     fillDialCodes();
-
-    // 🆕 Rafraîchissement silencieux depuis Supabase, sans bloquer l'affichage
-    refreshFlatSelectFromDB('profession', loadProfessionsFromDB, 'Sélectionnez votre profession');
-    refreshFlatSelectFromDB('domaine', loadDomainesFromDB, 'Sélectionnez votre domaine');
-    refreshFlatSelectFromDB('fonctionCellule', loadFonctionsCelluleFromDB, 'Sélectionnez votre fonction');
-  }
-
-  // 🆕 Remplace le contenu d'un select déjà affiché par la liste venue de
-  // la BD, en conservant la sélection en cours si elle est toujours valide.
-  async function refreshFlatSelectFromDB(selectId, loader, placeholder) {
-    const sel = $(`#${selectId}`);
-    if (!sel) return;
-
-    const liste = await loader();
-    if (!liste || !liste.length) return;
-
-    const current = sel.value;
-    fillSelect(sel, liste, placeholder);
-
-    if (current && liste.includes(current)) {
-      sel.value = current;
-    } else if (current) {
-      // La valeur choisie n'existe plus dans la liste à jour (rare) :
-      // on la garde affichée en la ré-ajoutant, pour ne pas effacer
-      // silencieusement un choix déjà fait par le patriote.
-      const opt = document.createElement('option');
-      opt.value = current;
-      opt.textContent = current;
-      sel.appendChild(opt);
-      sel.value = current;
-    }
   }
 
   function fillDialCodes() {
@@ -770,8 +439,8 @@
       celluleSel.disabled = false;
     });
 
-    // 🆕 RÉGION → DÉPARTEMENT (seulement pour Sénégal) — depuis Supabase
-    $('#region').addEventListener('change', async e => {
+    // 🆕 RÉGION → DÉPARTEMENT (seulement pour Sénégal)
+    $('#region').addEventListener('change', e => {
       const pays = $('#pays').value;
       const region = e.target.value;
       const departementSel = $('#departement');
@@ -787,12 +456,10 @@
         return;
       }
 
-      departementSel.innerHTML = '<option value="">Chargement des départements...</option>';
-      departementSel.disabled = true;
-
-      const departments = await loadDepartementsFromDB(region);
-
-      if (departments.length > 0) {
+      // Charger les départements de cette région
+      const senegalStruct = PASTEF_DATA.senegalStructure[region];
+      if (senegalStruct) {
+        const departments = Object.keys(senegalStruct).sort();
         fillSelect(departementSel, departments, 'Sélectionnez votre département');
         departementSel.disabled = false;
       } else {
@@ -801,8 +468,8 @@
       }
     });
 
-    // 🆕 DÉPARTEMENT → COMMUNE (seulement pour Sénégal) — depuis Supabase
-    $('#departement').addEventListener('change', async e => {
+    // 🆕 DÉPARTEMENT → COMMUNE (seulement pour Sénégal)
+    $('#departement').addEventListener('change', e => {
       const pays = $('#pays').value;
       const region = $('#region').value;
       const departement = e.target.value;
@@ -814,10 +481,9 @@
         return;
       }
 
-      communeSel.innerHTML = '<option value="">Chargement des communes...</option>';
-      communeSel.disabled = true;
-
-      const communes = await loadCommunesFromDB(region, departement);
+      // Charger les communes de ce département dans le select
+      const senegalStruct = PASTEF_DATA.senegalStructure[region];
+      const communes = senegalStruct?.[departement] || [];
 
       if (communes.length > 0) {
         let html = '<option value="">Sélectionnez votre commune</option>';
@@ -833,47 +499,31 @@
       }
     });
 
-    // 🆕 COMMUNE → CELLULES (recharger les cellules, avec élargissement
-    // automatique si aucune cellule n'est encore rattachée précisément
-    // à cette commune)
+    // 🆕 COMMUNE → CELLULES (recharger les cellules de cette commune)
     $('#commune').addEventListener('change', async (e) => {
       const pays = $('#pays').value;
-      const region = $('#region').value;
-      const departement = $('#departement').value;
       const commune = e.target.value;
       const celluleSel = $('#cellule');
 
       if (!pays || !commune) return;
 
+      // Recharger les cellules filtrées par cette commune
       celluleSel.innerHTML = '<option value="">Chargement des cellules...</option>';
       celluleSel.disabled = true;
-      const { cellules, level } = await loadCellulesWithFallbackChain(pays, region, departement, commune);
-      renderCelluleOptions(cellules, celluleSel, level, { region, departement, commune });
+      const cellules = await loadCellulesFromDB(pays, commune);
+      renderCelluleOptions(cellules, celluleSel);
     });
 
     // 🆕 Fonction utilitaire pour rendre les options du select des cellules
-    // `level` indique jusqu'où on a dû élargir la recherche (commune,
-    // departement, region ou pays) — affiche une petite info si on
-    // n'a pas trouvé de cellule exactement dans la commune choisie.
-    function renderCelluleOptions(cellules, celluleSel, level = 'commune', location = {}) {
+    function renderCelluleOptions(cellules, celluleSel) {
       if (cellules.length === 0) {
-        celluleSel.innerHTML = '<option value="">Aucune cellule pré-définie</option>'
+        celluleSel.innerHTML = '<option value="">Aucune cellule dans cette commune</option>'
           + '<option value="autre">Autre cellule (préciser)</option>';
         celluleSel.disabled = false;
         return;
       }
 
       let html = '<option value="">Sélectionnez votre cellule</option>';
-
-      if (level && level !== 'commune') {
-        const labels = {
-          departement: `Pas encore de cellule dans ${location.commune || 'votre commune'} — cellules du département`,
-          region: `Pas encore de cellule dans votre département — cellules de la région`,
-          pays: `Pas encore de cellule dans votre région — cellules disponibles`
-        };
-        html += `<option value="" disabled>— ${labels[level] || 'Cellules les plus proches'} —</option>`;
-      }
-
       cellules.forEach(c => {
         html += `<option value="${escapeHtml(c.id)}" data-nom="${escapeHtml(c.nom)}">${escapeHtml(c.nom)}</option>`;
       });
@@ -1069,14 +719,11 @@
 
       pays: fd.get('pays'),
       region: fd.get('region'),
-      // 🆕 Colonnes dédiées (utilisées pour le filtrage précis des cellules
-      // côté admin). Uniquement renseignées pour le Sénégal, où la
-      // hiérarchie région → département → commune existe.
-      departement: fd.get('pays') === 'Sénégal' ? (fd.get('departement') || null) : null,
-      commune: fd.get('pays') === 'Sénégal' ? (fd.get('commune') || null) : null,
-      // La colonne 'quartier' reste renseignée pour compatibilité avec
-      // l'existant (elle contient la commune pour le Sénégal, la localité
-      // libre pour la diaspora).
+      departement: fd.get('departement') || null,
+      commune: fd.get('pays') === 'Sénégal'
+        ? fd.get('commune')
+        : fd.get('communeText')?.trim() || null,
+      // quartier reste rempli pour rétrocompatibilité admin
       quartier: fd.get('pays') === 'Sénégal'
         ? fd.get('commune')
         : fd.get('communeText')?.trim(),
