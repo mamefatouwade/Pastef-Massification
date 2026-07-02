@@ -103,6 +103,26 @@ const DATA = {
   ],
 
   /* ----------------------------------------
+     FONCTIONS DANS UNE CELLULE
+     Graine locale (fallback hors-ligne) — la source de
+     vérité est la table Supabase fonctions_cellule
+     ---------------------------------------- */
+  fonctionsCellule: [
+    'Chef du Parti',
+    'Vice-Président / Vice-Présidente',
+    'Coordinateur / Coordinatrice',
+    'Coordinateur Adjoint',
+    'Secrétaire Général',
+    'Trésorier',
+    'Chargé de Communication',
+    'Chargé de Mobilisation',
+    'Chargé de la Jeunesse',
+    'Chargée des Femmes',
+    'Membre simple',
+    'Sympathisant'
+  ],
+
+  /* ----------------------------------------
      PAYS
      ---------------------------------------- */
   pays: [

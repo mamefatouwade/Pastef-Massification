@@ -256,6 +256,13 @@
   .city-name { font-size: 13px; font-weight: 600; }
   .city-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
+  .cellule-unofficial {
+    font-size: 10px;
+    font-style: italic;
+    color: var(--text-soft);
+    margin-left: 6px;
+  }
+
   /* Recent list */
   .recent-list { display: flex; flex-direction: column; }
 
@@ -357,7 +364,7 @@
 
 <script>
 let allMembers = [];
-let cellules = {};
+let cellulesParPays = {};
 let currentContinent = 'all';
 
 // Mapping pays → continent
@@ -413,35 +420,32 @@ function getContinent(country) {
 
 function buildPage() {
   // Regroupement par pays (= cellule diaspora)
-  cellules = {};
+  cellulesParPays = {};
   allMembers.forEach((m) => {
     if (!m.pays) return;
-    if (!cellules[m.pays]) {
-      cellules[m.pays] = { pays: m.pays, continent: getContinent(m.pays), members: [] };
+    if (!cellulesParPays[m.pays]) {
+      cellulesParPays[m.pays] = { pays: m.pays, continent: getContinent(m.pays), members: [] };
     }
-    cellules[m.pays].members.push(m);
+    cellulesParPays[m.pays].members.push(m);
   });
 
   renderSelector();
 }
 
 function renderSelector() {
-  // Filtrer selon le continent actif
   const filtered = currentContinent === 'all'
-    ? Object.keys(cellules)
-    : Object.keys(cellules).filter((c) => cellules[c].continent === currentContinent);
+    ? Object.keys(cellulesParPays)
+    : Object.keys(cellulesParPays).filter((c) => cellulesParPays[c].continent === currentContinent);
 
   const sorted = filtered.sort();
-
-  // Continents disponibles
-  const availableContinents = [...new Set(Object.values(cellules).map((c) => c.continent))].sort();
+  const availableContinents = [...new Set(Object.values(cellulesParPays).map((c) => c.continent))].sort();
 
   document.getElementById('content').innerHTML = `
     <!-- SÉLECTEUR -->
     <div class="selector-card">
       <div class="selector-eyebrow">Vue internationale</div>
       <h1 class="selector-title">Cellules de la diaspora</h1>
-      <p class="selector-sub">${Object.keys(cellules).length} pays · ${PASTEF.utils.formatNumber(allMembers.length)} patriotes à l'international</p>
+      <p class="selector-sub">${Object.keys(cellulesParPays).length} pays · ${PASTEF.utils.formatNumber(allMembers.length)} patriotes à l'international</p>
 
       <div class="selector-row">
         <div class="selector-field">
@@ -458,7 +462,7 @@ function renderSelector() {
           <label>Cellule (pays)</label>
           <select class="selector-select" id="celluleSelect">
             <option value="">— Choisir un pays —</option>
-            ${sorted.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)} · ${cellules[p].members.length} patriotes</option>`).join('')}
+            ${sorted.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)} · ${cellulesParPays[p].members.length} patriotes</option>`).join('')}
           </select>
         </div>
 
@@ -472,10 +476,10 @@ function renderSelector() {
 
       <div class="continent-pills">
         <div class="continent-pill ${currentContinent === 'all' ? 'active' : ''}" onclick="setContinent('all')">
-          Tous (${Object.keys(cellules).length})
+          Tous (${Object.keys(cellulesParPays).length})
         </div>
         ${availableContinents.map((c) => {
-          const count = Object.values(cellules).filter((x) => x.continent === c).length;
+          const count = Object.values(cellulesParPays).filter((x) => x.continent === c).length;
           return `<div class="continent-pill ${currentContinent === c ? 'active' : ''}" onclick="setContinent('${c}')">
             ${c} (${count})
           </div>`;
@@ -510,19 +514,103 @@ function filterByContinent() {
   setContinent(continent);
 }
 
-function showCellule() {
+async function showCellule() {
   const pays = document.getElementById('celluleSelect').value;
-  if (!pays || !cellules[pays]) {
+  if (!pays || !cellulesParPays[pays]) {
     PASTEF.utils.toast('Choisissez un pays', '', { color: 'var(--pastef-or)' });
     return;
   }
 
-  const data = cellules[pays];
+  const data = cellulesParPays[pays];
   const members = data.members;
   const stats = computeStats(members);
   const coord = findCoordinator(members);
 
-  document.getElementById('celluleDetail').innerHTML = `
+  document.getElementById('celluleDetail').innerHTML = renderCelluleDetail(data, stats, coord);
+  renderGenreChart(stats);
+
+  // 🆕 Cellules réellement enregistrées en base pour ce pays
+  const cellulesDB = await fetchCellulesForPays(pays);
+  updateCellulesBlock(cellulesDB, members);
+}
+
+async function fetchCellulesForPays(pays) {
+  try {
+    const { data: rows, error } = await PASTEF.supabase
+      .from('cellules')
+      .select('id,nom,type,ville_diaspora')
+      .ilike('pays', pays.trim())
+      .eq('active', true)
+      .order('nom', { ascending: true });
+
+    if (error) { console.error('[PASTEF] Erreur chargement cellules diaspora', error); return []; }
+    return rows || [];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+
+function updateCellulesBlock(cellulesDB, members) {
+  const kpiEl = document.getElementById('kpiCellulesDiaspora');
+  const subEl = document.getElementById('cellulesDiasporaSub');
+  const boxEl = document.getElementById('cellulesDiasporaBox');
+  if (!boxEl) return; // l'utilisateur a changé de pays entre-temps
+
+  if (kpiEl) kpiEl.textContent = PASTEF.utils.formatNumber(cellulesDB.length);
+  if (subEl) subEl.textContent = `${cellulesDB.length} cellule${cellulesDB.length > 1 ? 's' : ''} enregistrée${cellulesDB.length > 1 ? 's' : ''} en base`;
+
+  const merged = mergeCellules(cellulesDB, members);
+  boxEl.innerHTML = renderCellulesList(merged);
+}
+
+function mergeCellules(cellulesDB, members) {
+  const countByName = {};
+  members.forEach((m) => { if (m.cellule) countByName[m.cellule] = (countByName[m.cellule] || 0) + 1; });
+
+  const known = new Set();
+  const list = cellulesDB.map((c) => {
+    known.add(c.nom);
+    return { name: c.nom, count: countByName[c.nom] || 0, official: true };
+  });
+
+  Object.entries(countByName).forEach(([name, count]) => {
+    if (!known.has(name)) list.push({ name, count, official: false });
+  });
+
+  list.sort((a, b) => b.count - a.count);
+  return list;
+}
+
+function renderCellulesList(cellules) {
+  if (!cellules.length) {
+    return `<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Aucune cellule enregistrée pour ce pays.</div>`;
+  }
+
+  const max = Math.max(...cellules.map((c) => c.count), 1);
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${cellules.slice(0, 10).map((c) => {
+        const pct = Math.round((c.count / max) * 100);
+        return `
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+              <span style="font-weight:600">${PASTEF.utils.escapeHtml(c.name)}${!c.official ? '<span class="cellule-unofficial">(non enregistrée)</span>' : ''}</span>
+              <span class="text-muted">${c.count} membre${c.count > 1 ? 's' : ''}</span>
+            </div>
+            <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),#B57607);border-radius:3px"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderCelluleDetail(data, stats, coord) {
+  return `
     <div class="section-actions">
       <div>
         <span class="country-badge">
@@ -567,18 +655,18 @@ function showCellule() {
         <div class="section-kpi-value">${stats.cities}</div>
       </div>
       <div class="section-kpi">
+        <div class="section-kpi-icon icon-or">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+        </div>
+        <div class="section-kpi-label">Cellules</div>
+        <div class="section-kpi-value" id="kpiCellulesDiaspora">…</div>
+      </div>
+      <div class="section-kpi">
         <div class="section-kpi-icon icon-green">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </div>
         <div class="section-kpi-label">Nouveaux ce mois</div>
         <div class="section-kpi-value text-green">+${PASTEF.utils.formatNumber(stats.thisMonth)}</div>
-      </div>
-      <div class="section-kpi">
-        <div class="section-kpi-icon icon-or">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div class="section-kpi-label">Engagement</div>
-        <div class="section-kpi-value">${stats.engagementMoyen}<span style="font-size:14px;color:var(--text-muted)">%</span></div>
       </div>
       <div class="section-kpi">
         <div class="section-kpi-icon icon-red">
@@ -591,7 +679,6 @@ function showCellule() {
 
     <!-- Layout principal -->
     <div class="grid grid-1-2">
-      <!-- Colonne gauche : Coordinateur + Genre -->
       <div>
         <div class="coord-card">
           <div class="coord-eyebrow">Coordinateur diaspora</div>
@@ -609,7 +696,6 @@ function showCellule() {
         </div>
       </div>
 
-      <!-- Colonne droite : Villes + Récents -->
       <div>
         <div class="info-strip" style="margin-bottom:16px">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
@@ -618,10 +704,23 @@ function showCellule() {
           <span><strong>Activités diaspora</strong> — Les activités saisies par le coordinateur de cette cellule diaspora apparaîtront ici. Module en cours d'intégration.</span>
         </div>
 
+        <!-- 🆕 Cellules réellement enregistrées en base -->
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
+            <div>
+              <div class="card-title">Cellules enregistrées</div>
+              <div class="card-sub" id="cellulesDiasporaSub">Chargement…</div>
+            </div>
+          </div>
+          <div id="cellulesDiasporaBox">
+            <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Chargement des cellules…</div>
+          </div>
+        </div>
+
         <div class="chart-card">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
             <div>
-              <div class="card-title">Répartition par ville</div>
+              <div class="card-title">Répartition par ville (déclarative)</div>
               <div class="card-sub">${stats.citiesList.length} ville${stats.citiesList.length > 1 ? 's' : ''}</div>
             </div>
           </div>
@@ -641,18 +740,18 @@ function showCellule() {
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
             <div>
               <div class="card-title">Derniers patriotes inscrits</div>
-              <div class="card-sub">${members.length > 6 ? '6 plus récents' : 'Tous'}</div>
+              <div class="card-sub">${data.members.length > 6 ? '6 plus récents' : 'Tous'}</div>
             </div>
           </div>
           <div class="recent-list">
-            ${members.slice(0, 6).map((m) => `
+            ${data.members.slice(0, 6).map((m) => `
               <div class="recent-item">
                 <div class="recent-avatar ${m.sexe === 'Homme' ? 'male' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
                 <div style="flex:1;min-width:0">
                   <div class="recent-name">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
                   <div class="recent-meta">${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(m.region || m.quartier || '')} · ${PASTEF.utils.formatDate(m.created_at)}</div>
                 </div>
-                ${m.fonction_cellule && m.fonction_cellule !== 'Membre' ? `<span class="badge badge-or">${PASTEF.utils.escapeHtml(m.fonction_cellule)}</span>` : ''}
+                ${m.fonction_cellule && m.fonction_cellule !== 'Membre simple' ? `<span class="badge badge-or">${PASTEF.utils.escapeHtml(m.fonction_cellule)}</span>` : ''}
               </div>
             `).join('')}
           </div>
@@ -660,15 +759,13 @@ function showCellule() {
       </div>
     </div>
   `;
-
-  renderGenreChart(stats);
 }
 
 function findCoordinator(members) {
-  return members.find((m) =>
-    m.fonction_cellule === 'Coordinateur' ||
-    m.fonction_cellule === 'Coordinateur Adjoint'
-  );
+  // 🆕 Les libellés exacts viennent maintenant de fonctions_cellule
+  // ("Coordinateur / Coordinatrice", pas juste "Coordinateur")
+  return members.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
+      || members.find((m) => m.fonction_cellule?.startsWith('Coordinateur'));
 }
 
 function renderCoordinator(coord, pays) {
@@ -690,7 +787,7 @@ function renderCoordinator(coord, pays) {
   return `
     <div class="coord-avatar">${PASTEF.utils.initials(coord.prenom, coord.nom)}</div>
     <div class="coord-name">${PASTEF.utils.escapeHtml(coord.prenom || '')} ${PASTEF.utils.escapeHtml(coord.nom || '')}</div>
-    <div class="coord-fn">Coordinateur diaspora</div>
+    <div class="coord-fn">${PASTEF.utils.escapeHtml(coord.fonction_cellule || 'Coordinateur diaspora')}</div>
 
     <div class="coord-contact">
       <div class="coord-contact-row">
@@ -718,7 +815,8 @@ function computeStats(members) {
   const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
 
-  // Villes (utilise région ou quartier comme proxy)
+  // Villes : reste déclaratif (texte libre saisi par le patriote), la
+  // diaspora n'a pas de référentiel officiel de villes comme le Sénégal
   const cityMap = {};
   members.forEach((m) => {
     const city = m.region || m.quartier;
@@ -729,7 +827,7 @@ function computeStats(members) {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 
-  const sansFonction = members.filter((m) => !m.fonction_cellule || m.fonction_cellule === 'Membre').length;
+  const sansFonction = members.filter((m) => !m.fonction_cellule || m.fonction_cellule === 'Membre simple').length;
 
   const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
   const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;

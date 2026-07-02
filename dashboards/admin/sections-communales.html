@@ -68,7 +68,7 @@
 
   .selector-row {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 10px;
     align-items: end;
   }
@@ -107,6 +107,11 @@
     background-color: rgba(255,255,255,0.15);
   }
 
+  .selector-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .selector-select option {
     background: var(--ink);
     color: #fff;
@@ -128,7 +133,10 @@
 
   .selector-btn:hover { background: var(--pastef-or-light); transform: translateY(-1px); }
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
+    .selector-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
     .selector-row { grid-template-columns: 1fr; }
   }
 
@@ -364,6 +372,13 @@
     align-items: start;
     gap: 10px;
   }
+
+  .cellule-unofficial {
+    font-size: 10px;
+    font-style: italic;
+    color: var(--text-soft);
+    margin-left: 6px;
+  }
 </style>
 </head>
 <body>
@@ -394,7 +409,9 @@
 
 <script>
 let allMembers = [];
-let regroupements = {};
+let allCommunesRows = [];   // 🆕 référentiel officiel, depuis la table `communes`
+let regroupements = {};     // clé: "region::departement::commune"
+let orphanMembers = [];     // 🆕 patriotes du Sénégal qu'on n'a pas pu rattacher précisément
 
 (async function () {
   'use strict';
@@ -402,7 +419,6 @@ let regroupements = {};
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
 
-  // Ouvre le groupe Sections dans la sidebar
   PASTEF.sidebar.render(session, 'sec-communales');
   PASTEF.topbar.render({
     session,
@@ -411,13 +427,26 @@ let regroupements = {};
   });
 
   try {
-    const { data, error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5000);
-    if (error) throw error;
-    allMembers = data || [];
+    // 🆕 On charge en parallèle les inscrits ET le référentiel officiel
+    // des communes (région → département → commune), pour afficher
+    // TOUTES les communes du Sénégal — pas seulement celles qui ont déjà
+    // au moins un inscrit.
+    const [membersRes, communesRes] = await Promise.all([
+      PASTEF.supabase.from(PASTEF.TABLE).select('*').order('created_at', { ascending: false }).limit(5000),
+      PASTEF.supabase.from('communes').select('region,departement,commune').eq('active', true),
+    ]);
+
+    if (membersRes.error) throw membersRes.error;
+    allMembers = membersRes.data || [];
+
+    if (communesRes.error) {
+      console.warn('[PASTEF] Table communes indisponible, repli sur regroupement par quartier', communesRes.error);
+      allCommunesRows = [];
+    } else {
+      allCommunesRows = communesRes.data || [];
+    }
+
+    buildRegroupements();
     buildPage();
   } catch (err) {
     console.error(err);
@@ -430,50 +459,105 @@ let regroupements = {};
   }
 })();
 
-function buildPage() {
-  // Regroupement par région > commune (basé sur quartier comme proxy de commune en l'absence de champ dédié)
-  // Pour PASTEF Sénégal : region = département administratif, quartier = commune/zone urbaine
+// ============================================
+// 🆕 REGROUPEMENT — basé sur la table `communes` (source de vérité),
+// avec repli sur l'ancienne méthode (région + quartier) si la table
+// est inaccessible.
+// ============================================
+function buildRegroupements() {
   regroupements = {};
-  allMembers
-    .filter((m) => m.pays === 'Sénégal' && m.region && m.quartier)
-    .forEach((m) => {
-      const key = `${m.region} › ${m.quartier}`;
-      if (!regroupements[key]) {
-        regroupements[key] = {
-          region: m.region,
-          commune: m.quartier,
-          label: key,
-          members: [],
-        };
-      }
-      regroupements[key].members.push(m);
+  orphanMembers = [];
+
+  if (allCommunesRows.length) {
+    // 1) Toutes les communes officielles d'abord (même à 0 patriote)
+    allCommunesRows.forEach((c) => {
+      const key = `${c.region}::${c.departement}::${c.commune}`;
+      regroupements[key] = { region: c.region, departement: c.departement, commune: c.commune, members: [] };
     });
 
-  const communes = Object.keys(regroupements).sort();
+    // Index de secours région+commune (pour les inscriptions historiques
+    // qui n'ont pas encore de département renseigné)
+    const byRegionCommune = {};
+    Object.values(regroupements).forEach((r) => {
+      const k2 = `${r.region}::${r.commune}`;
+      (byRegionCommune[k2] = byRegionCommune[k2] || []).push(r);
+    });
+
+    // 2) On rattache chaque patriote à SA commune officielle
+    allMembers
+      .filter((m) => m.pays === 'Sénégal')
+      .forEach((m) => {
+        const commune = m.commune || m.quartier;
+        if (!m.region || !commune) { orphanMembers.push(m); return; }
+
+        const exactKey = `${m.region}::${m.departement}::${commune}`;
+        if (m.departement && regroupements[exactKey]) {
+          regroupements[exactKey].members.push(m);
+          return;
+        }
+
+        const candidates = byRegionCommune[`${m.region}::${commune}`];
+        if (candidates && candidates.length === 1) {
+          candidates[0].members.push(m);
+          return;
+        }
+
+        // Nom de commune introuvable dans le référentiel officiel, ou
+        // ambigu (existe dans plusieurs départements de la région) —
+        // on ne devine pas, on le compte à part.
+        orphanMembers.push(m);
+      });
+  } else {
+    // Repli : ancien comportement si `communes` est inaccessible
+    allMembers
+      .filter((m) => m.pays === 'Sénégal' && m.region && (m.commune || m.quartier))
+      .forEach((m) => {
+        const commune = m.commune || m.quartier;
+        const key = `${m.region}::__::${commune}`;
+        if (!regroupements[key]) regroupements[key] = { region: m.region, departement: null, commune, members: [] };
+        regroupements[key].members.push(m);
+      });
+  }
+}
+
+// ============================================
+// SÉLECTEUR — 3 niveaux : Région → Département → Commune
+// ============================================
+function buildPage() {
+  const regions = [...new Set(Object.values(regroupements).map((r) => r.region))].sort();
+  const communesCount = Object.keys(regroupements).length;
 
   document.getElementById('content').innerHTML = `
     <!-- SÉLECTEUR -->
     <div class="selector-card">
       <div class="selector-eyebrow">Vue communale</div>
       <h1 class="selector-title">Sections communales du Sénégal</h1>
-      <p class="selector-sub">${communes.length} communes recensées · Sélectionnez une commune pour voir son détail.</p>
+      <p class="selector-sub">
+        ${PASTEF.utils.formatNumber(communesCount)} communes officielles recensées
+        ${orphanMembers.length ? ` · <span style="color:var(--pastef-or-light)">${orphanMembers.length} patriote(s) non rattaché(s) précisément à une commune</span>` : ''}
+        · Sélectionnez une commune pour voir son détail.
+      </p>
 
       <div class="selector-row">
         <div class="selector-field">
-          <label>Département</label>
+          <label>Région</label>
           <select class="selector-select" id="regionFilter">
             <option value="">Toutes régions</option>
-            ${[...new Set(Object.values(regroupements).map((r) => r.region))].sort().map((r) =>
-              `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`
-            ).join('')}
+            ${regions.map((r) => `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="selector-field">
+          <label>Département</label>
+          <select class="selector-select" id="departementFilter" disabled>
+            <option value="">Choisir une région d'abord</option>
           </select>
         </div>
 
         <div class="selector-field">
           <label>Commune</label>
-          <select class="selector-select" id="communeSelect">
+          <select class="selector-select" id="communeSelect" disabled>
             <option value="">— Choisir une commune —</option>
-            ${communes.map((c) => `<option value="${PASTEF.utils.escapeHtml(c)}">${PASTEF.utils.escapeHtml(c)}</option>`).join('')}
           </select>
         </div>
 
@@ -497,24 +581,63 @@ function buildPage() {
           </svg>
         </div>
         <div class="placeholder-title">Sélectionnez une commune</div>
-        <div class="placeholder-text">Choisissez une commune dans le menu déroulant ci-dessus pour visualiser ses coordinateurs, ses patriotes et ses activités.</div>
+        <div class="placeholder-text">Choisissez une région, un département puis une commune dans le menu ci-dessus pour visualiser ses coordinateurs, ses patriotes et ses cellules.</div>
       </div>
     </div>
   `;
 
-  // Bind filtre département → filtre communes
-  document.getElementById('regionFilter').addEventListener('change', (e) => {
-    const region = e.target.value;
-    const communeSelect = document.getElementById('communeSelect');
-    const filtered = region
-      ? communes.filter((c) => regroupements[c].region === region)
-      : communes;
-    communeSelect.innerHTML = `<option value="">— Choisir une commune —</option>` +
-      filtered.map((c) => `<option value="${PASTEF.utils.escapeHtml(c)}">${PASTEF.utils.escapeHtml(c)}</option>`).join('');
-  });
+  document.getElementById('regionFilter').addEventListener('change', onRegionChange);
+  document.getElementById('departementFilter').addEventListener('change', onDepartementChange);
 }
 
-function showCommune() {
+function onRegionChange(e) {
+  const region = e.target.value;
+  const depSel = document.getElementById('departementFilter');
+  const comSel = document.getElementById('communeSelect');
+
+  comSel.innerHTML = `<option value="">— Choisir une commune —</option>`;
+  comSel.disabled = true;
+
+  if (!region) {
+    depSel.innerHTML = `<option value="">Choisir une région d'abord</option>`;
+    depSel.disabled = true;
+    return;
+  }
+
+  const departements = [...new Set(
+    Object.values(regroupements).filter((r) => r.region === region).map((r) => r.departement).filter(Boolean)
+  )].sort();
+
+  depSel.innerHTML = `<option value="">Tous départements</option>` +
+    departements.map((d) => `<option value="${PASTEF.utils.escapeHtml(d)}">${PASTEF.utils.escapeHtml(d)}</option>`).join('');
+  depSel.disabled = false;
+
+  populateCommunesForFilter(region, '');
+}
+
+function onDepartementChange(e) {
+  const region = document.getElementById('regionFilter').value;
+  populateCommunesForFilter(region, e.target.value);
+}
+
+function populateCommunesForFilter(region, departement) {
+  const comSel = document.getElementById('communeSelect');
+
+  const entries = Object.entries(regroupements)
+    .filter(([, r]) => (!region || r.region === region) && (!departement || r.departement === departement))
+    .sort((a, b) => a[1].commune.localeCompare(b[1].commune));
+
+  comSel.innerHTML = `<option value="">— Choisir une commune —</option>` +
+    entries.map(([key, r]) =>
+      `<option value="${PASTEF.utils.escapeHtml(key)}">${PASTEF.utils.escapeHtml(r.commune)}${r.members.length ? ` (${r.members.length})` : ''}</option>`
+    ).join('');
+  comSel.disabled = false;
+}
+
+// ============================================
+// DÉTAIL D'UNE COMMUNE
+// ============================================
+async function showCommune() {
   const key = document.getElementById('communeSelect').value;
   if (!key || !regroupements[key]) {
     PASTEF.utils.toast('Choisissez une commune', '', { color: 'var(--pastef-or)' });
@@ -526,11 +649,49 @@ function showCommune() {
   const stats = computeSectionStats(members);
   const coord = findCoordinator(members);
 
-  document.getElementById('communeDetail').innerHTML = `
+  document.getElementById('communeDetail').innerHTML = renderCommuneDetail(data, stats, coord);
+  renderGenreChart(stats);
+
+  // 🆕 Cellules réellement enregistrées en base pour CETTE commune
+  // exactement (pas d'élargissement ici : c'est une vue de reporting,
+  // pas un outil d'affectation — on veut voir ce qui existe vraiment,
+  // pas des cellules voisines).
+  const cellulesDB = await fetchCellulesForCommune(data);
+  updateCellulesBlock(cellulesDB, members);
+}
+
+async function fetchCellulesForCommune(data) {
+  try {
+    let q = PASTEF.supabase
+      .from('cellules')
+      .select('id,nom,type')
+      .ilike('pays', 'Sénégal')
+      .eq('active', true)
+      .eq('commune', data.commune);
+
+    if (data.region) q = q.eq('region', data.region);
+    if (data.departement) q = q.eq('departement', data.departement);
+
+    const { data: rows, error } = await q.order('nom', { ascending: true });
+    if (error) { console.error('[PASTEF] Erreur chargement cellules commune', error); return []; }
+    return rows || [];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+
+function renderCommuneDetail(data, stats, coord) {
+  const locLine = [
+    data.region ? `Région de ${PASTEF.utils.escapeHtml(data.region)}` : null,
+    data.departement ? `Département de ${PASTEF.utils.escapeHtml(data.departement)}` : null,
+  ].filter(Boolean).join(' · ');
+
+  return `
     <div class="section-actions">
       <div>
         <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">${PASTEF.utils.escapeHtml(data.commune)}</h2>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">Département de ${PASTEF.utils.escapeHtml(data.region)} · ${stats.total} patriote${stats.total > 1 ? 's' : ''}</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">${locLine} · ${stats.total} patriote${stats.total > 1 ? 's' : ''}</p>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-secondary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.commune)}', 'excel')">
@@ -569,7 +730,7 @@ function showCommune() {
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="section-kpi-label">Cellules</div>
-        <div class="section-kpi-value">${stats.cellules}</div>
+        <div class="section-kpi-value" id="kpiCellules">…</div>
       </div>
       <div class="section-kpi">
         <div class="section-kpi-icon icon-green">
@@ -587,9 +748,8 @@ function showCommune() {
       </div>
     </div>
 
-    <!-- Layout 2 colonnes : Coordinateur + Activités | Stats -->
+    <!-- Layout 2 colonnes : Coordinateur + Démographie | Cellules + Récents -->
     <div class="grid grid-1-2">
-      <!-- Colonne gauche : Coordinateur + Démographie -->
       <div>
         <div class="coord-card">
           <div class="coord-eyebrow">Coordinateur communal</div>
@@ -607,7 +767,6 @@ function showCommune() {
         </div>
       </div>
 
-      <!-- Colonne droite : Activités + Cellules + Récents -->
       <div>
         <div class="info-strip" style="margin-bottom:16px">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
@@ -620,21 +779,23 @@ function showCommune() {
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
             <div>
               <div class="card-title">Cellules de base</div>
-              <div class="card-sub">${stats.cellulesList.length} cellule${stats.cellulesList.length > 1 ? 's' : ''} active${stats.cellulesList.length > 1 ? 's' : ''}</div>
+              <div class="card-sub" id="cellulesSub">Chargement…</div>
             </div>
           </div>
-          ${renderCellulesList(stats.cellulesList)}
+          <div id="cellulesListBox">
+            <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Chargement des cellules…</div>
+          </div>
         </div>
 
         <div class="chart-card" style="margin-top:16px">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
             <div>
               <div class="card-title">Derniers patriotes inscrits</div>
-              <div class="card-sub">${members.length > 6 ? '6 plus récents' : 'Tous'}</div>
+              <div class="card-sub">${data.members.length > 6 ? '6 plus récents' : 'Tous'}</div>
             </div>
           </div>
           <div class="recent-list">
-            ${members.slice(0, 6).map((m) => `
+            ${data.members.slice(0, 6).map((m) => `
               <div class="recent-item">
                 <div class="recent-avatar ${m.sexe === 'Femme' ? 'female' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
                 <div style="flex:1;min-width:0">
@@ -643,22 +804,60 @@ function showCommune() {
                 </div>
                 ${m.cellule ? `<span class="badge badge-green">${PASTEF.utils.escapeHtml(m.cellule)}</span>` : `<span class="badge badge-neutral">Sans</span>`}
               </div>
-            `).join('')}
+            `).join('') || '<div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:13px">Aucun patriote inscrit pour le moment.</div>'}
           </div>
         </div>
       </div>
     </div>
   `;
+}
 
-  // Render chart
-  renderGenreChart(stats);
+// 🆕 Met à jour le bloc Cellules une fois la requête Supabase terminée
+// (fusionne les cellules officiellement enregistrées avec les mentions
+// libres des patriotes, pour ne rien perdre)
+function updateCellulesBlock(cellulesDB, members) {
+  const kpiEl = document.getElementById('kpiCellules');
+  const subEl = document.getElementById('cellulesSub');
+  const boxEl = document.getElementById('cellulesListBox');
+  if (!boxEl) return; // l'utilisateur a changé de commune entre-temps
+
+  if (kpiEl) kpiEl.textContent = PASTEF.utils.formatNumber(cellulesDB.length);
+
+  const merged = mergeCellules(cellulesDB, members);
+
+  if (subEl) {
+    subEl.textContent = `${cellulesDB.length} cellule${cellulesDB.length > 1 ? 's' : ''} enregistrée${cellulesDB.length > 1 ? 's' : ''} en base`;
+  }
+
+  boxEl.innerHTML = renderCellulesList(merged);
+}
+
+function mergeCellules(cellulesDB, members) {
+  const countByName = {};
+  members.forEach((m) => { if (m.cellule) countByName[m.cellule] = (countByName[m.cellule] || 0) + 1; });
+
+  const known = new Set();
+  const list = cellulesDB.map((c) => {
+    known.add(c.nom);
+    return { name: c.nom, count: countByName[c.nom] || 0, official: true };
+  });
+
+  // Mentions de cellule mentionnées par des patriotes mais absentes de la
+  // table `cellules` (texte libre "Autre cellule (préciser)" par ex.) —
+  // on les affiche quand même pour ne perdre aucune donnée.
+  Object.entries(countByName).forEach(([name, count]) => {
+    if (!known.has(name)) list.push({ name, count, official: false });
+  });
+
+  list.sort((a, b) => b.count - a.count);
+  return list;
 }
 
 function findCoordinator(members) {
-  return members.find((m) =>
-    m.fonction_cellule === 'Coordinateur' ||
-    m.fonction_cellule === 'Coordinateur Adjoint'
-  );
+  // 🆕 Les libellés exacts viennent maintenant de la table fonctions_cellule
+  // ("Coordinateur / Coordinatrice", pas juste "Coordinateur")
+  return members.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
+      || members.find((m) => m.fonction_cellule?.startsWith('Coordinateur'));
 }
 
 function renderCoordinator(coord) {
@@ -690,7 +889,7 @@ function renderCoordinator(coord) {
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
         </svg>
-        <span>${PASTEF.utils.escapeHtml(coord.quartier || coord.region || '—')}</span>
+        <span>${PASTEF.utils.escapeHtml(coord.commune || coord.quartier || coord.region || '—')}</span>
       </div>
     </div>
   `;
@@ -701,7 +900,7 @@ function renderCellulesList(cellules) {
     return `<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Aucune cellule recensée dans cette commune.</div>`;
   }
 
-  const max = cellules[0].count;
+  const max = Math.max(...cellules.map((c) => c.count), 1);
 
   return `
     <div style="display:flex;flex-direction:column;gap:10px">
@@ -710,7 +909,7 @@ function renderCellulesList(cellules) {
         return `
           <div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-              <span style="font-weight:600">${PASTEF.utils.escapeHtml(c.name)}</span>
+              <span style="font-weight:600">${PASTEF.utils.escapeHtml(c.name)}${!c.official ? '<span class="cellule-unofficial">(non enregistrée)</span>' : ''}</span>
               <span class="text-muted">${c.count} membre${c.count > 1 ? 's' : ''}</span>
             </div>
             <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden">
@@ -732,26 +931,12 @@ function computeSectionStats(members) {
   const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
 
-  const sansCellule = members.filter((m) => m.appartient_cellule !== 'Oui' || !m.cellule).length;
-
-  // Comptage cellules
-  const cellMap = {};
-  members.forEach((m) => {
-    if (m.cellule) cellMap[m.cellule] = (cellMap[m.cellule] || 0) + 1;
-  });
-  const cellulesList = Object.entries(cellMap)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({ name, count }));
+  const sansCellule = members.filter((m) => m.appartient_cellule?.toLowerCase() !== 'oui' || !m.cellule).length;
 
   const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
   const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
 
-  return {
-    total, hommes, femmes, thisMonth, sansCellule,
-    cellules: cellulesList.length,
-    cellulesList,
-    engagementMoyen,
-  };
+  return { total, hommes, femmes, thisMonth, sansCellule, engagementMoyen };
 }
 
 function renderGenreChart(stats) {

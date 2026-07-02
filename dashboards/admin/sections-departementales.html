@@ -64,7 +64,7 @@
 
   .selector-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr 1fr auto;
     gap: 10px;
     align-items: end;
   }
@@ -102,6 +102,8 @@
     border-color: var(--pastef-or-light);
     background-color: rgba(255,255,255,0.15);
   }
+
+  .selector-select:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .selector-select option { background: var(--ink); color: #fff; }
 
@@ -340,7 +342,9 @@
 
 <script>
 let allMembers = [];
-let departements = {};
+let allCommunesRows = [];    // 🆕 référentiel officiel (région, département, commune)
+let departementsMap = {};    // clé "region::departement"
+let orphanMembers = [];      // 🆕 patriotes non rattachés précisément à un département
 
 (async function () {
   'use strict';
@@ -356,14 +360,22 @@ let departements = {};
   });
 
   try {
-    const { data, error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
-      .select('*')
-      .eq('pays', 'Sénégal')
-      .order('created_at', { ascending: false })
-      .limit(5000);
-    if (error) throw error;
-    allMembers = data || [];
+    const [membersRes, communesRes] = await Promise.all([
+      PASTEF.supabase.from(PASTEF.TABLE).select('*').eq('pays', 'Sénégal').order('created_at', { ascending: false }).limit(5000),
+      PASTEF.supabase.from('communes').select('region,departement,commune').eq('active', true),
+    ]);
+
+    if (membersRes.error) throw membersRes.error;
+    allMembers = membersRes.data || [];
+
+    if (communesRes.error) {
+      console.warn('[PASTEF] Table communes indisponible, repli sur regroupement par région', communesRes.error);
+      allCommunesRows = [];
+    } else {
+      allCommunesRows = communesRes.data || [];
+    }
+
+    buildRegroupements();
     buildPage();
   } catch (err) {
     console.error(err);
@@ -376,32 +388,91 @@ let departements = {};
   }
 })();
 
-function buildPage() {
-  // Regroupement par département (region dans Supabase = département admin)
-  departements = {};
-  allMembers.forEach((m) => {
-    if (!m.region) return;
-    if (!departements[m.region]) {
-      departements[m.region] = { region: m.region, members: [] };
-    }
-    departements[m.region].members.push(m);
-  });
+// ============================================
+// 🆕 REGROUPEMENT — basé sur la table `communes` (source de vérité)
+// ============================================
+function buildRegroupements() {
+  departementsMap = {};
+  orphanMembers = [];
 
-  const list = Object.keys(departements).sort();
+  if (allCommunesRows.length) {
+    // 1) Tous les départements officiels (même à 0 patriote), avec la
+    // liste de leurs communes
+    allCommunesRows.forEach((c) => {
+      const key = `${c.region}::${c.departement}`;
+      if (!departementsMap[key]) {
+        departementsMap[key] = { region: c.region, departement: c.departement, members: [], communesSet: new Set() };
+      }
+      departementsMap[key].communesSet.add(c.commune);
+    });
+
+    // Index de secours région+commune → département (pour rattacher les
+    // inscriptions qui n'ont que 'quartier' de rempli)
+    const byRegionCommune = {};
+    allCommunesRows.forEach((c) => {
+      const k2 = `${c.region}::${c.commune}`;
+      (byRegionCommune[k2] = byRegionCommune[k2] || []).push(c.departement);
+    });
+
+    allMembers.forEach((m) => {
+      if (!m.region) { orphanMembers.push(m); return; }
+
+      const exactKey = `${m.region}::${m.departement}`;
+      if (m.departement && departementsMap[exactKey]) {
+        departementsMap[exactKey].members.push(m);
+        return;
+      }
+
+      const commune = m.commune || m.quartier;
+      if (commune) {
+        const candidates = byRegionCommune[`${m.region}::${commune}`];
+        if (candidates && candidates.length === 1) {
+          departementsMap[`${m.region}::${candidates[0]}`].members.push(m);
+          return;
+        }
+      }
+
+      orphanMembers.push(m);
+    });
+  } else {
+    // Repli : ancien comportement (groupe par région uniquement)
+    allMembers.forEach((m) => {
+      if (!m.region) return;
+      const key = `${m.region}::__`;
+      if (!departementsMap[key]) departementsMap[key] = { region: m.region, departement: null, members: [], communesSet: new Set() };
+      departementsMap[key].members.push(m);
+    });
+  }
+}
+
+function buildPage() {
+  const regions = [...new Set(Object.values(departementsMap).map((d) => d.region))].sort();
+  const deptCount = Object.keys(departementsMap).length;
 
   document.getElementById('content').innerHTML = `
     <!-- SÉLECTEUR -->
     <div class="selector-card">
       <div class="selector-eyebrow">Vue départementale</div>
       <h1 class="selector-title">Coordinations départementales</h1>
-      <p class="selector-sub">${list.length} département${list.length > 1 ? 's' : ''} recensé${list.length > 1 ? 's' : ''} au Sénégal · Sélectionnez-en un pour voir le détail.</p>
+      <p class="selector-sub">
+        ${deptCount} département${deptCount > 1 ? 's' : ''} officiel${deptCount > 1 ? 's' : ''} au Sénégal
+        ${orphanMembers.length ? ` · <span style="color:var(--pastef-or-light)">${orphanMembers.length} patriote(s) non rattaché(s) précisément</span>` : ''}
+        · Sélectionnez-en un pour voir le détail.
+      </p>
 
       <div class="selector-row">
         <div class="selector-field">
+          <label>Région</label>
+          <select class="selector-select" id="regionFilter">
+            <option value="">Toutes régions</option>
+            ${regions.map((r) => `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="selector-field">
           <label>Département</label>
-          <select class="selector-select" id="deptSelect">
-            <option value="">— Choisir un département —</option>
-            ${list.map((d) => `<option value="${PASTEF.utils.escapeHtml(d)}">${PASTEF.utils.escapeHtml(d)} · ${departements[d].members.length} patriotes</option>`).join('')}
+          <select class="selector-select" id="deptSelect" disabled>
+            <option value="">Choisir une région d'abord</option>
           </select>
         </div>
 
@@ -424,38 +495,105 @@ function buildPage() {
           </svg>
         </div>
         <div class="placeholder-title">Sélectionnez un département</div>
-        <div class="placeholder-text">Choisissez un département dans la liste ci-dessus pour visualiser son coordinateur, ses sections communales rattachées et ses statistiques.</div>
+        <div class="placeholder-text">Choisissez une région puis un département pour visualiser son coordinateur, ses sections communales rattachées et ses statistiques.</div>
       </div>
     </div>
   `;
+
+  document.getElementById('regionFilter').addEventListener('change', onRegionChange);
+
+  // Permettre de choisir directement une région pour voir tous ses
+  // départements sans forcer un choix préalable
+  onRegionChange({ target: { value: '' } });
 }
 
-function showDept() {
+function onRegionChange(e) {
+  const region = e.target.value;
+  const deptSel = document.getElementById('deptSelect');
+
+  const entries = Object.entries(departementsMap)
+    .filter(([, d]) => !region || d.region === region)
+    .sort((a, b) => (a[1].region + a[1].departement).localeCompare(b[1].region + b[1].departement));
+
+  deptSel.innerHTML = `<option value="">— Choisir un département —</option>` +
+    entries.map(([key, d]) =>
+      `<option value="${PASTEF.utils.escapeHtml(key)}">${PASTEF.utils.escapeHtml(d.departement || d.region)}${!region ? ` (${PASTEF.utils.escapeHtml(d.region)})` : ''} · ${d.members.length} patriote${d.members.length > 1 ? 's' : ''}</option>`
+    ).join('');
+  deptSel.disabled = false;
+}
+
+async function showDept() {
   const key = document.getElementById('deptSelect').value;
-  if (!key || !departements[key]) {
+  if (!key || !departementsMap[key]) {
     PASTEF.utils.toast('Choisissez un département', '', { color: 'var(--pastef-or)' });
     return;
   }
 
-  const data = departements[key];
+  const data = departementsMap[key];
   const members = data.members;
-  const stats = computeStats(members);
+  const stats = computeStats(data);
   const coord = findCoordinator(members);
 
-  document.getElementById('deptDetail').innerHTML = `
+  document.getElementById('deptDetail').innerHTML = renderDeptDetail(data, stats, coord);
+  renderGenreChart(stats);
+
+  // 🆕 Cellules réellement enregistrées en base pour ce département
+  const cellulesDB = await fetchCellulesForDept(data);
+  updateCellulesKPIAndTable(cellulesDB, data);
+}
+
+async function fetchCellulesForDept(data) {
+  try {
+    let q = PASTEF.supabase
+      .from('cellules')
+      .select('id,nom,commune')
+      .ilike('pays', 'Sénégal')
+      .eq('active', true)
+      .eq('region', data.region);
+
+    if (data.departement) q = q.eq('departement', data.departement);
+
+    const { data: rows, error } = await q;
+    if (error) { console.error('[PASTEF] Erreur chargement cellules département', error); return []; }
+    return rows || [];
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+}
+
+function updateCellulesKPIAndTable(cellulesDB, data) {
+  const kpiEl = document.getElementById('kpiCellulesDept');
+  if (kpiEl) kpiEl.textContent = PASTEF.utils.formatNumber(cellulesDB.length);
+
+  // Compte de cellules par commune, pour la colonne "Cellules" du tableau
+  const cellulesByCommune = {};
+  cellulesDB.forEach((c) => {
+    if (!c.commune) return;
+    cellulesByCommune[c.commune] = (cellulesByCommune[c.commune] || 0) + 1;
+  });
+
+  document.querySelectorAll('[data-commune-cellules]').forEach((el) => {
+    const commune = el.getAttribute('data-commune-cellules');
+    el.textContent = cellulesByCommune[commune] || 0;
+  });
+}
+
+function renderDeptDetail(data, stats, coord) {
+  return `
     <div class="section-actions">
       <div>
-        <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">Département de ${PASTEF.utils.escapeHtml(data.region)}</h2>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">${stats.communes} section${stats.communes > 1 ? 's' : ''} communale${stats.communes > 1 ? 's' : ''} · ${PASTEF.utils.formatNumber(stats.total)} patriote${stats.total > 1 ? 's' : ''}</p>
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">${PASTEF.utils.escapeHtml(data.departement || data.region)}</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">Région de ${PASTEF.utils.escapeHtml(data.region)} · ${stats.communes} section${stats.communes > 1 ? 's' : ''} communale${stats.communes > 1 ? 's' : ''} · ${PASTEF.utils.formatNumber(stats.total)} patriote${stats.total > 1 ? 's' : ''}</p>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.region)}', 'excel')">
+        <button class="btn btn-secondary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.departement || data.region)}', 'excel')">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           Excel
         </button>
-        <button class="btn btn-primary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.region)}', 'pdf')">
+        <button class="btn btn-primary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.departement || data.region)}', 'pdf')">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
           </svg>
@@ -485,7 +623,7 @@ function showDept() {
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
         </div>
         <div class="section-kpi-label">Cellules de base</div>
-        <div class="section-kpi-value">${stats.cellules}</div>
+        <div class="section-kpi-value" id="kpiCellulesDept">…</div>
       </div>
       <div class="section-kpi">
         <div class="section-kpi-icon icon-green">
@@ -505,7 +643,6 @@ function showDept() {
 
     <!-- Layout : Coordinateur + Genre | Communes rattachées -->
     <div class="grid grid-1-2">
-      <!-- Colonne gauche : Coordinateur + Chart -->
       <div>
         <div class="coord-card">
           <div class="coord-eyebrow">Coordinateur départemental</div>
@@ -523,7 +660,6 @@ function showDept() {
         </div>
       </div>
 
-      <!-- Colonne droite : Communes rattachées -->
       <div>
         <div class="info-strip" style="margin-bottom:16px">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
@@ -536,7 +672,7 @@ function showDept() {
           <div class="card-header" style="border-bottom:1px solid var(--border);padding:16px 18px;margin:0">
             <div>
               <div class="card-title">Sections communales rattachées</div>
-              <div class="card-sub">${stats.communesList.length} commune${stats.communesList.length > 1 ? 's' : ''}</div>
+              <div class="card-sub">${stats.communesList.length} commune${stats.communesList.length > 1 ? 's' : ''} officielle${stats.communesList.length > 1 ? 's' : ''}</div>
             </div>
           </div>
 
@@ -552,14 +688,14 @@ function showDept() {
             <div class="commune-row">
               <div>
                 <div class="commune-name">${PASTEF.utils.escapeHtml(c.name)}</div>
-                <div class="commune-sub">${c.coordinator ? `${c.coordinator.prenom} ${c.coordinator.nom}` : 'Aucun coordinateur'}</div>
+                <div class="commune-sub">${c.coordinator ? `${PASTEF.utils.escapeHtml(c.coordinator.prenom)} ${PASTEF.utils.escapeHtml(c.coordinator.nom)}` : 'Aucun coordinateur'}</div>
               </div>
               <div>
                 <div class="commune-stat">${c.total}</div>
                 <div class="commune-stat-label">Total</div>
               </div>
               <div>
-                <div class="commune-stat">${c.cellules}</div>
+                <div class="commune-stat" data-commune-cellules="${PASTEF.utils.escapeHtml(c.name)}">…</div>
                 <div class="commune-stat-label">Cellules</div>
               </div>
               <div>
@@ -580,17 +716,13 @@ function showDept() {
       </div>
     </div>
   `;
-
-  renderGenreChart(stats);
 }
 
 function findCoordinator(members) {
-  // Pour un département : on cherche un coordinateur départemental
-  // En attendant la table coordinator_accounts, on prend le premier "Coordinateur" trouvé
-  return members.find((m) =>
-    m.fonction_cellule === 'Coordinateur' ||
-    m.fonction_cellule === 'Coordinateur Adjoint'
-  );
+  // 🆕 Les libellés exacts viennent maintenant de fonctions_cellule
+  // ("Coordinateur / Coordinatrice", pas juste "Coordinateur")
+  return members.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
+      || members.find((m) => m.fonction_cellule?.startsWith('Coordinateur'));
 }
 
 function renderCoordinator(coord) {
@@ -612,7 +744,7 @@ function renderCoordinator(coord) {
   return `
     <div class="coord-avatar">${PASTEF.utils.initials(coord.prenom, coord.nom)}</div>
     <div class="coord-name">${PASTEF.utils.escapeHtml(coord.prenom || '')} ${PASTEF.utils.escapeHtml(coord.nom || '')}</div>
-    <div class="coord-fn">Coordinateur départemental</div>
+    <div class="coord-fn">${PASTEF.utils.escapeHtml(coord.fonction_cellule || 'Coordinateur')}</div>
 
     <div class="coord-contact">
       <div class="coord-contact-row">
@@ -625,13 +757,14 @@ function renderCoordinator(coord) {
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
         </svg>
-        <span>${PASTEF.utils.escapeHtml(coord.quartier || coord.region || '—')}</span>
+        <span>${PASTEF.utils.escapeHtml(coord.commune || coord.quartier || coord.region || '—')}</span>
       </div>
     </div>
   `;
 }
 
-function computeStats(members) {
+function computeStats(data) {
+  const members = data.members;
   const total = members.length;
   const hommes = members.filter((m) => m.sexe === 'Homme').length;
   const femmes = total - hommes;
@@ -640,33 +773,26 @@ function computeStats(members) {
   const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
 
-  // Communes (quartiers dans Sénégal) rattachées
-  const communeMap = {};
-  members.forEach((m) => {
-    if (!m.quartier) return;
-    if (!communeMap[m.quartier]) {
-      communeMap[m.quartier] = { name: m.quartier, members: [] };
-    }
-    communeMap[m.quartier].members.push(m);
-  });
+  // 🆕 Communes officielles de ce département (même à 0 patriote), avec
+  // repli sur les noms mentionnés par les membres si `communes` était
+  // indisponible au chargement
+  const communeNames = data.communesSet && data.communesSet.size
+    ? [...data.communesSet]
+    : [...new Set(members.map((m) => m.commune || m.quartier).filter(Boolean))];
 
-  const communesList = Object.values(communeMap).map((c) => {
-    const cMembers = c.members;
+  const communesList = communeNames.sort().map((name) => {
+    const cMembers = members.filter((m) => (m.commune || m.quartier) === name);
     const cThisMonth = cMembers.filter((m) => new Date(m.created_at) >= startMonth).length;
     const cEng = cMembers.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
-    const cCellules = new Set(cMembers.filter((m) => m.cellule).map((m) => m.cellule)).size;
     return {
-      name: c.name,
+      name,
       total: cMembers.length,
-      cellules: cCellules,
       thisMonth: cThisMonth,
       engagement: cMembers.length > 0 ? Math.round((cEng / cMembers.length) * 100) : 0,
-      coordinator: cMembers.find((m) => m.fonction_cellule === 'Coordinateur' || m.fonction_cellule === 'Coordinateur Adjoint'),
+      coordinator: cMembers.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
+                 || cMembers.find((m) => m.fonction_cellule?.startsWith('Coordinateur')),
     };
   }).sort((a, b) => b.total - a.total);
-
-  // Cellules totales
-  const cellules = new Set(members.filter((m) => m.cellule).map((m) => m.cellule)).size;
 
   const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
   const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
@@ -675,7 +801,6 @@ function computeStats(members) {
     total, hommes, femmes, thisMonth,
     communes: communesList.length,
     communesList,
-    cellules,
     engagementMoyen,
   };
 }
