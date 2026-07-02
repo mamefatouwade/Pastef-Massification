@@ -19,6 +19,7 @@
      Coordinateurs — Styles spécifiques
      ============================================ */
 
+  /* KPI strip */
   .kpi-strip {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
@@ -36,6 +37,7 @@
   .kpi-value { font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -0.5px; }
   .kpi-sub   { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
+  /* Header actions */
   .page-header {
     display: flex;
     align-items: center;
@@ -96,8 +98,8 @@
   }
 
   .btn-designate:hover { background: var(--pastef-green-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-  .btn-designate:disabled { opacity: 0.6; cursor: not-allowed; }
 
+  /* Table coordinateurs */
   .coord-table {
     width: 100%;
     border-collapse: collapse;
@@ -152,7 +154,6 @@
   }
   .coord-actions button:hover { background: var(--bg); color: var(--pastef-green); }
   .coord-actions button.danger:hover { color: var(--pastef-red); }
-  .coord-actions button:disabled { opacity: 0.4; cursor: wait; }
 
   .last-login { font-size: 11px; color: var(--text-muted); }
 
@@ -172,7 +173,10 @@
     transition: opacity 0.2s;
   }
 
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
 
   .modal {
     background: var(--card);
@@ -214,6 +218,7 @@
     border-top: 1px solid var(--border-light);
   }
 
+  /* Steps indicator */
   .steps { display: flex; gap: 4px; margin-bottom: 24px; }
 
   .step {
@@ -227,6 +232,7 @@
   .step.done { background: var(--pastef-green); }
   .step.active { background: var(--pastef-green-light); }
 
+  /* Form fields */
   .field { margin-bottom: 18px; }
   .field-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
   .field-hint  { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
@@ -255,8 +261,7 @@
     padding-right: 30px;
   }
 
-  .field-select:disabled { opacity: 0.5; cursor: not-allowed; }
-
+  /* Radio cards */
   .radio-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
   .radio-card {
@@ -282,6 +287,7 @@
   .radio-card-label { font-size: 12px; font-weight: 600; color: var(--ink); }
   .radio-card-desc  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
+  /* Search results */
   .search-results {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -307,6 +313,7 @@
   .search-result-name  { font-size: 13px; font-weight: 600; color: var(--ink); }
   .search-result-info  { font-size: 11px; color: var(--text-muted); }
 
+  /* Credentials card */
   .creds-card {
     background: var(--pastef-green-soft);
     border: 1.5px solid var(--pastef-green);
@@ -346,6 +353,7 @@
     font-weight: 500;
   }
 
+  /* Empty state */
   .empty-search {
     text-align: center;
     padding: 20px;
@@ -353,15 +361,7 @@
     font-size: 13px;
   }
 
-  .form-error {
-    background: var(--pastef-red-soft);
-    color: var(--pastef-red-dark);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    font-size: 12px;
-    margin-bottom: 14px;
-  }
-
+  /* Responsive */
   @media (max-width: 768px) {
     .radio-cards { grid-template-columns: 1fr; }
     .modal { max-width: 100%; margin: 10px; }
@@ -403,6 +403,7 @@
 
 <script src="../../js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../js/data.js"></script>
 <script src="../../shared/supabase-client.js"></script>
 <script src="../../shared/utils.js"></script>
 <script src="../../shared/auth.js"></script>
@@ -419,76 +420,37 @@
   PASTEF.sidebar.render(session, 'coordinateurs');
   PASTEF.topbar.render({ session, title: 'Coordinateurs', breadcrumb: 'Gestion des coordinateurs' });
 
-  // 🆕 Un coordinateur communal/départemental/diaspora est rattaché à un
-  // LIEU réel (commune, département ou pays) — pas à une "cellule" à
-  // sélectionner dans une liste qui n'existe pas encore. La fiche de
-  // coordination correspondante est créée automatiquement côté serveur
-  // si elle n'existe pas déjà (voir l'Edge Function).
-  const CONTINENTS = {
-    'Afrique': ['Algérie','Bénin','Burkina Faso','Cameroun','Cap-Vert',"Côte d'Ivoire",'Gabon','Gambie','Ghana','Guinée','Guinée-Bissau','Mali','Maroc','Mauritanie','Niger','Nigéria','Tunisie'],
-    'Amérique': ['Canada','États-Unis'],
-    'Asie': ['Chine'],
-    'Europe': ['Allemagne','Belgique','Espagne','France','Italie','Pays-Bas','Portugal','Royaume-Uni','Suisse'],
-    'Moyen-Orient': ['Arabie Saoudite','Émirats Arabes Unis','Turquie'],
-  };
-
-  // 🆕 Caches basés sur les vraies tables regions/departements/communes
-  // (plus de "SELECT DISTINCT sur du texte" — une seule ligne canonique
-  // possible par région/département, donc plus de doublons d'accent/casse)
-  let regionsCache = null;               // [{id,nom}]
-  let departementsCache = {};            // regionId -> [{id,nom}]
-  let communesParDeptCache = {};         // departementId -> [{id,commune}]
-
+  const content = document.getElementById('content');
   let allCoordinators = [];
 
   /* ============================================
-     🆕 CHARGEMENT DEPUIS SUPABASE
-     ============================================ */
+     CHARGEMENT DEPUIS SUPABASE
+  ============================================ */
   async function loadCoordinators() {
     const { data, error } = await PASTEF.supabase
       .from('coordinator_accounts')
       .select(`
         *,
-        enrolment:enrolment_id ( prenom, nom, telephone ),
-        cellule:cellule_id ( nom, type, pays, region, departement, commune, ville_diaspora )
+        enrolment:enrolment_id ( prenom, nom, telephone )
       `)
       .order('created_at', { ascending: false });
-
     if (error) throw error;
     return data || [];
   }
-
-  const content = document.getElementById('content');
 
   try {
     allCoordinators = await loadCoordinators();
   } catch (err) {
     console.error(err);
-    content.innerHTML = `
-      <div class="empty">
-        <div class="empty-title">Erreur de chargement</div>
-        <div class="empty-text">${PASTEF.utils.escapeHtml(err.message)}</div>
-      </div>
-    `;
+    content.innerHTML = `<div class="empty"><div class="empty-title">Erreur</div><div class="empty-text">${PASTEF.utils.escapeHtml(err.message)}</div></div>`;
     return;
   }
 
   /* ============================================
-     HELPERS D'AFFICHAGE
-     ============================================ */
-  function computeStats(list) {
-    return {
-      total: list.length,
-      dept: list.filter((c) => c.role === 'departemental').length,
-      comm: list.filter((c) => c.role === 'communal').length,
-      diaspora: list.filter((c) => c.role === 'diaspora').length,
-      actifs: list.filter((c) => c.active).length,
-      inactifs: list.filter((c) => !c.active).length,
-    };
-  }
-
+     HELPERS
+  ============================================ */
   function roleLabel(role) {
-    return { admin: 'Admin', departemental: 'Départemental', communal: 'Communal', diaspora: 'Diaspora' }[role] || role;
+    return { departemental: 'Départemental', communal: 'Communal', diaspora: 'Diaspora', admin: 'Admin' }[role] || role;
   }
 
   function roleBadge(role) {
@@ -500,29 +462,20 @@
     return { departemental: 'avatar-green', communal: 'avatar-or', diaspora: 'avatar-ink' }[role] || 'avatar-ink';
   }
 
-  function initialsOf(c) {
-    const p = c.enrolment?.prenom || c.email || '?';
-    const n = c.enrolment?.nom || '';
-    return `${(p[0] || '?').toUpperCase()}${(n[0] || '').toUpperCase()}`;
-  }
-
   function displayName(c) {
     if (c.enrolment?.prenom || c.enrolment?.nom) return `${c.enrolment.prenom || ''} ${c.enrolment.nom || ''}`.trim();
-    return c.email;
+    return c.email || '—';
   }
 
   function displayLieu(c) {
-    const cel = c.cellule;
-    if (!cel) return { main: '—', sub: '' };
-    if (cel.type === 'diaspora') return { main: cel.nom, sub: cel.ville_diaspora || cel.pays || '' };
-    return { main: cel.nom, sub: [cel.commune, cel.departement, cel.region].filter(Boolean).join(' · ') };
+    const parts = [c.commune, c.departement, c.region, c.pays].filter(Boolean);
+    return parts.join(' · ') || '—';
   }
 
   function timeAgo(dateStr) {
     if (!dateStr) return 'Jamais';
     const d = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now - d) / 86400000);
+    const diff = Math.floor((new Date() - d) / 86400000);
     if (diff === 0) return "Aujourd'hui";
     if (diff === 1) return 'Hier';
     if (diff < 7) return `Il y a ${diff} jours`;
@@ -530,17 +483,29 @@
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
 
+  function computeStats(list) {
+    return {
+      total: list.length,
+      dept: list.filter(c => c.role === 'departemental').length,
+      comm: list.filter(c => c.role === 'communal').length,
+      diaspora: list.filter(c => c.role === 'diaspora').length,
+      actifs: list.filter(c => c.active).length,
+      inactifs: list.filter(c => !c.active).length,
+    };
+  }
+
+  /* ============================================
+     RENDU TABLE
+  ============================================ */
   function renderTable(data) {
     if (!data.length) {
-      return '<tr><td colspan="6" class="empty-search">Aucun coordinateur trouvé</td></tr>';
+      return '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">Aucun coordinateur trouvé</td></tr>';
     }
-    return data.map((c) => {
-      const lieu = displayLieu(c);
-      return `
+    return data.map(c => `
       <tr data-id="${c.id}">
         <td>
           <div class="coord-cell">
-            <div class="coord-avatar ${avatarCls(c.role)}">${initialsOf(c)}</div>
+            <div class="coord-avatar ${avatarCls(c.role)}">${(displayName(c)[0] || '?').toUpperCase()}${(displayName(c).split(' ')[1]?.[0] || '').toUpperCase()}</div>
             <div>
               <div class="coord-name">${PASTEF.utils.escapeHtml(displayName(c))}</div>
               <div class="coord-phone">${PASTEF.utils.escapeHtml(c.enrolment?.telephone || c.email || '')}</div>
@@ -548,30 +513,26 @@
           </div>
         </td>
         <td>${roleBadge(c.role)}</td>
-        <td>
-          <div style="font-weight:500;">${PASTEF.utils.escapeHtml(lieu.main)}</div>
-          <div class="coord-lieu">${PASTEF.utils.escapeHtml(lieu.sub)}</div>
-        </td>
+        <td style="font-size:13px;">${PASTEF.utils.escapeHtml(displayLieu(c))}</td>
         <td><span class="badge ${c.active ? 'badge-green' : 'badge-red'}"><span class="badge-dot"></span>${c.active ? 'Actif' : 'Inactif'}</span></td>
         <td><span class="last-login">${timeAgo(c.last_login)}</span></td>
         <td>
           <div class="coord-actions">
-            <button title="Modifier" onclick="editCoord('${c.id}')">
-              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
             <button title="${c.active ? 'Désactiver' : 'Réactiver'}" class="${c.active ? 'danger' : ''}" onclick="toggleCoord('${c.id}')">
               <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${c.active
                 ? '<path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/>'
-                : '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'
-              }</svg>
+                : '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'}
+              </svg>
             </button>
           </div>
         </td>
       </tr>
-    `;
-    }).join('');
+    `).join('');
   }
 
+  /* ============================================
+     RENDU PAGE
+  ============================================ */
   function renderPage() {
     const stats = computeStats(allCoordinators);
     content.innerHTML = `
@@ -579,7 +540,7 @@
         <div class="kpi kpi-green">
           <div class="kpi-label">Total coordinateurs</div>
           <div class="kpi-value">${stats.total}</div>
-          <div class="kpi-sub">${stats.actifs} actifs · ${stats.inactifs} inactif${stats.inactifs > 1 ? 's' : ''}</div>
+          <div class="kpi-sub">${stats.actifs} actifs · ${stats.inactifs} inactif${stats.inactifs !== 1 ? 's' : ''}</div>
         </div>
         <div class="kpi kpi-green">
           <div class="kpi-label">Départementaux</div>
@@ -621,10 +582,10 @@
               <tr>
                 <th>Coordinateur</th>
                 <th>Rôle</th>
-                <th>Affectation</th>
+                <th>Zone</th>
                 <th>Statut</th>
                 <th>Dernière connexion</th>
-                <th style="width:80px;"></th>
+                <th style="width:60px;"></th>
               </tr>
             </thead>
             <tbody id="coordBody">${renderTable(allCoordinators)}</tbody>
@@ -637,29 +598,21 @@
   renderPage();
 
   /* ============================================
-     FILTRAGE TABLE
-     ============================================ */
-  let currentFilter = '';
-  let currentRole = '';
+     FILTRES
+  ============================================ */
+  let currentFilter = '', currentRole = '';
 
-  window.filterCoords = function (q) {
-    currentFilter = q.toLowerCase();
-    applyFilters();
-  };
-
-  window.filterRole = function (role) {
-    currentRole = role;
-    applyFilters();
-  };
+  window.filterCoords = function (q) { currentFilter = q.toLowerCase(); applyFilters(); };
+  window.filterRole = function (role) { currentRole = role; applyFilters(); };
 
   function applyFilters() {
     let data = allCoordinators;
-    if (currentRole) data = data.filter((c) => c.role === currentRole);
+    if (currentRole) data = data.filter(c => c.role === currentRole);
     if (currentFilter) {
-      data = data.filter((c) => {
+      data = data.filter(c => {
         const name = displayName(c).toLowerCase();
         const phone = (c.enrolment?.telephone || '').toLowerCase();
-        const lieu = displayLieu(c).main.toLowerCase();
+        const lieu = displayLieu(c).toLowerCase();
         return name.includes(currentFilter) || phone.includes(currentFilter) || lieu.includes(currentFilter);
       });
     }
@@ -667,538 +620,388 @@
   }
 
   /* ============================================
-     🆕 TOGGLE ACTIF/INACTIF — vraie mise à jour Supabase
-     ============================================ */
+     TOGGLE ACTIF/INACTIF
+  ============================================ */
   window.toggleCoord = async function (id) {
-    const c = allCoordinators.find((x) => x.id === id);
+    const c = allCoordinators.find(x => x.id === id);
     if (!c) return;
-
-    const action = c.active ? 'désactiver' : 'réactiver';
-    if (!confirm(`Voulez-vous ${action} ${displayName(c)} ?`)) return;
-
-    const newActive = !c.active;
-    const row = document.querySelector(`tr[data-id="${id}"]`);
-    row?.querySelectorAll('button').forEach((b) => (b.disabled = true));
+    if (!confirm(`Voulez-vous ${c.active ? 'désactiver' : 'réactiver'} ${displayName(c)} ?`)) return;
 
     try {
       const { error } = await PASTEF.supabase
         .from('coordinator_accounts')
-        .update({ active: newActive })
+        .update({ active: !c.active })
         .eq('id', id);
-
       if (error) throw error;
-
-      c.active = newActive;
+      c.active = !c.active;
       applyFilters();
-      renderKpisOnly();
-      PASTEF.utils.toast(newActive ? 'Coordinateur réactivé' : 'Coordinateur désactivé', displayName(c));
+      PASTEF.utils.toast(c.active ? 'Coordinateur réactivé' : 'Coordinateur désactivé', displayName(c));
     } catch (err) {
-      console.error(err);
       PASTEF.utils.toast('Erreur', err.message, { color: 'var(--pastef-red)' });
-      row?.querySelectorAll('button').forEach((b) => (b.disabled = false));
     }
   };
 
-  function renderKpisOnly() {
-    const stats = computeStats(allCoordinators);
-    const kpiValues = document.querySelectorAll('.kpi-value');
-    if (kpiValues.length >= 4) {
-      kpiValues[0].textContent = stats.total;
-      document.querySelector('.kpi-sub').textContent = `${stats.actifs} actifs · ${stats.inactifs} inactif${stats.inactifs > 1 ? 's' : ''}`;
-      kpiValues[1].textContent = stats.dept;
-      kpiValues[2].textContent = stats.comm;
-      kpiValues[3].textContent = stats.diaspora;
-    }
+  /* ============================================
+     MODAL DÉSIGNATION
+     Étape 1 : Choisir le rôle
+     Étape 2 : Choisir la zone (Région → Département → Commune pour Sénégal)
+     Étape 3 : Choisir le patriote parmi ceux de cette zone
+     Étape 4 : Email + confirmation
+     Étape 5 : Résultat avec identifiants
+  ============================================ */
+  const overlay = document.getElementById('modalOverlay');
+  const mBody  = document.getElementById('modalBody');
+  const mFooter = document.getElementById('modalFooter');
+  const mTitle  = document.getElementById('modalTitle');
+
+  const CONTINENTS = {
+    'Afrique': ['Algérie','Bénin','Burkina Faso','Cameroun','Cap-Vert',"Côte d'Ivoire",'Gabon','Gambie','Ghana','Guinée','Guinée-Bissau','Mali','Maroc','Mauritanie','Niger','Nigéria','Tunisie'],
+    'Amérique': ['Canada','États-Unis'],
+    'Asie': ['Chine'],
+    'Europe': ['Allemagne','Belgique','Espagne','France','Italie','Pays-Bas','Portugal','Royaume-Uni','Suisse'],
+    'Moyen-Orient': ['Arabie Saoudite','Émirats Arabes Unis','Turquie'],
+  };
+
+  let designState = {};
+  let patriotesCache = [];
+
+  function initState() {
+    designState = { step: 1, role: '', region: '', departement: '', commune: '', continent: '', pays: '', inscrit: null, email: '', error: '', result: null };
   }
 
-  /* ============================================
-     ÉDITION — fonctionnalité à venir
-     Modifier le rôle/la cellule d'un coordinateur existant est une
-     opération distincte de la désignation (pas de création de compte
-     Auth). Volontairement pas encore branchée pour rester focalisé
-     sur "les vraies personnes dans la base" — dites-moi si vous
-     voulez qu'on l'implémente ensuite.
-     ============================================ */
-  window.editCoord = function (id) {
-    PASTEF.utils.toast('Bientôt disponible', "L'édition d'un coordinateur existant arrive dans une prochaine itération", { color: 'var(--pastef-or)' });
-  };
+  function stepsHtml(current) {
+    return `<div class="steps">${[1,2,3,4,5].map(i =>
+      `<div class="step ${i < current ? 'done' : ''} ${i === current ? 'active' : ''}"></div>`
+    ).join('')}</div>`;
+  }
 
-  /* ============================================
-     MODAL — FLOW DE DÉSIGNATION (branché sur Supabase)
-     ============================================ */
-  const overlay = document.getElementById('modalOverlay');
-  const mBody = document.getElementById('modalBody');
-  const mFooter = document.getElementById('modalFooter');
-  const mTitle = document.getElementById('modalTitle');
-
-  let designState = { step: 1, role: '', continent: '', regionId: '', region: '', departementId: '', departement: '', commune: '', pays: '', inscrit: null, email: '', error: '' };
-
-  window.openDesignation = function () {
-    designState = { step: 1, role: '', continent: '', regionId: '', region: '', departementId: '', departement: '', commune: '', pays: '', inscrit: null, email: '', error: '' };
-    renderStep();
-    overlay.classList.add('open');
-  };
-
-  window.closeModal = function () {
-    overlay.classList.remove('open');
-  };
-
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
-
-  // 🆕 Résumé lisible du lieu choisi, selon le rôle
-  function localisationSummary(s) {
+  function localisationLabel(s) {
     if (s.role === 'diaspora') return s.pays || '—';
-    if (s.role === 'communal') return s.commune ? `${s.commune}, ${s.departement} (${s.region})` : '—';
-    if (s.role === 'departemental') return s.departement ? `${s.departement} (${s.region})` : '—';
+    if (s.role === 'communal') return [s.commune, s.departement, s.region].filter(Boolean).join(', ');
+    if (s.role === 'departemental') return [s.departement, s.region].filter(Boolean).join(', ');
     return '—';
   }
 
-  function renderStep() {
+  /* ── ÉTAPE 1 : Rôle ── */
+  function renderStep1() {
     const s = designState;
-
-    const stepsHtml = `
-      <div class="steps">
-        <div class="step ${s.step >= 1 ? 'done' : ''} ${s.step === 1 ? 'active' : ''}"></div>
-        <div class="step ${s.step >= 2 ? 'done' : ''} ${s.step === 2 ? 'active' : ''}"></div>
-        <div class="step ${s.step >= 3 ? 'done' : ''} ${s.step === 3 ? 'active' : ''}"></div>
-        <div class="step ${s.step >= 4 ? 'done' : ''} ${s.step === 4 ? 'active' : ''}"></div>
-        <div class="step ${s.step >= 5 ? 'done' : ''} ${s.step === 5 ? 'active' : ''}"></div>
+    mTitle.textContent = 'Étape 1 — Type de coordination';
+    mBody.innerHTML = stepsHtml(1) + `
+      <div class="field"><label class="field-label">Quel type de coordinateur désigner ?</label></div>
+      <div class="radio-cards">
+        <label class="radio-card ${s.role === 'departemental' ? 'selected' : ''}" onclick="selectRole('departemental')">
+          <input type="radio" name="role" value="departemental" />
+          <div class="radio-card-icon">🏛️</div>
+          <div class="radio-card-label">Départemental</div>
+          <div class="radio-card-desc">Gère un département</div>
+        </label>
+        <label class="radio-card ${s.role === 'communal' ? 'selected' : ''}" onclick="selectRole('communal')">
+          <input type="radio" name="role" value="communal" />
+          <div class="radio-card-icon">🏘️</div>
+          <div class="radio-card-label">Communal</div>
+          <div class="radio-card-desc">Gère une commune</div>
+        </label>
+        <label class="radio-card ${s.role === 'diaspora' ? 'selected' : ''}" onclick="selectRole('diaspora')">
+          <input type="radio" name="role" value="diaspora" />
+          <div class="radio-card-icon">🌍</div>
+          <div class="radio-card-label">Diaspora</div>
+          <div class="radio-card-desc">Coordination d'un pays</div>
+        </label>
       </div>
     `;
+    mFooter.innerHTML = `
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary btn-sm" onclick="goStep(2)" ${!s.role ? 'disabled' : ''}>Suivant</button>
+    `;
+  }
 
-    if (s.step === 1) {
-      mTitle.textContent = 'Étape 1 — Choisir le niveau';
-      mBody.innerHTML = stepsHtml + `
-        <div class="field"><label class="field-label">Type de coordinateur à désigner</label></div>
-        <div class="radio-cards">
-          <label class="radio-card ${s.role === 'departemental' ? 'selected' : ''}" onclick="selectRole('departemental')">
-            <input type="radio" name="role" value="departemental" />
-            <div class="radio-card-icon">🏛️</div>
-            <div class="radio-card-label">Départemental</div>
-            <div class="radio-card-desc">Gère un département</div>
-          </label>
-          <label class="radio-card ${s.role === 'communal' ? 'selected' : ''}" onclick="selectRole('communal')">
-            <input type="radio" name="role" value="communal" />
-            <div class="radio-card-icon">🏘️</div>
-            <div class="radio-card-label">Communal</div>
-            <div class="radio-card-desc">Gère une commune</div>
-          </label>
-          <label class="radio-card ${s.role === 'diaspora' ? 'selected' : ''}" onclick="selectRole('diaspora')">
-            <input type="radio" name="role" value="diaspora" />
-            <div class="radio-card-icon">🌍</div>
-            <div class="radio-card-label">Diaspora</div>
-            <div class="radio-card-desc">Coordination d'un pays</div>
-          </label>
-        </div>
-      `;
-      mFooter.innerHTML = `
-        <button class="btn btn-secondary btn-sm" onclick="closeModal()">Annuler</button>
-        <button class="btn btn-primary btn-sm" onclick="nextStep()" ${!s.role ? 'disabled' : ''}>Suivant</button>
-      `;
-    }
+  /* ── ÉTAPE 2 : Zone géographique ── */
+  function renderStep2() {
+    const s = designState;
+    mTitle.textContent = 'Étape 2 — Zone géographique';
 
-    else if (s.step === 2) {
-      mTitle.textContent = s.role === 'diaspora' ? 'Étape 2 — Choisir le pays' : 'Étape 2 — Choisir la localisation';
-      renderLieuStep();
-    }
-
-    else if (s.step === 3) {
-      mTitle.textContent = 'Étape 3 — Choisir le patriote';
-      const selectedAge = s.inscrit ? PASTEF.utils.computeAge(s.inscrit.date_naissance) : null;
-      mBody.innerHTML = stepsHtml + `
+    if (s.role === 'diaspora') {
+      // Continent → Pays
+      const continents = Object.keys(CONTINENTS).sort();
+      const paysList = s.continent ? (CONTINENTS[s.continent] || []).sort() : [];
+      mBody.innerHTML = stepsHtml(2) + `
         <div class="field">
-          <label class="field-label">Patriote de cette zone</label>
-          <button class="btn btn-secondary btn-sm" style="width:100%" onclick="loadInscritsForZone()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;vertical-align:-2px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Choisir un patriote
-          </button>
-          <div class="field-hint">Seuls les patriotes déjà inscrits dans cette zone sont proposés</div>
+          <label class="field-label">Continent</label>
+          <select class="field-select" onchange="onContinentPick(this.value)">
+            <option value="">Sélectionner un continent</option>
+            ${continents.map(c => `<option value="${c}" ${s.continent === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
         </div>
-        <div id="inscritPickerBox" style="margin-top:10px"></div>
-        ${s.inscrit ? `
-          <div style="margin-top:12px;padding:12px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);">
-            <div style="font-size:13px;font-weight:600;color:var(--pastef-green-dark);">${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</div>
-            <div style="font-size:11px;color:var(--pastef-green);margin-top:2px;">(${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}${selectedAge ? `, ${selectedAge} ans` : ''})</div>
-          </div>
+        <div class="field">
+          <label class="field-label">Pays</label>
+          <select class="field-select" ${!s.continent ? 'disabled' : ''} onchange="designState.pays = this.value">
+            <option value="">Sélectionner un pays</option>
+            ${paysList.map(p => `<option value="${p}" ${s.pays === p ? 'selected' : ''}>${p}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    } else {
+      // Sénégal : Région → Département (→ Commune si communal)
+      const DATA = window.PASTEF_DATA;
+      const regions = DATA.regions['Sénégal'] || [];
+      const departements = s.region ? Object.keys(DATA.senegalStructure[s.region] || {}).sort() : [];
+      const communes = (s.role === 'communal' && s.departement && s.region)
+        ? (DATA.senegalStructure[s.region]?.[s.departement] || [])
+        : [];
+
+      mBody.innerHTML = stepsHtml(2) + `
+        <div class="field">
+          <label class="field-label">Région</label>
+          <select class="field-select" onchange="onRegionPick(this.value)">
+            <option value="">Sélectionner une région</option>
+            ${regions.map(r => `<option value="${r}" ${s.region === r ? 'selected' : ''}>${r}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Département</label>
+          <select class="field-select" ${!s.region ? 'disabled' : ''} onchange="onDepartementPick(this.value)">
+            <option value="">Sélectionner un département</option>
+            ${departements.map(d => `<option value="${d}" ${s.departement === d ? 'selected' : ''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        ${s.role === 'communal' ? `
+        <div class="field">
+          <label class="field-label">Commune</label>
+          <select class="field-select" ${!s.departement ? 'disabled' : ''} onchange="designState.commune = this.value">
+            <option value="">Sélectionner une commune</option>
+            ${communes.map(c => `<option value="${c}" ${s.commune === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
         ` : ''}
       `;
-      mFooter.innerHTML = `
-        <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
-        <button class="btn btn-primary btn-sm" onclick="nextStep()" ${!s.inscrit ? 'disabled' : ''}>Suivant</button>
-      `;
     }
 
-    else if (s.step === 4) {
-      mTitle.textContent = 'Étape 4 — Email et confirmation';
-      mBody.innerHTML = stepsHtml + `
-        ${s.error ? `<div class="form-error">${PASTEF.utils.escapeHtml(s.error)}</div>` : ''}
-        <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;">
-          <div style="font-weight:700;color:var(--ink);margin-bottom:8px;">Récapitulatif</div>
-          <div style="display:grid;grid-template-columns:100px 1fr;gap:4px 12px;color:var(--text-muted);">
-            <span>Niveau</span><span style="font-weight:600;color:var(--text);">${roleLabel(s.role)}</span>
-            <span>Localisation</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(localisationSummary(s))}</span>
-            <span>Inscrit</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</span>
-            <span>Téléphone</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}</span>
-          </div>
-        </div>
-        <div class="field">
-          <label class="field-label">Email du coordinateur</label>
-          <input class="field-input" type="email" id="emailCoord" placeholder="prenom.nom@email.com" value="${PASTEF.utils.escapeHtml(s.email)}" oninput="designState.email = this.value" />
-          <div class="field-hint">Un compte de connexion sera créé avec un mot de passe temporaire</div>
-        </div>
-      `;
-      mFooter.innerHTML = `
-        <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
-        <button class="btn btn-primary btn-sm" id="btnConfirm" onclick="executeDesignation()">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Confirmer la désignation
-        </button>
-      `;
-    }
-
-    else if (s.step === 5) {
-      mTitle.textContent = 'Coordinateur désigné';
-      const emailBanner = s.result.emailSent
-        ? `<div style="background:var(--pastef-green-soft);color:var(--pastef-green-dark);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">✅ Email envoyé automatiquement à ${PASTEF.utils.escapeHtml(s.result.email)}</div>`
-        : `<div style="background:var(--pastef-or-soft);color:var(--pastef-or);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">⚠️ L'email automatique n'a pas pu être envoyé (${PASTEF.utils.escapeHtml(s.result.emailError || 'raison inconnue')}) — transmettez les identifiants ci-dessous vous-même.</div>`;
-      mBody.innerHTML = `
-        ${emailBanner}
-        <div class="creds-card">
-          <div class="creds-icon">✅</div>
-          <div class="creds-title">${PASTEF.utils.escapeHtml(s.result.prenom)} ${PASTEF.utils.escapeHtml(s.result.nom)} est maintenant ${roleLabel(s.role)}</div>
-          <div class="creds-row">
-            <div><div class="creds-label">Email</div><div class="creds-value">${PASTEF.utils.escapeHtml(s.result.email)}</div></div>
-            <button class="creds-copy" onclick="copyText('${s.result.email}')">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </div>
-          <div class="creds-row">
-            <div><div class="creds-label">Mot de passe temporaire</div><div class="creds-value">${s.result.password}</div></div>
-            <button class="creds-copy" onclick="copyText('${s.result.password}')">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </div>
-          <div class="creds-row">
-            <div><div class="creds-label">Localisation</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(s.result.localisation || '—')}</div></div>
-          </div>
-          <div class="creds-warning">Conservez ces identifiants précieusement : le mot de passe ne sera plus jamais affiché après fermeture de cette fenêtre.</div>
-        </div>
-      `;
-      mFooter.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal()">Fermer</button>`;
-    }
-  }
-
-  window.selectRole = function (role) {
-    designState.role = role;
-    designState.continent = '';
-    designState.regionId = '';
-    designState.region = '';
-    designState.departementId = '';
-    designState.departement = '';
-    designState.commune = '';
-    designState.pays = '';
-    renderStep();
-  };
-
-  window.nextStep = function () {
-    const s = designState;
-    if (s.step === 2) {
-      if (s.role === 'communal' && !s.commune) { alert('Choisissez une région, un département et une commune'); return; }
-      if (s.role === 'departemental' && !s.departement) { alert('Choisissez une région et un département'); return; }
-      if (s.role === 'diaspora' && !s.pays) { alert('Choisissez un continent et un pays'); return; }
-    }
-    s.step++;
-    renderStep();
-  };
-
-  window.prevStep = function () {
-    designState.step--;
-    renderStep();
-  };
-
-  /* ============================================
-     🆕 ÉTAPE 2 — LOCALISATION RÉELLE
-     Communal   : Région → Département → Commune
-     Départemental : Région → Département
-     Diaspora   : Continent → Pays
-     Les menus Région/Département viennent maintenant des vraies
-     tables `regions`/`departements` — une seule ligne canonique
-     possible par nom, donc plus de doublons d'accent/casse dans les
-     listes. Pas de "cellule" à choisir : la fiche de coordination
-     correspondante est créée automatiquement côté serveur si elle
-     n'existe pas encore (voir l'Edge Function).
-     ============================================ */
-  async function ensureRegions() {
-    if (regionsCache) return regionsCache;
-    const { data, error } = await PASTEF.supabase.from('regions').select('id,nom').eq('actif', true).order('nom', { ascending: true });
-    if (error) throw error;
-    regionsCache = data || [];
-    return regionsCache;
-  }
-
-  async function loadDepartementsForRegion(regionId) {
-    if (departementsCache[regionId]) return departementsCache[regionId];
-    const { data, error } = await PASTEF.supabase.from('departements').select('id,nom').eq('region_id', regionId).eq('actif', true).order('nom', { ascending: true });
-    if (error) throw error;
-    departementsCache[regionId] = data || [];
-    return departementsCache[regionId];
-  }
-
-  async function loadCommunesForDepartement(departementId) {
-    if (communesParDeptCache[departementId]) return communesParDeptCache[departementId];
-    const { data, error } = await PASTEF.supabase.from('communes').select('id,commune').eq('departement_id', departementId).eq('active', true).order('commune', { ascending: true });
-    if (error) throw error;
-    communesParDeptCache[departementId] = data || [];
-    return communesParDeptCache[departementId];
-  }
-
-  async function renderLieuStep() {
-    const s = designState;
-
-    if (s.role === 'diaspora') {
-      renderDiasporaScope();
-      return;
-    }
-
-    mBody.innerHTML = `
-      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
-      <div class="field-hint">Chargement des régions…</div>
+    mFooter.innerHTML = `
+      <button class="btn btn-secondary btn-sm" onclick="goStep(1)">Retour</button>
+      <button class="btn btn-primary btn-sm" onclick="validateStep2()">Suivant</button>
     `;
-    mFooter.innerHTML = `<button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>`;
-
-    try {
-      await ensureRegions();
-    } catch (err) {
-      mBody.innerHTML += `<div class="form-error">Erreur de chargement des régions : ${PASTEF.utils.escapeHtml(err.message)}</div>`;
-      return;
-    }
-
-    await renderRegionDeptScope();
   }
 
-  async function renderRegionDeptScope() {
+  /* ── ÉTAPE 3 : Patriote de la zone ── */
+  async function renderStep3() {
     const s = designState;
-    const departements = s.regionId ? await loadDepartementsForRegion(s.regionId) : [];
-    const communes = (s.role === 'communal' && s.departementId) ? await loadCommunesForDepartement(s.departementId) : [];
-
-    mBody.innerHTML = `
-      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
-      <div class="field">
-        <label class="field-label">Région</label>
-        <select class="field-select" id="selRegion" onchange="onRegionPick(this.value)">
-          <option value="">Sélectionner une région</option>
-          ${regionsCache.map((r) => `<option value="${r.id}" ${s.regionId === r.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(r.nom)}</option>`).join('')}
-        </select>
+    mTitle.textContent = 'Étape 3 — Choisir le patriote';
+    mBody.innerHTML = stepsHtml(3) + `
+      <div style="padding:10px 14px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);font-size:12px;margin-bottom:16px;">
+        <strong>Zone sélectionnée :</strong> ${PASTEF.utils.escapeHtml(localisationLabel(s))}
       </div>
-      <div class="field">
-        <label class="field-label">Département</label>
-        <select class="field-select" id="selDepartement" onchange="onDepartementPick(this.value)" ${!s.regionId ? 'disabled' : ''}>
-          <option value="">${s.regionId ? 'Sélectionner un département' : "Choisissez d'abord une région"}</option>
-          ${departements.map((d) => `<option value="${d.id}" ${s.departementId === d.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(d.nom)}</option>`).join('')}
-        </select>
+      <div id="patrioteBox">
+        <div class="empty-search">Chargement des patriotes de cette zone…</div>
       </div>
-      ${s.role === 'communal' ? `
-      <div class="field">
-        <label class="field-label">Commune</label>
-        <select class="field-select" id="selCommune" onchange="onCommunePick(this.value)" ${!s.departementId ? 'disabled' : ''}>
-          <option value="">${s.departementId ? 'Sélectionner une commune' : "Choisissez d'abord un département"}</option>
-          ${communes.map((c) => `<option value="${PASTEF.utils.escapeHtml(c.commune)}" ${s.commune === c.commune ? 'selected' : ''}>${PASTEF.utils.escapeHtml(c.commune)}</option>`).join('')}
-        </select>
-      </div>
+      ${s.inscrit ? `
+        <div style="margin-top:12px;padding:12px;background:var(--pastef-green-soft);border-radius:var(--radius-sm);border:1px solid var(--pastef-green);">
+          <div style="font-size:13px;font-weight:600;color:var(--pastef-green-dark);">✓ ${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</div>
+          <div style="font-size:11px;color:var(--pastef-green);margin-top:2px;">${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}</div>
+        </div>
       ` : ''}
     `;
-
     mFooter.innerHTML = `
-      <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
-      <button class="btn btn-primary btn-sm" onclick="nextStep()">Suivant</button>
-    `;
-  }
-
-  window.onRegionPick = async function (regionId) {
-    const s = designState;
-    s.regionId = regionId;
-    s.region = regionsCache.find((r) => r.id === regionId)?.nom || '';
-    s.departementId = '';
-    s.departement = '';
-    s.commune = '';
-    await renderRegionDeptScope();
-  };
-
-  window.onDepartementPick = async function (departementId) {
-    const s = designState;
-    s.departementId = departementId;
-    s.departement = (departementsCache[s.regionId] || []).find((d) => d.id === departementId)?.nom || '';
-    s.commune = '';
-    await renderRegionDeptScope();
-  };
-
-  window.onCommunePick = function (commune) {
-    designState.commune = commune;
-  };
-
-  function renderDiasporaScope() {
-    const s = designState;
-    const continents = Object.keys(CONTINENTS).sort();
-    const paysList = s.continent ? (CONTINENTS[s.continent] || []).slice().sort() : [];
-
-    mBody.innerHTML = `
-      <div class="steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>
-      <div class="field">
-        <label class="field-label">Continent</label>
-        <select class="field-select" id="selContinent" onchange="onContinentPick(this.value)">
-          <option value="">Sélectionner un continent</option>
-          ${continents.map((c) => `<option value="${PASTEF.utils.escapeHtml(c)}" ${s.continent === c ? 'selected' : ''}>${PASTEF.utils.escapeHtml(c)}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field">
-        <label class="field-label">Pays</label>
-        <select class="field-select" id="selPays" onchange="onPaysPick(this.value)" ${!s.continent ? 'disabled' : ''}>
-          <option value="">${s.continent ? 'Sélectionner un pays' : "Choisissez d'abord un continent"}</option>
-          ${paysList.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}" ${s.pays === p ? 'selected' : ''}>${PASTEF.utils.escapeHtml(p)}</option>`).join('')}
-        </select>
-      </div>
+      <button class="btn btn-secondary btn-sm" onclick="goStep(2)">Retour</button>
+      <button class="btn btn-primary btn-sm" onclick="goStep(4)" ${!s.inscrit ? 'disabled' : ''} id="btnStep3Next">Suivant</button>
     `;
 
-    mFooter.innerHTML = `
-      <button class="btn btn-secondary btn-sm" onclick="prevStep()">Retour</button>
-      <button class="btn btn-primary btn-sm" onclick="nextStep()">Suivant</button>
-    `;
+    await chargerPatriotes();
   }
 
-  window.onContinentPick = function (continent) {
-    designState.continent = continent;
-    designState.pays = '';
-    renderDiasporaScope();
-  };
-
-  window.onPaysPick = function (pays) {
-    designState.pays = pays;
-  };
-
-  /* ============================================
-     🆕 ÉTAPE 3 — patriotes DE LA ZONE choisie à l'étape 2
-     (pas de recherche libre : seuls les inscrits déjà rattachés à
-     cette commune / ce département / ce pays sont proposés)
-
-     🩹 On récupère toute la région puis on compare en mémoire de façon
-     NORMALISÉE (casse + accents ignorés). Une comparaison exacte en base
-     (eq) rate silencieusement des inscriptions dès qu'un accent ou une
-     majuscule diffère légèrement — déjà vu avec "pays" plus tôt dans ce
-     projet. Le filtrage normalisé évite ce piège.
-     ============================================ */
-  let inscritOptionsCache = [];
-
-  function normalizeStr(v) {
-    return (v || '').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  }
-
-  async function fetchInscritsForZone() {
+  async function chargerPatriotes() {
     const s = designState;
-
-    if (s.role === 'diaspora') {
-      const { data, error } = await PASTEF.supabase
-        .from('enrolments')
-        .select('id,prenom,nom,telephone,date_naissance,region,departement,commune,quartier,pays')
-        .ilike('pays', s.pays)
-        .order('nom', { ascending: true })
-        .limit(500);
-      if (error) throw error;
-      return data || [];
-    }
-
-    // Sénégal : on charge toute la région (ilike = insensible à la
-    // casse/aux accents dès la requête), puis on affine en mémoire
-    const { data, error } = await PASTEF.supabase
-      .from('enrolments')
-      .select('id,prenom,nom,telephone,date_naissance,region,departement,commune,quartier,pays')
-      .eq('pays', 'Sénégal')
-      .ilike('region', s.region)
-      .order('nom', { ascending: true })
-      .limit(2000);
-
-    if (error) throw error;
-    const rows = data || [];
-    console.log(`[PASTEF] ${rows.length} inscrit(s) dans la région ${s.region} avant filtrage précis`);
-    console.table(rows.map((r) => ({
-      nom: `${r.prenom} ${r.nom}`,
-      departement_stocke: r.departement || '(vide)',
-      commune_stockee: r.commune || '(vide)',
-      quartier_stocke: r.quartier || '(vide)',
-    })));
-
-    if (s.role === 'communal') {
-      const target = normalizeStr(s.commune);
-      console.log(`[PASTEF] Commune recherchée : "${s.commune}" (normalisée : "${target}")`);
-      return rows.filter((r) => normalizeStr(r.commune) === target || normalizeStr(r.quartier) === target);
-    }
-
-    // Départemental : departement direct, OU commune/quartier appartenant
-    // à ce département selon le référentiel officiel. Pour le rôle
-    // "communal" ces communes sont déjà en cache (étape 2) ; pour
-    // "departemental" on ne les avait pas encore chargées, on le fait ici.
-    const communesDuDeptRows = await loadCommunesForDepartement(s.departementId);
-    const communesDuDept = communesDuDeptRows.map((c) => normalizeStr(c.commune));
-    const targetDept = normalizeStr(s.departement);
-    console.log(`[PASTEF] Département recherché : "${s.departement}" (normalisé : "${targetDept}")`);
-    console.log('[PASTEF] Communes attendues pour ce département :', communesDuDeptRows.map((c) => c.commune));
-    return rows.filter((r) => {
-      if (normalizeStr(r.departement) === targetDept) return true;
-      const c = normalizeStr(r.commune) || normalizeStr(r.quartier);
-      return communesDuDept.includes(c);
-    });
-  }
-
-  window.loadInscritsForZone = async function () {
-    const box = document.getElementById('inscritPickerBox');
+    const box = document.getElementById('patrioteBox');
     if (!box) return;
-    box.innerHTML = '<div class="empty-search">Chargement des patriotes de cette zone…</div>';
 
     try {
-      const data = await fetchInscritsForZone();
-      inscritOptionsCache = data;
+      let query = PASTEF.supabase
+        .from('enrolments')
+        .select('id, prenom, nom, telephone, date_naissance, region, departement, commune, quartier, pays')
+        .order('nom', { ascending: true })
+        .limit(500);
 
-      if (!data.length) {
-        box.innerHTML = '<div class="empty-search">Aucun patriote trouvé pour cette zone précise. Ouvrez la console du navigateur (F12) : la ligne "[PASTEF] X inscrit(s) dans la région..." vous dit si la région contient du monde mais que la commune/département ne correspond pas exactement.</div>';
+      if (s.role === 'diaspora') {
+        query = query.ilike('pays', s.pays);
+      } else {
+        query = query.eq('pays', 'Sénégal').ilike('region', s.region);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Filtrage en mémoire (insensible casse + accents)
+      const normalize = v => (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+      let filtered = data || [];
+      if (s.role === 'communal' && s.commune) {
+        const target = normalize(s.commune);
+        filtered = filtered.filter(r => normalize(r.commune) === target || normalize(r.quartier) === target);
+      } else if (s.role === 'departemental' && s.departement) {
+        const targetDept = normalize(s.departement);
+        const communesDuDept = (window.PASTEF_DATA.senegalStructure[s.region]?.[s.departement] || []).map(normalize);
+        filtered = filtered.filter(r =>
+          normalize(r.departement) === targetDept ||
+          communesDuDept.includes(normalize(r.commune)) ||
+          communesDuDept.includes(normalize(r.quartier))
+        );
+      }
+
+      patriotesCache = filtered;
+
+      if (!filtered.length) {
+        box.innerHTML = '<div class="empty-search">Aucun patriote inscrit dans cette zone. Vérifiez que des patriotes ont bien rempli le formulaire pour cette zone.</div>';
         return;
       }
 
       box.innerHTML = `
-        <select class="field-select" id="selInscrit" onchange="onInscritPick(this.value)">
-          <option value="">${data.length} patriote${data.length > 1 ? 's' : ''} trouvé${data.length > 1 ? 's' : ''} — sélectionner</option>
-          ${data.map((r) => {
+        <label class="field-label">${filtered.length} patriote${filtered.length > 1 ? 's' : ''} trouvé${filtered.length > 1 ? 's' : ''}</label>
+        <select class="field-select" onchange="onPatriotePick(this.value)">
+          <option value="">— Sélectionner un patriote —</option>
+          ${filtered.map(r => {
             const age = PASTEF.utils.computeAge(r.date_naissance);
-            const label = `${r.prenom || ''} ${r.nom || ''} — ${r.telephone || '\u2014'}${age ? ` (${age} ans)` : ''}`;
-            return `<option value="${r.id}" ${designState.inscrit?.id === r.id ? 'selected' : ''}>${PASTEF.utils.escapeHtml(label)}</option>`;
+            return `<option value="${r.id}" ${s.inscrit?.id === r.id ? 'selected' : ''}>
+              ${PASTEF.utils.escapeHtml(r.prenom || '')} ${PASTEF.utils.escapeHtml(r.nom || '')} — ${PASTEF.utils.escapeHtml(r.telephone || '—')}${age ? ` (${age} ans)` : ''}
+            </option>`;
           }).join('')}
         </select>
       `;
     } catch (err) {
-      console.error(err);
       box.innerHTML = `<div class="empty-search">Erreur : ${PASTEF.utils.escapeHtml(err.message)}</div>`;
     }
-  };
+  }
 
-  window.onInscritPick = function (id) {
-    const found = inscritOptionsCache.find((i) => i.id === id);
-    if (!found) return;
-    designState.inscrit = found;
-    designState.email = designState.email || '';
+  /* ── ÉTAPE 4 : Email + confirmation ── */
+  function renderStep4() {
+    const s = designState;
+    mTitle.textContent = 'Étape 4 — Confirmation';
+    mBody.innerHTML = stepsHtml(4) + `
+      ${s.error ? `<div class="form-error">${PASTEF.utils.escapeHtml(s.error)}</div>` : ''}
+      <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;">
+        <div style="font-weight:700;color:var(--ink);margin-bottom:8px;">Récapitulatif</div>
+        <div style="display:grid;grid-template-columns:110px 1fr;gap:4px 12px;color:var(--text-muted);">
+          <span>Rôle</span><span style="font-weight:600;color:var(--text);">${roleLabel(s.role)}</span>
+          <span>Zone</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(localisationLabel(s))}</span>
+          <span>Patriote</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.prenom)} ${PASTEF.utils.escapeHtml(s.inscrit.nom)}</span>
+          <span>Téléphone</span><span style="font-weight:600;color:var(--text);">${PASTEF.utils.escapeHtml(s.inscrit.telephone || '—')}</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Email du coordinateur</label>
+        <input class="field-input" type="email" id="emailCoord" placeholder="prenom.nom@email.com"
+          value="${PASTEF.utils.escapeHtml(s.email)}" oninput="designState.email = this.value" />
+        <div class="field-hint">Un compte de connexion sera créé et les identifiants envoyés par email</div>
+      </div>
+    `;
+    mFooter.innerHTML = `
+      <button class="btn btn-secondary btn-sm" onclick="goStep(3)">Retour</button>
+      <button class="btn btn-primary btn-sm" id="btnConfirm" onclick="executeDesignation()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmer la désignation
+      </button>
+    `;
+  }
+
+  /* ── ÉTAPE 5 : Résultat ── */
+  function renderStep5() {
+    const s = designState;
+    const r = s.result;
+    mTitle.textContent = 'Coordinateur désigné ✅';
+
+    const emailBanner = r.emailSent
+      ? `<div style="background:var(--pastef-green-soft);color:var(--pastef-green-dark);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">✅ Email envoyé à ${PASTEF.utils.escapeHtml(r.email)}</div>`
+      : `<div style="background:var(--pastef-or-soft);color:var(--pastef-or);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">⚠️ Email non envoyé (${PASTEF.utils.escapeHtml(r.emailError || 'erreur inconnue')}) — transmettez les identifiants manuellement.</div>`;
+
+    mBody.innerHTML = emailBanner + `
+      <div class="creds-card">
+        <div class="creds-icon">✅</div>
+        <div class="creds-title">${PASTEF.utils.escapeHtml(r.prenom)} ${PASTEF.utils.escapeHtml(r.nom)} — ${roleLabel(s.role)}</div>
+        <div class="creds-row">
+          <div><div class="creds-label">Email</div><div class="creds-value">${PASTEF.utils.escapeHtml(r.email)}</div></div>
+          <button class="creds-copy" onclick="copyText('${r.email}')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="creds-row">
+          <div><div class="creds-label">Mot de passe temporaire</div><div class="creds-value">${r.password}</div></div>
+          <button class="creds-copy" onclick="copyText('${r.password}')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <div class="creds-row">
+          <div><div class="creds-label">Zone</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(localisationLabel(s))}</div></div>
+        </div>
+        <div class="creds-warning">⚠️ Conservez ce mot de passe : il ne sera plus affiché après fermeture.</div>
+      </div>
+    `;
+    mFooter.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal()">Fermer</button>`;
+  }
+
+  /* ── NAVIGATION ── */
+  function renderStep() {
+    const step = designState.step;
+    if (step === 1) renderStep1();
+    else if (step === 2) renderStep2();
+    else if (step === 3) renderStep3();
+    else if (step === 4) renderStep4();
+    else if (step === 5) renderStep5();
+  }
+
+  window.goStep = function (n) {
+    designState.step = n;
     renderStep();
   };
 
-  /* ============================================
-     🆕 ÉTAPE 5 — exécution via l'Edge Function
-     (aucune création de compte Auth n'est possible directement
-     depuis ce fichier — clé anonyme insuffisante, voir
-     supabase/functions/create-coordinator/index.ts)
-     ============================================ */
+  window.selectRole = function (role) {
+    designState.role = role;
+    renderStep1();
+  };
+
+  window.onContinentPick = function (continent) {
+    designState.continent = continent;
+    designState.pays = '';
+    renderStep2();
+  };
+
+  window.onRegionPick = function (region) {
+    designState.region = region;
+    designState.departement = '';
+    designState.commune = '';
+    renderStep2();
+  };
+
+  window.onDepartementPick = function (departement) {
+    designState.departement = departement;
+    designState.commune = '';
+    renderStep2();
+  };
+
+  window.onPatriotePick = function (id) {
+    const found = patriotesCache.find(p => p.id === id);
+    if (!found) return;
+    designState.inscrit = found;
+    // Activer le bouton Suivant
+    const btn = document.getElementById('btnStep3Next');
+    if (btn) btn.disabled = false;
+    // Afficher la sélection
+    renderStep3();
+  };
+
+  window.validateStep2 = function () {
+    const s = designState;
+    if (s.role === 'diaspora' && !s.pays) return alert('Choisissez un pays');
+    if (s.role === 'departemental' && !s.departement) return alert('Choisissez une région et un département');
+    if (s.role === 'communal' && !s.commune) return alert('Choisissez une région, un département et une commune');
+    goStep(3);
+  };
+
+  /* ── EXÉCUTION ── */
   window.executeDesignation = async function () {
     const s = designState;
     s.error = '';
 
     if (!s.email || !s.email.includes('@')) {
       s.error = 'Entrez un email valide';
-      renderStep();
+      renderStep4();
       return;
     }
 
@@ -1206,10 +1009,6 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Création en cours…'; }
 
     try {
-      const { data: { session: authSession } } = await PASTEF.supabase.auth.getSession();
-      const accessToken = authSession?.access_token;
-      if (!accessToken) throw new Error('Session expirée, reconnectez-vous');
-
       const { data, error } = await PASTEF.supabase.functions.invoke('create-coordinator', {
         body: {
           email: s.email.trim(),
@@ -1227,25 +1026,37 @@
 
       s.result = data;
       s.step = 5;
-      renderStep();
+      renderStep5();
 
-      // Recharge la vraie liste depuis Supabase (pas un push local)
       allCoordinators = await loadCoordinators();
       applyFilters();
-      renderKpisOnly();
     } catch (err) {
       console.error(err);
-      s.error = err.message || 'Erreur lors de la création du coordinateur';
-      renderStep();
+      s.error = err.message || 'Erreur lors de la création';
+      renderStep4();
     } finally {
       const btnAgain = document.getElementById('btnConfirm');
-      if (btnAgain) { btnAgain.disabled = false; btnAgain.innerHTML = 'Confirmer la désignation'; }
+      if (btnAgain) { btnAgain.disabled = false; btnAgain.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Confirmer la désignation'; }
     }
   };
 
+  /* ── MODAL OPEN/CLOSE ── */
+  window.openDesignation = function () {
+    initState();
+    renderStep();
+    overlay.classList.add('open');
+  };
+
+  window.closeModal = function () {
+    overlay.classList.remove('open');
+  };
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+  /* ── UTILS ── */
   window.copyText = function (text) {
     navigator.clipboard.writeText(text).then(() => {
-      PASTEF.utils.toast('Copié', '', { color: 'var(--pastef-green)' });
+      PASTEF.utils.toast('Copié !', '', { color: 'var(--pastef-green)' });
     });
   };
 
