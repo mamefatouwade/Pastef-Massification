@@ -1,43 +1,32 @@
 /* ============================================
-   PASTEF — Module Audio
-   - Enregistrement via MediaRecorder
-   - Compatible iOS Safari (audio/mp4) + Android/Chrome (audio/webm)
-   - Stockage IndexedDB hors-ligne
-   - Sync Supabase Storage + table enrolments
-   - Gestion des erreurs partielles (upload OK / insert KO)
-   - Limite de retry pour éviter les boucles infinies
+   PASTEF — Module Audio v2
+   Adapté au schéma normalisé :
+   - Crée un patriote minimal (mode_enrolement = AUDIO)
+   - Puis insère dans enrolements_audio
    ============================================ */
 
-(function() {
+(function () {
   'use strict';
 
-  // ============================================
-  // INDEXEDDB
-  // ============================================
-  const DB_NAME    = 'pastef_audio_db';
-  const DB_VERSION = 2; // ← version 2 : ajout retry_count + upload_path
-  const STORE      = 'recordings';
-
-  const MAX_BLOB_SIZE_MB = 20; // limite upload (bucket Supabase = 25 MB)
-  const MAX_RETRY        = 5;  // nombre max de tentatives avant abandon
+  // ─── IndexedDB ───
+  const DB_NAME = 'pastef_audio_db';
+  const DB_VERSION = 3;
+  const STORE = 'recordings';
+  const MAX_BLOB_SIZE_MB = 20;
+  const MAX_RETRY = 5;
 
   function openDB() {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
-
       req.onupgradeneeded = e => {
         const db = e.target.result;
-        // Créer le store s'il n'existe pas
         if (!db.objectStoreNames.contains(STORE)) {
           const store = db.createObjectStore(STORE, { keyPath: 'id' });
           store.createIndex('created_at', 'created_at', { unique: false });
         }
-        // Migration v1 → v2 : les anciens enregistrements n'ont pas retry_count
-        // IndexedDB gère ça automatiquement (champ absent = undefined → on défausse à 0)
       };
-
       req.onsuccess = () => resolve(req.result);
-      req.onerror  = () => reject(req.error);
+      req.onerror = () => reject(req.error);
     });
   }
 
@@ -47,17 +36,17 @@
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).put(record);
       tx.oncomplete = () => resolve(record);
-      tx.onerror    = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error);
     });
   }
 
   async function dbGetAll() {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction(STORE, 'readonly');
+      const tx = db.transaction(STORE, 'readonly');
       const req = tx.objectStore(STORE).getAll();
       req.onsuccess = () => resolve(req.result || []);
-      req.onerror   = () => reject(req.error);
+      req.onerror = () => reject(req.error);
     });
   }
 
@@ -67,16 +56,16 @@
       const tx = db.transaction(STORE, 'readwrite');
       tx.objectStore(STORE).delete(id);
       tx.oncomplete = () => resolve();
-      tx.onerror    = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error);
     });
   }
 
   async function dbUpdate(id, changes) {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx    = db.transaction(STORE, 'readwrite');
+      const tx = db.transaction(STORE, 'readwrite');
       const store = tx.objectStore(STORE);
-      const req   = store.get(id);
+      const req = store.get(id);
       req.onsuccess = () => {
         const record = req.result;
         if (!record) return resolve(null);
@@ -91,155 +80,118 @@
   async function dbCount() {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction(STORE, 'readonly');
+      const tx = db.transaction(STORE, 'readonly');
       const req = tx.objectStore(STORE).count();
       req.onsuccess = () => resolve(req.result);
-      req.onerror   = () => reject(req.error);
+      req.onerror = () => reject(req.error);
     });
   }
 
-  // ============================================
-  // DÉTECTION PLATEFORME
-  // ============================================
+  // ─── Plateforme ───
   function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 
-  function isAndroid() {
-    return /Android/.test(navigator.userAgent);
-  }
-
-  // ============================================
-  // UPLOAD VERS SUPABASE STORAGE
-  // Retourne le path stocké dans le bucket
-  // Lance une exception si échec
-  // ============================================
+  // ─── Upload Storage ───
   async function uploadAudioToStorage(blob, filename) {
     const cfg = window.SUPABASE_CONFIG;
-    if (!cfg || cfg.url.includes('VOTRE-PROJET')) {
-      throw new Error('Configuration Supabase manquante');
-    }
+    if (!cfg || cfg.url.includes('VOTRE-PROJET')) throw new Error('Config Supabase manquante');
 
-    // Vérification taille avant envoi
     const sizeMB = blob.size / (1024 * 1024);
-    if (sizeMB > MAX_BLOB_SIZE_MB) {
-      throw new Error(`Fichier trop volumineux (${sizeMB.toFixed(1)} Mo > ${MAX_BLOB_SIZE_MB} Mo)`);
-    }
+    if (sizeMB > MAX_BLOB_SIZE_MB) throw new Error(`Fichier trop volumineux (${sizeMB.toFixed(1)} Mo)`);
 
     const bucket = cfg.audioBucket || 'enrolments-audio';
-    const path   = `${bucket}/${filename}`;
-    const url    = `${cfg.url}/storage/v1/object/${path}`;
+    const path = `${bucket}/${filename}`;
+    const url = `${cfg.url}/storage/v1/object/${path}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'apikey'        : cfg.anonKey,
-        'Authorization' : `Bearer ${cfg.anonKey}`,
-        'Content-Type'  : blob.type || 'audio/mp4',
-        'x-upsert'      : 'false'
+        'apikey': cfg.anonKey,
+        'Authorization': `Bearer ${cfg.anonKey}`,
+        'Content-Type': blob.type || 'audio/mp4',
+        'x-upsert': 'false',
       },
-      body: blob
+      body: blob,
     });
 
     if (!response.ok) {
+      if (response.status === 409) return path; // déjà uploadé
       const txt = await response.text().catch(() => '');
-      // 409 = fichier déjà uploadé (doublon) → on considère comme succès
-      if (response.status === 409) {
-        console.warn('[Audio] Fichier déjà présent dans le bucket :', filename);
-        return path;
-      }
       throw new Error(`Upload audio (${response.status}): ${txt}`);
     }
-
     return path;
   }
 
-  // ============================================
-  // INSERTION EN BASE (table enrolments)
-  // ============================================
-  async function createAudioEnrolmentRecord(record, storagePath) {
-    const cfg = window.SUPABASE_CONFIG;
+  // ─── Création patriote minimal + enrolements_audio ───
+  async function createAudioEnrolment(record, storagePath) {
+    const sb = window.PASTEF?.supabase;
+    if (!sb) throw new Error('Client Supabase non initialisé');
 
-    const payload = {
-      // Audio
-      has_audio            : true,
-      audio_path           : storagePath,
-      transcription_status : 'pending',
-      audio_duration_sec   : record.duration_sec,
+    // Récupérer l'ID du mode AUDIO
+    const modeAudioId = PASTEF_DATA.getModeEnrolementId('AUDIO');
+    // Récupérer un sexe par défaut (sera mis à jour après transcription)
+    const sexes = PASTEF_DATA.getSexes();
+    const sexeDefaut = sexes.length > 0 ? sexes[0].id : null;
+    // Pays Sénégal par défaut
+    const senegal = PASTEF_DATA.getPaysSenegal();
+    const senegalId = senegal ? senegal.id : null;
 
-      // Identité capturée à l'enregistrement (peut être partielle)
-      prenom         : (record.nom || '').trim() || 'À transcrire',
-      nom            : 'À transcrire',
-      date_naissance : '1900-01-01',   // placeholder — sera mis à jour après transcription
-      sexe           : 'À transcrire',
-      lieu_naissance : 'À transcrire',
-      telephone      : record.telephone_complet || 'À transcrire',
-      telephone_indicatif : record.telephone_indicatif || null,
-      telephone_local     : record.telephone_local     || null,
+    // 1. Créer un patriote minimal
+    const { data: patrioteResult, error: patrioteError } = await sb
+      .from('patriotes')
+      .insert({
+        prenom: (record.nom || '').trim() || 'À transcrire',
+        nom: 'À transcrire',
+        date_naissance: '1900-01-01',
+        sexe_id: sexeDefaut,
+        lieu_naissance: 'À transcrire',
+        nationalite_id: senegalId,
+        pays_residence_id: senegalId,
+        indicatif: record.telephone_indicatif || '+221',
+        telephone: record.telephone_local || '000000000',
+        fait_partie_cellule: false,
+        statut_cellule: 'EN_ATTENTE',
+        engagement_soutenir: false,
+        engagement_participer: false,
+        engagement_oeuvrer: false,
+        mode_enrolement_id: modeAudioId,
+      })
+      .select('id')
+      .single();
 
-      // Champs requis non connus → placeholder
-      profession        : 'À transcrire',
-      domaine           : 'À transcrire',
-      pays              : 'À transcrire',
-      region            : 'À transcrire',
-      quartier          : 'À transcrire',
-      appartient_cellule: 'à_déterminer',
+    if (patrioteError) throw new Error('Patriote audio: ' + patrioteError.message);
 
-      // Engagements non applicables pour l'audio
-      engagement_soutenir  : false,
-      engagement_participer: false,
-      engagement_oeuvrer   : false,
-      certification        : false,
+    // 2. Créer l'entrée enrolements_audio
+    const publicUrl = `${window.SUPABASE_CONFIG.url}/storage/v1/object/public/${storagePath}`;
 
-      // Métadonnées
-      client_id   : record.client_id,
-      user_agent  : navigator.userAgent,
-      submitted_at: record.created_at
-    };
+    const { error: audioError } = await sb
+      .from('enrolements_audio')
+      .insert({
+        patriote_id: patrioteResult.id,
+        fichier_url: publicUrl,
+        fichier_path: storagePath,
+        duree_secondes: record.duration_sec,
+        statut: 'EN_ATTENTE',
+      });
 
-    const response = await fetch(`${cfg.url}/rest/v1/${cfg.table}`, {
-      method : 'POST',
-      headers: {
-        'apikey'       : cfg.anonKey,
-        'Authorization': `Bearer ${cfg.anonKey}`,
-        'Content-Type' : 'application/json',
-        'Prefer'       : 'return=minimal'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const txt = await response.text().catch(() => '');
-      throw new Error(`INSERT audio (${response.status}): ${txt}`);
-    }
+    if (audioError) throw new Error('Audio record: ' + audioError.message);
 
     return true;
   }
 
-  // ============================================
-  // SYNCHRONISATION AUDIO
-  //
-  // Flux en 3 étapes pour éviter les pertes :
-  //   1) Upload blob → Supabase Storage  → on note upload_path dans IndexedDB
-  //   2) INSERT row → table enrolments   → si OK, on supprime d'IndexedDB
-  //   3) Si upload OK mais INSERT KO     → on retente l'INSERT à la prochaine sync
-  //      (pas de re-upload car upload_path est déjà stocké)
-  // ============================================
+  // ─── Sync ───
   async function syncAllAudio() {
     const all = await dbGetAll();
     if (!all.length) return { sent: 0, failed: 0, abandoned: 0 };
 
-    let sent      = 0;
-    let failed    = 0;
-    let abandoned = 0;
+    let sent = 0, failed = 0, abandoned = 0;
 
     for (const rec of all) {
       const retryCount = rec.retry_count || 0;
 
-      // Abandon après MAX_RETRY tentatives (fichier corrompu ou erreur permanente)
       if (retryCount >= MAX_RETRY) {
-        console.warn('[Audio Sync] Abandon après', MAX_RETRY, 'tentatives :', rec.id);
         await dbDelete(rec.id);
         abandoned++;
         continue;
@@ -248,25 +200,17 @@
       try {
         let storagePath = rec.upload_path || null;
 
-        // Étape 1 : Upload si pas encore fait
         if (!storagePath) {
           const filename = `${rec.id}.${rec.extension || 'mp4'}`;
-          storagePath    = await uploadAudioToStorage(rec.blob, filename);
-          // On sauvegarde le path immédiatement → si l'INSERT plante après,
-          // la prochaine sync saute directement à l'étape 2
+          storagePath = await uploadAudioToStorage(rec.blob, filename);
           await dbUpdate(rec.id, { upload_path: storagePath, retry_count: retryCount + 1 });
         }
 
-        // Étape 2 : INSERT en base
-        await createAudioEnrolmentRecord(rec, storagePath);
-
-        // Tout OK → supprimer d'IndexedDB
+        await createAudioEnrolment(rec, storagePath);
         await dbDelete(rec.id);
         sent++;
-
       } catch (err) {
-        console.error('[Audio Sync] Échec (tentative', retryCount + 1, '/', MAX_RETRY, ')', rec.id, err.message);
-        // Incrémenter le compteur de retry
+        console.error('[Audio Sync]', rec.id, err.message);
         await dbUpdate(rec.id, { retry_count: retryCount + 1 }).catch(() => {});
         failed++;
       }
@@ -275,20 +219,14 @@
     return { sent, failed, abandoned };
   }
 
-  // ============================================
-  // SÉLECTION DU FORMAT AUDIO
-  // ============================================
+  // ─── Format audio ───
   function pickMimeType() {
     const candidates = isIOS()
       ? ['audio/mp4', 'audio/aac', 'audio/mp4;codecs=mp4a.40.2']
-      : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg'];
-
+      : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
     if (typeof MediaRecorder === 'undefined') return '';
-
     for (const m of candidates) {
-      try {
-        if (MediaRecorder.isTypeSupported(m)) return m;
-      } catch (e) { /* Safari peut throw */ }
+      try { if (MediaRecorder.isTypeSupported(m)) return m; } catch {}
     }
     return '';
   }
@@ -297,119 +235,73 @@
     if (!mime) return isIOS() ? 'm4a' : 'webm';
     if (mime.includes('mp4') || mime.includes('aac')) return 'm4a';
     if (mime.includes('webm')) return 'webm';
-    if (mime.includes('ogg'))  return 'ogg';
-    if (mime.includes('mpeg')) return 'mp3';
+    if (mime.includes('ogg')) return 'ogg';
     return isIOS() ? 'm4a' : 'webm';
   }
 
-  // ============================================
-  // ENREGISTREMENT (MediaRecorder)
-  // ============================================
+  // ─── MediaRecorder ───
   const recorder = {
-    mediaRecorder : null,
-    stream        : null,
-    chunks        : [],
-    startTime     : 0,
-    state         : 'idle', // idle | recording | preview
-    lastBlob      : null,
-    lastDuration  : 0,
-    lastExtension : 'm4a'
+    mediaRecorder: null, stream: null, chunks: [],
+    startTime: 0, state: 'idle',
+    lastBlob: null, lastDuration: 0, lastExtension: 'm4a',
   };
 
   function isSupported() {
-    return !!(
-      navigator.mediaDevices &&
-      navigator.mediaDevices.getUserMedia &&
-      typeof MediaRecorder !== 'undefined'
-    );
+    return !!(navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined');
   }
 
   async function startRecording() {
-    if (!isSupported()) {
-      throw new Error('Votre navigateur ne supporte pas l\'enregistrement audio');
-    }
+    if (!isSupported()) throw new Error('Enregistrement audio non supporté');
 
     const constraints = isIOS()
       ? { audio: { echoCancellation: true, noiseSuppression: true } }
       : { audio: true };
 
     recorder.stream = await navigator.mediaDevices.getUserMedia(constraints);
-    const mimeType  = pickMimeType();
+    const mimeType = pickMimeType();
 
     try {
       recorder.mediaRecorder = mimeType
         ? new MediaRecorder(recorder.stream, { mimeType })
         : new MediaRecorder(recorder.stream);
-    } catch (e) {
-      console.warn('[Audio] mimeType rejeté, fallback :', e.message);
+    } catch {
       recorder.mediaRecorder = new MediaRecorder(recorder.stream);
     }
 
-    recorder.chunks       = [];
+    recorder.chunks = [];
     recorder.lastExtension = mimeToExtension(recorder.mediaRecorder.mimeType);
-
-    recorder.mediaRecorder.ondataavailable = e => {
-      if (e.data && e.data.size > 0) recorder.chunks.push(e.data);
-    };
+    recorder.mediaRecorder.ondataavailable = e => { if (e.data?.size > 0) recorder.chunks.push(e.data); };
 
     return new Promise((resolve, reject) => {
-      recorder.mediaRecorder.onerror = e => {
-        reject(new Error('Erreur enregistrement : ' + (e.error?.message || 'inconnue')));
-      };
-
+      recorder.mediaRecorder.onerror = e => reject(new Error('Erreur enregistrement'));
       recorder.mediaRecorder.onstop = () => {
         const mimeUsed = recorder.mediaRecorder.mimeType || (isIOS() ? 'audio/mp4' : 'audio/webm');
-        const blob     = new Blob(recorder.chunks, { type: mimeUsed });
-
-        recorder.lastBlob     = blob;
+        const blob = new Blob(recorder.chunks, { type: mimeUsed });
+        recorder.lastBlob = blob;
         recorder.lastDuration = Math.round((Date.now() - recorder.startTime) / 1000);
-        recorder.state        = 'preview';
-
-        if (recorder.stream) {
-          recorder.stream.getTracks().forEach(t => t.stop());
-          recorder.stream = null;
-        }
-
+        recorder.state = 'preview';
+        if (recorder.stream) { recorder.stream.getTracks().forEach(t => t.stop()); recorder.stream = null; }
         resolve({ blob, duration: recorder.lastDuration, extension: recorder.lastExtension });
       };
 
-      // iOS a besoin d'un timeslice pour ne pas perdre les chunks
-      if (isIOS()) {
-        recorder.mediaRecorder.start(1000);
-      } else {
-        recorder.mediaRecorder.start();
-      }
-
+      isIOS() ? recorder.mediaRecorder.start(1000) : recorder.mediaRecorder.start();
       recorder.startTime = Date.now();
-      recorder.state     = 'recording';
+      recorder.state = 'recording';
     });
   }
 
   function stopRecording() {
-    if (recorder.mediaRecorder && recorder.mediaRecorder.state !== 'inactive') {
-      recorder.mediaRecorder.stop();
-    }
+    if (recorder.mediaRecorder?.state !== 'inactive') recorder.mediaRecorder?.stop();
   }
 
   function cancelRecording() {
-    if (recorder.stream) {
-      recorder.stream.getTracks().forEach(t => t.stop());
-      recorder.stream = null;
-    }
+    if (recorder.stream) { recorder.stream.getTracks().forEach(t => t.stop()); recorder.stream = null; }
     recorder.mediaRecorder = null;
-    recorder.chunks        = [];
-    recorder.state         = 'idle';
-    recorder.lastBlob      = null;
+    recorder.chunks = [];
+    recorder.state = 'idle';
+    recorder.lastBlob = null;
   }
 
-  function getElapsedSeconds() {
-    if (recorder.state !== 'recording') return 0;
-    return Math.floor((Date.now() - recorder.startTime) / 1000);
-  }
-
-  // ============================================
-  // SAUVEGARDE LOCALE (IndexedDB)
-  // ============================================
   function getClientId() {
     let id = localStorage.getItem('pastef_client_id');
     if (!id) {
@@ -420,63 +312,44 @@
   }
 
   async function saveRecording({ blob, duration, extension, nom, telephone_indicatif, telephone_local }) {
-    // Vérification taille avant de stocker en local
     const sizeMB = blob.size / (1024 * 1024);
-    if (sizeMB > MAX_BLOB_SIZE_MB) {
-      throw new Error(`Enregistrement trop long (${sizeMB.toFixed(1)} Mo). Limitez à ${MAX_BLOB_SIZE_MB} Mo.`);
-    }
+    if (sizeMB > MAX_BLOB_SIZE_MB) throw new Error(`Trop volumineux (${sizeMB.toFixed(1)} Mo)`);
 
-    const id       = 'aud_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+    const id = 'aud_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
     const telLocal = (telephone_local || '').trim();
-    const telComplet = telLocal ? `${telephone_indicatif || '+221'} ${telLocal}` : null;
 
     const record = {
-      id,
-      blob,
-      extension,
-      mime        : blob.type,
-      size_bytes  : blob.size,
+      id, blob, extension,
+      mime: blob.type,
+      size_bytes: blob.size,
       duration_sec: duration,
-      nom         : (nom || '').trim() || null,
-      telephone_indicatif : telLocal ? telephone_indicatif : null,
-      telephone_local     : telLocal || null,
-      telephone_complet   : telComplet,
-      client_id   : getClientId(),
-      created_at  : new Date().toISOString(),
-      // Champs de suivi sync
-      retry_count : 0,
-      upload_path : null  // sera rempli après l'upload Supabase Storage
+      nom: (nom || '').trim() || null,
+      telephone_indicatif: telLocal ? telephone_indicatif : null,
+      telephone_local: telLocal || null,
+      telephone_complet: telLocal ? `${telephone_indicatif || '+221'} ${telLocal}` : null,
+      client_id: getClientId(),
+      created_at: new Date().toISOString(),
+      retry_count: 0,
+      upload_path: null,
     };
 
     await dbSave(record);
     return record;
   }
 
-  // ============================================
-  // EXPORT
-  // ============================================
+  // ─── Export ───
   window.PASTEF_AUDIO = {
-    // Enregistrement
-    isSupported,
-    startRecording,
-    stopRecording,
-    cancelRecording,
-    getElapsedSeconds,
-    // Stockage local
+    isSupported, startRecording, stopRecording, cancelRecording,
     saveRecording,
-    getAllRecordings : dbGetAll,
-    deleteRecording  : dbDelete,
-    countRecordings  : dbCount,
-    // Sync vers Supabase
-    syncAll : syncAllAudio,
-    // État courant
-    getState        : () => recorder.state,
-    getLastBlob     : () => recorder.lastBlob,
-    getLastDuration : () => recorder.lastDuration,
+    getAllRecordings: dbGetAll,
+    deleteRecording: dbDelete,
+    countRecordings: dbCount,
+    syncAll: syncAllAudio,
+    getState: () => recorder.state,
+    getLastBlob: () => recorder.lastBlob,
+    getLastDuration: () => recorder.lastDuration,
     getLastExtension: () => recorder.lastExtension,
-    // Debug
     isIOS,
-    isAndroid
   };
 
 })();

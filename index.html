@@ -17,7 +17,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="domaine-dropdown-fix.css">
 </head>
 <body>
 
@@ -44,7 +43,9 @@
     <!-- FORMULAIRE -->
     <form id="enrolmentForm" class="form" novalidate>
 
-      <!-- SECTION 1 : INFORMATIONS PERSONNELLES -->
+      <!-- ═══════════════════════════════════════════
+           SECTION 1 : IDENTITÉ
+           ═══════════════════════════════════════════ -->
       <section class="card">
         <div class="card-header">
           <div class="card-icon" aria-hidden="true">
@@ -53,7 +54,7 @@
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
-          <h2 class="card-title">Informations personnelles</h2>
+          <h2 class="card-title">Identité</h2>
         </div>
 
         <div class="grid grid-2">
@@ -61,7 +62,6 @@
             <label for="prenom">Prénom(s) <span class="req">*</span></label>
             <input type="text" id="prenom" name="prenom" required placeholder="Entrez votre prénom" autocomplete="given-name">
           </div>
-
           <div class="field">
             <label for="nom">Nom <span class="req">*</span></label>
             <input type="text" id="nom" name="nom" required placeholder="Entrez votre nom" autocomplete="family-name">
@@ -74,121 +74,33 @@
             <input type="date" id="dateNaissance" name="dateNaissance" required>
             <span class="hint" id="ageHint"></span>
           </div>
-
           <div class="field">
             <label for="sexe">Sexe <span class="req">*</span></label>
+            <!-- Rempli par JS depuis ref.sexes -->
             <select id="sexe" name="sexe" required>
-              <option value="">Sélectionnez</option>
-              <option value="Homme">Homme</option>
-              <option value="Femme">Femme</option>
+              <option value="">Chargement…</option>
             </select>
           </div>
-        </div>
-
-        <div class="field">
-          <label for="lieuNaissance">Lieu de naissance <span class="req">*</span></label>
-          <input type="text" id="lieuNaissance" name="lieuNaissance" required placeholder="Ville, pays de naissance">
-        </div>
-
-        <div class="field">
-          <label for="telephone">Numéro de téléphone <span class="req">*</span></label>
-          <div class="phone-group">
-            <select id="dialCode" name="dialCode" class="dial-code" aria-label="Indicatif pays">
-              <!-- Rempli par JS -->
-            </select>
-            <input type="tel" id="telephone" name="telephone" required placeholder="77 000 00 00" autocomplete="tel-national">
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION 2 : PROFESSION & DOMAINE -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-            </svg>
-          </div>
-          <h2 class="card-title">Activité professionnelle</h2>
         </div>
 
         <div class="grid grid-2">
           <div class="field">
-            <label for="profession">Profession <span class="req">*</span></label>
-            <select id="profession" name="profession" required>
-              <option value="">Sélectionnez votre profession</option>
-            </select>
+            <label for="lieuNaissance">Lieu de naissance <span class="req">*</span></label>
+            <input type="text" id="lieuNaissance" name="lieuNaissance" required placeholder="Ville, pays de naissance">
           </div>
-
           <div class="field">
-            <label for="domaine">Domaine d'activité <span class="req">*</span></label>
-            <select id="domaine" name="domaine" required>
-              <option value="">Sélectionnez votre domaine</option>
+            <label for="nationalite">Nationalité <span class="req">*</span></label>
+            <!-- ✅ ADAPTÉ : select depuis ref.pays (FK nationalite_id) -->
+            <select id="nationalite" name="nationalite" required>
+              <option value="">Chargement…</option>
             </select>
-          </div>
-        </div>
-
-        <div class="field" id="professionAutreWrap" hidden>
-          <label for="professionAutre">Précisez votre profession <span class="req">*</span></label>
-          <input type="text" id="professionAutre" name="professionAutre" placeholder="Indiquez votre profession">
-        </div>
-
-        <div class="field" id="domaineAutreWrap" hidden>
-          <label for="domaineAutre">Précisez votre domaine <span class="req">*</span></label>
-          <input type="text" id="domaineAutre" name="domaineAutre" placeholder="Indiquez votre domaine">
-        </div>
-      </section>
-
-      <!-- SECTION 3 : ZONE DE RÉSIDENCE -->
-      <section class="card">
-        <div class="card-header">
-          <div class="card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-          </div>
-          <h2 class="card-title">Zone de résidence actuelle</h2>
-        </div>
-
-        <div class="field">
-          <label for="pays">Pays <span class="req">*</span></label>
-          <select id="pays" name="pays" required>
-            <option value="">Sélectionnez votre pays</option>
-          </select>
-        </div>
-
-        <div class="grid grid-2">
-          <div class="field">
-            <label for="region">Région <span class="req">*</span></label>
-            <select id="region" name="region" required disabled>
-              <option value="">Sélectionnez d'abord le pays</option>
-            </select>
-          </div>
-
-          <div class="field" id="departementField" hidden>
-            <label for="departement">Département <span class="req">*</span></label>
-            <select id="departement" name="departement" disabled>
-              <option value="">Sélectionnez d'abord la région</option>
-            </select>
-          </div>
-
-          <div class="field" id="communeSelectField" hidden>
-            <label for="commune">Commune <span class="req">*</span></label>
-            <select id="commune" name="commune" disabled>
-              <option value="">Sélectionnez d'abord le département</option>
-            </select>
-          </div>
-
-          <div class="field" id="communeTextField">
-            <label for="communeText">Quartier / Localité <span class="req">*</span></label>
-            <input type="text" id="communeText" name="communeText" required placeholder="Ex : Sacré-Cœur, Médina...">
           </div>
         </div>
       </section>
 
-      <!-- SECTION 4 : CELLULE PASTEF -->
+      <!-- ═══════════════════════════════════════════
+           SECTION 2 : APPARTENANCE À UNE CELLULE
+           ═══════════════════════════════════════════ -->
       <section class="card">
         <div class="card-header">
           <div class="card-icon" aria-hidden="true">
@@ -199,7 +111,7 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <h2 class="card-title">Cellule PASTEF</h2>
+          <h2 class="card-title">Appartenance à une cellule PASTEF</h2>
         </div>
 
         <div class="field">
@@ -216,21 +128,93 @@
           </div>
         </div>
 
-        <!-- Si OUI -->
+        <div id="celluleNonBlock" hidden>
+          <div class="info-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <p>Remarque : votre coordinateur vous affectera à une cellule dans un délai de 48 heures.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           SECTION 3 : RÉSIDENCE
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="residenceSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Résidence</h2>
+        </div>
+
+        <div class="field">
+          <label for="pays">Pays de résidence <span class="req">*</span></label>
+          <!-- Rempli par JS depuis ref.pays -->
+          <select id="pays" name="pays" required>
+            <option value="">Chargement…</option>
+          </select>
+        </div>
+
+        <!-- CAS SÉNÉGAL -->
+        <div id="senegalFields" hidden>
+          <div class="field">
+            <label for="region">Région <span class="req">*</span></label>
+            <select id="region" name="region" required disabled>
+              <option value="">Sélectionnez votre région</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="departement">Département <span class="req">*</span></label>
+            <select id="departement" name="departement" required disabled>
+              <option value="">Sélectionnez d'abord la région</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="commune">Commune <span class="req">*</span></label>
+            <select id="commune" name="commune" required disabled>
+              <option value="">Sélectionnez d'abord le département</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CAS ÉTRANGER (DIASPORA) -->
+        <div id="etrangerFields" hidden>
+          <div class="field">
+            <label for="villeDiaspora">Ville <span class="req">*</span></label>
+            <!-- ✅ ADAPTÉ : select depuis ref.villes_diaspora (FK ville_diaspora_id) -->
+            <select id="villeDiaspora" name="villeDiaspora" disabled>
+              <option value="">Sélectionnez d'abord le pays</option>
+            </select>
+            <span class="hint" id="villeDiasporaHint"></span>
+          </div>
+          <div class="field" id="villeDiasporaAutreWrap" hidden>
+            <label for="villeDiasporaAutre">Précisez votre ville <span class="req">*</span></label>
+            <input type="text" id="villeDiasporaAutre" name="villeDiasporaAutre" placeholder="Nom de votre ville">
+          </div>
+        </div>
+
+        <!-- CELLULE (si OUI) -->
         <div id="celluleOuiBlock" hidden>
           <div class="grid grid-2">
             <div class="field">
-              <label for="cellule">Cellule d'appartenance <span class="req">*</span></label>
-              <select id="cellule" name="cellule">
-                <option value="">Sélectionnez votre cellule</option>
+              <label for="cellule">Cellule <span class="req">*</span></label>
+              <select id="cellule" name="cellule" disabled>
+                <option value="">Sélectionnez d'abord votre zone</option>
               </select>
             </div>
-
             <div class="field">
-              <label for="fonctionCellule">Fonction dans la cellule <span class="req">*</span></label>
+              <label for="fonctionCellule">Fonction dans le parti <span class="req">*</span></label>
+              <!-- Rempli par JS depuis ref.fonctions_parti -->
               <select id="fonctionCellule" name="fonctionCellule">
-              <option value="">Sélectionnez votre fonction</option>
-            </select>
+                <option value="">Chargement…</option>
+              </select>
             </div>
           </div>
 
@@ -239,26 +223,164 @@
             <input type="text" id="celluleAutre" name="celluleAutre" placeholder="Indiquez le nom de votre cellule">
           </div>
         </div>
+      </section>
 
-        <!-- Si NON -->
-        <div id="celluleNonBlock" hidden>
-          <div class="info-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
+      <!-- ═══════════════════════════════════════════
+           SECTION 4 : CONTACT
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="contactSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
-            <p>Votre demande sera transmise à la coordination locale qui vous affectera à la cellule la plus proche de votre zone de résidence.</p>
+          </div>
+          <h2 class="card-title">Contact</h2>
+        </div>
+
+        <div class="field">
+          <label for="telephone">Téléphone <span class="req">*</span></label>
+          <div class="phone-group">
+            <!-- Rempli par JS depuis ref.pays (indicatifs) -->
+            <select id="dialCode" name="dialCode" class="dial-code" aria-label="Indicatif pays">
+              <option value="+221">🇸🇳 +221</option>
+            </select>
+            <input type="tel" id="telephone" name="telephone" required placeholder="77 000 00 00" autocomplete="tel-national">
+          </div>
+          <span class="hint" id="dialHint">Indicatif automatique selon votre pays de résidence</span>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           SECTION 5 : PIÈCE D'IDENTITÉ
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="pieceSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" ry="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Pièce d'identité</h2>
+        </div>
+
+        <div class="field">
+          <label for="paysEmetteur">Pays émetteur <span class="req">*</span></label>
+          <!-- Rempli par JS depuis ref.pays -->
+          <select id="paysEmetteur" name="paysEmetteur" required>
+            <option value="">Chargement…</option>
+          </select>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="typePiece">Type de pièce <span class="req">*</span></label>
+            <!-- Rempli par JS depuis ref.types_pieces -->
+            <select id="typePiece" name="typePiece" required>
+              <option value="">Chargement…</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="numeroPiece">Numéro <span class="req">*</span></label>
+            <input type="text" id="numeroPiece" name="numeroPiece" required placeholder="Numéro de la pièce" autocomplete="off" maxlength="30">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="dateDelivrance">Date de délivrance</label>
+            <input type="date" id="dateDelivrance" name="dateDelivrance">
+          </div>
+          <div class="field">
+            <label for="dateExpiration">Date d'expiration</label>
+            <input type="date" id="dateExpiration" name="dateExpiration">
+            <span class="hint" id="expirationHint"></span>
           </div>
         </div>
       </section>
 
-      <!-- SECTION 5 : ENGAGEMENT -->
-      <section class="card">
+      <!-- ═══════════════════════════════════════════
+           SECTION 6 : CARTE D'ÉLECTEUR
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="electeurSection" hidden>
         <div class="card-header">
           <div class="card-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Carte d'électeur</h2>
+        </div>
+
+        <div class="field">
+          <p class="field-question">Possédez-vous une carte d'électeur sénégalaise ?</p>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="possedeCarte" value="Oui">
+              <span>Oui</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="possedeCarte" value="Non">
+              <span>Non</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field" id="carteElecteurField" hidden>
+          <label for="numeroCartElecteur">Numéro de carte d'électeur</label>
+          <input type="text" id="numeroCartElecteur" name="numeroCartElecteur" placeholder="Entrez votre numéro" autocomplete="off" maxlength="30">
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           SECTION 7 : PROFESSION
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="professionSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Profession</h2>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="profession">Profession <span class="req">*</span></label>
+            <select id="profession" name="profession" required>
+              <option value="">Chargement…</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="domaine">Domaine <span class="req">*</span></label>
+            <!-- Rempli par JS depuis ref.domaines_profession -->
+            <select id="domaine" name="domaine" required>
+              <option value="">Chargement…</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="professionAutreWrap" hidden>
+          <label for="professionAutre">Précisez votre profession <span class="req">*</span></label>
+          <input type="text" id="professionAutre" name="professionAutre" placeholder="Indiquez votre profession">
+        </div>
+        <div class="field" id="domaineAutreWrap" hidden>
+          <label for="domaineAutre">Précisez votre domaine <span class="req">*</span></label>
+          <input type="text" id="domaineAutre" name="domaineAutre" placeholder="Indiquez votre domaine">
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           SECTION 8 : ENGAGEMENT
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="engagementSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </div>
           <h2 class="card-title">Engagement</h2>
@@ -270,12 +392,10 @@
           <input type="checkbox" name="engagement1" required>
           <span>Soutenir les idéaux et le programme de PASTEF</span>
         </label>
-
         <label class="check-label">
           <input type="checkbox" name="engagement2" required>
           <span>Participer activement aux activités du mouvement</span>
         </label>
-
         <label class="check-label">
           <input type="checkbox" name="engagement3" required>
           <span>Œuvrer pour un Sénégal souverain, juste et prospère</span>
@@ -289,8 +409,50 @@
         </label>
       </section>
 
-      <!-- SECTION SOUMISSION -->
-      <section class="card submit-card">
+      <!-- ═══════════════════════════════════════════
+           SECTION 9 : PRÉSENCE NUMÉRIQUE (optionnelle)
+           ═══════════════════════════════════════════ -->
+      <section class="card" id="numeriqueSection" hidden>
+        <div class="card-header">
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Présence numérique du patriote</h2>
+        </div>
+
+        <p class="hint" style="margin-bottom: 16px;">Cette section est optionnelle et indépendante de la cellule physique.</p>
+
+        <!-- Réseaux sociaux — construit dynamiquement depuis ref.reseaux_sociaux -->
+        <div class="field">
+          <p class="field-question">Réseaux sociaux utilisés</p>
+          <div id="reseauxContainer" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <!-- Rempli par JS -->
+          </div>
+        </div>
+
+        <!-- Niveau d'activité — rempli par JS depuis ref.niveaux_activite -->
+        <div class="field">
+          <label for="niveauActivite">Niveau d'activité en ligne</label>
+          <select id="niveauActivite" name="niveauActivite">
+            <option value="">Sélectionnez</option>
+          </select>
+        </div>
+
+        <!-- Type d'usage — rempli par JS depuis ref.types_usage -->
+        <div class="field">
+          <label for="typeUsage">Comment utilisez-vous les réseaux sociaux ?</label>
+          <select id="typeUsage" name="typeUsage">
+            <option value="">Sélectionnez</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- SOUMISSION -->
+      <section class="card submit-card" id="submitSection" hidden>
         <div class="submit-content">
           <div class="card-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -308,7 +470,7 @@
         </button>
       </section>
 
-      <p class="security-notice">
+      <p class="security-notice" id="securityNotice" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -334,10 +496,10 @@
     </div>
   </div>
 
-  <!-- Pattern décoratif (background) -->
+  <!-- Pattern décoratif -->
   <div class="decorative-pattern" aria-hidden="true"></div>
 
-  <!-- BOUTON FLOTTANT VOCAL (style WhatsApp) -->
+  <!-- BOUTON FLOTTANT VOCAL -->
   <button type="button" id="voiceFab" class="voice-fab" aria-label="Enregistrer un message vocal" title="Enregistrement vocal">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -347,7 +509,7 @@
     </svg>
   </button>
 
-  <!-- MODALE D'ENREGISTREMENT VOCAL -->
+  <!-- MODALE VOCAL -->
   <div id="voiceModal" class="voice-modal" hidden>
     <div class="voice-modal-content">
       <button type="button" id="voiceModalClose" class="voice-modal-close" aria-label="Fermer">
@@ -356,14 +518,11 @@
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-
       <h2>Enregistrement vocal</h2>
       <p class="subtitle-small">
-        Pour les patriotes analphabètes : enregistrez leurs informations à voix haute (nom, âge, profession, zone, etc.).
+        Pour les patriotes analphabètes : enregistrez leurs informations à voix haute.
         L'audio sera transcrit automatiquement après synchronisation.
       </p>
-
-      <!-- Zone d'enregistrement -->
       <div id="voiceRecorder" class="voice-recorder">
         <div id="voiceStatus" class="voice-status">Appuyez sur le micro pour démarrer</div>
         <div id="voiceTimer" class="voice-timer">00:00</div>
@@ -377,8 +536,6 @@
         </button>
         <p class="record-hint" id="recordHint">Durée recommandée : 1 à 3 minutes</p>
       </div>
-
-      <!-- Prévisualisation après enregistrement (style WhatsApp) -->
       <div id="voicePreview" class="voice-preview">
         <div class="audio-player">
           <button type="button" id="voiceRedoBtn" class="audio-delete-btn" aria-label="Supprimer et recommencer">
@@ -403,7 +560,6 @@
           </div>
           <span class="audio-size-tag" id="previewSize">— Ko</span>
         </div>
-
         <div class="voice-extra-fields">
           <div class="field">
             <label for="voiceNom">Nom du patriote (optionnel)</label>
@@ -417,7 +573,6 @@
             </div>
           </div>
         </div>
-
         <div class="voice-actions">
           <button type="button" id="voiceSaveBtn" class="btn-primary btn-send-voice">
             <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -427,48 +582,46 @@
           </button>
         </div>
       </div>
-
-      <!-- Erreur (micro non disponible) -->
       <div id="voiceError" class="voice-error" hidden></div>
     </div>
   </div>
 
-  <script src="js/data.js"></script>
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS
+       Ordre de chargement :
+       1. Supabase JS (CDN)
+       2. supabase-config.js (configuration)
+       3. supabase-client.js (client partagé)
+       4. data-loader.js (données de référence)
+       5. audio.js (module vocal)
+       6. app-v2.js (logique formulaire)
+       ═══════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/data-loader.js"></script>
   <script src="js/audio.js"></script>
-  <script src="js/app.js"></script>
-  <script src="domaine-dropdown-fix.js"></script>
+  <script src="js/app-v2.js"></script>
 
   <script>
-    // Enregistrement du Service Worker + mise à jour automatique
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
           console.log('[PWA] Service Worker enregistré', reg.scope);
-
-          // Vérifier une mise à jour toutes les 60 secondes
           setInterval(() => reg.update(), 60 * 1000);
-
           reg.addEventListener('updatefound', () => {
             const newSW = reg.installing;
             newSW.addEventListener('statechange', () => {
-              // Nouveau SW prêt + un ancien SW actif = mise à jour disponible
               if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] Nouvelle version disponible — rechargement...');
-                // On envoie SKIP_WAITING pour activer immédiatement sans attendre
                 newSW.postMessage({ type: 'SKIP_WAITING' });
               }
             });
           });
         }).catch(err => console.warn('[PWA] Échec enregistrement SW', err));
 
-        // Quand le nouveau SW prend le contrôle, recharger la page
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
+          if (!refreshing) { refreshing = true; window.location.reload(); }
         });
       });
     }

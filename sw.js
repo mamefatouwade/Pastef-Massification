@@ -3,26 +3,25 @@
    Compatible : Chrome, Safari iOS 16+, Firefox, Samsung Browser
    ============================================ */
 
-const CACHE_VERSION = 'pastef-v6';
+const CACHE_VERSION = 'pastef-v7';
 
 // Fichiers critiques — mis en cache obligatoirement
 const CACHE_CORE = [
   './index.html',
   './styles.css',
-  './js/data.js',
-  './js/app.js',
-  './js/audio.js',
   './js/supabase-config.js',
+  './js/supabase-client.js',
+  './js/data-loader.js',
+  './js/audio.js',
+  './js/app-v2.js',
   './manifest.json',
   './assets/logo.jpg',
-  './assets/logo-192.png',
-  './assets/logo-512.png',
-  './assets/couverture.png',
-  './assets/pattern.png'
+  './assets/icons/icon-192x192.png',
+  './assets/icons/icon-512x512.png',
+  './assets/icons/apple-touch-icon.png'
 ];
 
 // Fichiers optionnels — on essaie, mais l'échec ne bloque pas l'install
-// (ex: Google Fonts peut échouer si l'utilisateur est hors-ligne au 1er chargement)
 const CACHE_OPTIONAL = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
 ];
@@ -31,11 +30,11 @@ const CACHE_OPTIONAL = [
 // INSTALL
 // ============================================
 self.addEventListener('install', event => {
-  console.log('[SW] Installation v6');
+  console.log('[SW] Installation v7');
   event.waitUntil(
     caches.open(CACHE_VERSION).then(async cache => {
 
-      // 1) Fichiers critiques — SANS cache:'reload' (incompatible Safari)
+      // 1) Fichiers critiques
       await cache.addAll(CACHE_CORE);
       console.log('[SW] Fichiers core mis en cache');
 
@@ -49,8 +48,6 @@ self.addEventListener('install', event => {
       }
 
     })
-    // Sur Safari, skipWaiting() ici peut causer des problèmes
-    // On laisse le contrôleur gérer via le message SKIP_WAITING
   );
 });
 
@@ -58,7 +55,7 @@ self.addEventListener('install', event => {
 // ACTIVATE — Nettoyage des anciens caches
 // ============================================
 self.addEventListener('activate', event => {
-  console.log('[SW] Activation v6');
+  console.log('[SW] Activation v7');
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -70,8 +67,6 @@ self.addEventListener('activate', event => {
           })
       ))
       .then(() => {
-        // clients.claim() : prendre le contrôle immédiatement
-        // Compatible tous navigateurs y compris Safari iOS 16.4+
         return self.clients.claim();
       })
   );
@@ -124,7 +119,6 @@ self.addEventListener('fetch', event => {
           .then(cache => cache.put(event.request, clone));
         return response;
       }).catch(() => {
-        // Hors-ligne et pas en cache → rien à faire
         console.warn('[SW] Ressource non disponible hors-ligne :', event.request.url);
       });
     })
