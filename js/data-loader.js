@@ -34,20 +34,25 @@
   }
 
   // ─── Fetch générique avec cache ───
-  async function fetchAndCache(key, table, params) {
-    // Si en cache et pas de forceRefresh, retourner
-    if (_cache[key] && _cache[key].length > 0) return _cache[key];
+async function fetchAndCache(key, table, params) {
+     // Si en cache et pas de forceRefresh, retourner
+     if (_cache[key] && _cache[key].length > 0) return _cache[key];
 
-    try {
-      const data = await window.PASTEF.fetchRef(table, params);
-      _cache[key] = data;
-      saveCache();
-      return data;
-    } catch (err) {
-      console.warn(`[DataLoader] Échec fetch ${key}:`, err.message);
-      return _cache[key] || [];
-    }
-  }
+     if (!window.PASTEF || typeof window.PASTEF.fetchRef !== 'function') {
+       console.error('[DataLoader] window.PASTEF.fetchRef n\'est pas disponible');
+       return _cache[key] || [];
+     }
+
+     try {
+       const data = await window.PASTEF.fetchRef(table, params);
+       _cache[key] = data;
+       saveCache();
+       return data;
+     } catch (err) {
+       console.warn(`[DataLoader] Échec fetch ${key}:`, err.message);
+       return _cache[key] || [];
+     }
+   }
 
   // ============================================
   // CHARGEMENT INITIAL (toutes les petites tables)
