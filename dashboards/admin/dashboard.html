@@ -18,8 +18,6 @@
   /* ============================================
      Dashboard Admin — Vue d'ensemble nationale
      ============================================ */
-
-  /* Hero principal : carte signature du dashboard */
   .hero-card {
     position: relative;
     background:
@@ -32,7 +30,6 @@
     margin-bottom: 24px;
     box-shadow: var(--shadow-md);
   }
-
   .hero-card::before {
     content: '';
     position: absolute;
@@ -45,207 +42,127 @@
       var(--pastef-green-light) 66%, var(--pastef-green-light) 100%
     );
   }
-
   .hero-eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--pastef-or-light);
-    margin-bottom: 12px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--pastef-or-light); margin-bottom: 12px;
   }
-
   .hero-content {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 32px;
-    align-items: center;
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 32px; align-items: center;
   }
-
   .hero-greeting {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.6px;
-    line-height: 1.2;
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.6px; line-height: 1.2;
     margin-bottom: 8px;
   }
-
-  .hero-greeting em {
-    font-style: normal;
-    color: var(--pastef-or-light);
-  }
-
+  .hero-greeting em { font-style: normal; color: var(--pastef-or-light); }
   .hero-message {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.75);
-    max-width: 480px;
+    font-size: 14px; color: rgba(255, 255, 255, 0.75); max-width: 480px;
   }
-
   .hero-stats {
-    display: flex;
-    gap: 32px;
+    display: flex; gap: 32px;
     padding-left: 32px;
     border-left: 1px solid rgba(255, 255, 255, 0.15);
   }
-
   .hero-stat-value {
-    font-size: 32px;
-    font-weight: 900;
-    letter-spacing: -1px;
-    font-variant-numeric: tabular-nums;
+    font-size: 32px; font-weight: 900;
+    letter-spacing: -1px; font-variant-numeric: tabular-nums;
   }
-
   .hero-stat-label {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 11px; font-weight: 600;
     color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: uppercase; letter-spacing: 0.06em;
     margin-top: 2px;
   }
-
   @media (max-width: 900px) {
     .hero-content { grid-template-columns: 1fr; }
     .hero-stats {
       border-left: none;
       border-top: 1px solid rgba(255, 255, 255, 0.15);
-      padding-left: 0;
-      padding-top: 16px;
+      padding-left: 0; padding-top: 16px;
     }
   }
 
-  /* Section title */
   .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--text-muted);
-    margin-bottom: 12px;
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 12px; margin-top: 24px;
+    display: flex; align-items: center; gap: 8px;
   }
-
   .section-title::before {
-    content: '';
-    width: 4px;
-    height: 14px;
-    background: var(--pastef-green);
-    border-radius: 2px;
+    content: ''; width: 4px; height: 14px;
+    background: var(--pastef-green); border-radius: 2px;
   }
 
-  /* Quick actions */
   .quick-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 12px; margin-bottom: 24px;
   }
-
   .quick-action {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-decoration: none;
-    color: inherit;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: all 0.15s;
+    text-decoration: none; color: inherit;
   }
-
   .quick-action:hover {
     border-color: var(--pastef-green);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
   }
-
   .quick-action-icon {
-    width: 42px; height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 42px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-
   .quick-action-icon.green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
-  .quick-action-icon.red { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
-  .quick-action-icon.or { background: var(--pastef-or-soft); color: var(--pastef-or); }
-  .quick-action-icon.ink { background: var(--bg); color: var(--ink); }
-
+  .quick-action-icon.red   { background: var(--pastef-red-soft);   color: var(--pastef-red-dark); }
+  .quick-action-icon.or    { background: var(--pastef-or-soft);    color: var(--pastef-or); }
+  .quick-action-icon.ink   { background: var(--bg);                color: var(--ink); }
   .quick-action-text { flex: 1; }
   .quick-action-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
-  .quick-action-sub { font-size: 11px; color: var(--text-muted); }
+  .quick-action-sub   { font-size: 11px; color: var(--text-muted); }
 
-  /* Chart placeholder card */
   .chart-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
   }
+  .chart-wrap { height: 260px; position: relative; }
 
-  .chart-wrap {
-    height: 260px;
-    position: relative;
-  }
-
-  /* Activity feed */
-  .activity-list {
-    display: flex;
-    flex-direction: column;
-  }
-
+  .activity-list { display: flex; flex-direction: column; }
   .activity-row {
-    display: flex;
-    gap: 14px;
+    display: flex; gap: 14px;
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
   }
   .activity-row:last-child { border-bottom: none; }
-
   .activity-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 8px; height: 8px; border-radius: 50%;
     background: var(--pastef-green);
-    margin-top: 6px;
-    flex-shrink: 0;
+    margin-top: 6px; flex-shrink: 0;
   }
-  .activity-dot.red { background: var(--pastef-red); }
   .activity-dot.or { background: var(--pastef-or); }
-
   .activity-content { flex: 1; min-width: 0; }
   .activity-title { font-size: 13px; font-weight: 600; }
-  .activity-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .activity-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-  /* Section comparatif compact */
-  .geo-list {
-    display: flex;
-    flex-direction: column;
-  }
+  .geo-list { display: flex; flex-direction: column; }
   .geo-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 14px;
+    display: grid; grid-template-columns: 1fr auto auto;
+    align-items: center; gap: 14px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border-light);
   }
   .geo-row:last-child { border-bottom: none; }
   .geo-name { font-size: 13px; font-weight: 600; }
-  .geo-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .geo-sub  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
   .geo-bar {
-    width: 120px;
-    height: 6px;
+    width: 120px; height: 6px;
     background: var(--border-light);
-    border-radius: 3px;
-    overflow: hidden;
+    border-radius: 3px; overflow: hidden;
   }
   .geo-bar-fill {
     height: 100%;
@@ -253,11 +170,9 @@
     border-radius: 3px;
   }
   .geo-count {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 13px; font-weight: 700;
     font-variant-numeric: tabular-nums;
-    min-width: 50px;
-    text-align: right;
+    min-width: 50px; text-align: right;
   }
 </style>
 </head>
@@ -291,31 +206,53 @@
 (async function () {
   'use strict';
 
-  // 1. Vérifie l'authentification — admin uniquement
+  // ─── 1. Authentification (admin uniquement) ─────────────────────
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
 
-  // 2. Render sidebar + topbar
+  // ─── 2. Sidebar + topbar ─────────────────────────────────────────
   PASTEF.sidebar.render(session, 'dashboard');
   PASTEF.topbar.render({
     session,
     title: 'Tableau de bord',
-    breadcrumb: 'Vue d\'ensemble nationale',
+    breadcrumb: "Vue d'ensemble nationale",
   });
 
-  // 3. Charge les données
   const content = document.getElementById('content');
 
+  // ─── 3. Chargement des données en parallèle ──────────────────────
   try {
-    const { data: members, error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5000);
+    const [
+      { data: members, error: errMembers },
+      { data: adminRows, error: errMe },
+      { count: cellulesActives, error: errCel },
+    ] = await Promise.all([
+      // 3.1 — Vue enrichie v_patriotes (déjà JOIN-ée côté SQL)
+      PASTEF.supabase
+        .from('v_patriotes')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5000),
 
-    if (error) throw error;
+      // 3.2 — Identité de l'admin connecté (RPC me_coordinateur)
+      PASTEF.supabase.rpc('me_coordinateur'),
 
-    renderDashboard(members || [], session);
+      // 3.3 — Compte réel des cellules actives (pas via patriotes)
+      PASTEF.supabase
+        .from('cellules')
+        .select('*', { count: 'exact', head: true })
+        .eq('statut', 'ACTIVE')
+        .is('deleted_at', null),
+    ]);
+
+    if (errMembers) throw errMembers;
+    if (errMe)      console.warn('[me_coordinateur] non disponible :', errMe.message);
+    if (errCel)     console.warn('[cellules count] échec :', errCel.message);
+
+    const admin = (adminRows && adminRows[0]) || null;
+
+    renderDashboard(members || [], session, admin, cellulesActives || 0);
+
   } catch (err) {
     console.error('Dashboard error:', err);
     content.innerHTML = `
@@ -331,20 +268,28 @@
     `;
   }
 
-  /* ===== RENDU ===== */
-  function renderDashboard(members, session) {
-    const stats = computeStats(members);
+  /* ============================================
+     RENDU
+     ============================================ */
+  function renderDashboard(members, session, admin, cellulesActives) {
+    const stats = computeStats(members, cellulesActives);
     const hour = new Date().getHours();
     const greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
-    const emailName = session.user.email.split('@')[0];
+
+    // Nom d'affichage : prénom réel si dispo, sinon fallback sur email
+    const displayName = admin
+      ? admin.prenom
+      : session.user.email.split('@')[0];
+
+    const roleLibelle = admin ? admin.role_libelle : 'Administrateur';
 
     content.innerHTML = `
       <!-- HERO -->
       <section class="hero-card">
-        <div class="hero-eyebrow">Bienvenue dans l'espace national</div>
+        <div class="hero-eyebrow">${PASTEF.utils.escapeHtml(roleLibelle)}</div>
         <div class="hero-content">
           <div>
-            <h1 class="hero-greeting">${greet}, <em>${PASTEF.utils.escapeHtml(emailName)}</em>.</h1>
+            <h1 class="hero-greeting">${greet}, <em>${PASTEF.utils.escapeHtml(displayName)}</em>.</h1>
             <p class="hero-message">
               Vue d'ensemble du mouvement à l'instant T. Suivez les inscriptions, les cellules
               actives et l'engagement des coordinateurs.
@@ -392,7 +337,7 @@
         </div>
       </div>
 
-      <!-- Quick actions -->
+      <!-- Actions rapides -->
       <div class="section-title">Actions rapides</div>
       <div class="quick-actions">
         <a class="quick-action" href="inscriptions.html">
@@ -441,7 +386,7 @@
         </a>
       </div>
 
-      <!-- Comparaison géographique + Activité -->
+      <!-- Vue comparative -->
       <div class="section-title">Vue comparative</div>
       <div class="grid grid-2-1">
         <div class="chart-card">
@@ -474,19 +419,22 @@
             </div>
           </div>
           <div class="geo-list">
-            ${stats.topRegions.slice(0, 6).map((r) => {
-              const pct = Math.round((r.value / stats.topRegions[0].value) * 100);
-              return `
-                <div class="geo-row">
-                  <div>
-                    <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
-                    <div class="geo-sub">${r.percent}% du Sénégal</div>
-                  </div>
-                  <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%"></div></div>
-                  <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
-                </div>
-              `;
-            }).join('')}
+            ${stats.topRegions.length === 0
+              ? '<div class="empty-text" style="padding:20px 0">Aucune inscription au Sénégal pour le moment.</div>'
+              : stats.topRegions.slice(0, 6).map((r) => {
+                  const pct = Math.round((r.value / stats.topRegions[0].value) * 100);
+                  return `
+                    <div class="geo-row">
+                      <div>
+                        <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
+                        <div class="geo-sub">${r.percent}% du Sénégal</div>
+                      </div>
+                      <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%"></div></div>
+                      <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
+                    </div>
+                  `;
+                }).join('')
+            }
           </div>
         </div>
 
@@ -498,19 +446,22 @@
             </div>
           </div>
           <div class="geo-list">
-            ${stats.topDiaspora.slice(0, 6).map((r) => {
-              const pct = Math.round((r.value / Math.max(stats.topDiaspora[0]?.value || 1, 1)) * 100);
-              return `
-                <div class="geo-row">
-                  <div>
-                    <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
-                    <div class="geo-sub">${r.percent}% de la diaspora</div>
-                  </div>
-                  <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),var(--pastef-or-light))"></div></div>
-                  <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
-                </div>
-              `;
-            }).join('') || '<div class="empty-text">Aucun pays de diaspora encore.</div>'}
+            ${stats.topDiaspora.length === 0
+              ? '<div class="empty-text" style="padding:20px 0">Aucun pays de diaspora encore.</div>'
+              : stats.topDiaspora.slice(0, 6).map((r) => {
+                  const pct = Math.round((r.value / Math.max(stats.topDiaspora[0]?.value || 1, 1)) * 100);
+                  return `
+                    <div class="geo-row">
+                      <div>
+                        <div class="geo-name">${PASTEF.utils.escapeHtml(r.name)}</div>
+                        <div class="geo-sub">${r.percent}% de la diaspora</div>
+                      </div>
+                      <div class="geo-bar"><div class="geo-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),var(--pastef-or-light))"></div></div>
+                      <div class="geo-count">${PASTEF.utils.formatNumber(r.value)}</div>
+                    </div>
+                  `;
+                }).join('')
+            }
           </div>
         </div>
       </div>
@@ -519,18 +470,21 @@
       <div class="section-title">Dernières inscriptions</div>
       <div class="chart-card">
         <div class="activity-list">
-          ${stats.recent.slice(0, 6).map((m) => `
-            <div class="activity-row">
-              <div class="activity-dot ${m.pays === 'Sénégal' ? '' : 'or'}"></div>
-              <div class="activity-content">
-                <div class="activity-title">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
-                <div class="activity-meta">
-                  ${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(m.region || m.pays)} · ${PASTEF.utils.formatDateTime(m.created_at)}
+          ${stats.recent.length === 0
+            ? '<div class="empty-text" style="padding:20px 0">Aucune inscription pour le moment.</div>'
+            : stats.recent.slice(0, 6).map((m) => `
+                <div class="activity-row">
+                  <div class="activity-dot ${m.est_senegal ? '' : 'or'}"></div>
+                  <div class="activity-content">
+                    <div class="activity-title">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
+                    <div class="activity-meta">
+                      ${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(m.region || m.pays_residence || '—')} · ${PASTEF.utils.formatDateTime(m.created_at)}
+                    </div>
+                  </div>
+                  <span class="badge ${m.est_senegal ? 'badge-green' : 'badge-or'}">${PASTEF.utils.escapeHtml(m.pays_residence || '—')}</span>
                 </div>
-              </div>
-              <span class="badge ${m.pays === 'Sénégal' ? 'badge-green' : 'badge-or'}">${PASTEF.utils.escapeHtml(m.pays || '—')}</span>
-            </div>
-          `).join('')}
+              `).join('')
+          }
         </div>
       </div>
     `;
@@ -538,13 +492,23 @@
     renderCharts(stats);
   }
 
-  /* ===== STATS ===== */
-  function computeStats(data) {
+  /* ============================================
+     STATS — Alignées sur les champs de v_patriotes
+     Champs utilisés :
+       sexe            : 'Masculin' | 'Féminin'
+       est_senegal     : boolean
+       pays_residence  : nom pays
+       region          : nom région
+       cellule         : nom cellule (peut être null)
+       engagement_*    : boolean
+       profession, created_at, prenom, nom
+     ============================================ */
+  function computeStats(data, cellulesActivesGlobales) {
     const total = data.length;
-    const hommes = data.filter((m) => m.sexe === 'Homme').length;
-    const femmes = total - hommes;
-    const senegal = data.filter((m) => m.pays === 'Sénégal').length;
-    const diaspora = total - senegal;
+    const hommes = data.filter((m) => m.sexe === 'Masculin').length;
+    const femmes = data.filter((m) => m.sexe === 'Féminin').length;
+    const senegal = data.filter((m) => m.est_senegal === true).length;
+    const diaspora = data.filter((m) => m.est_senegal === false).length;
 
     const now = new Date();
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -560,16 +524,25 @@
       ? (thisMonth > 0 ? 100 : 0)
       : Math.round(((thisMonth - lastMonth) / lastMonth) * 100);
 
-    const cellules = new Set(data.filter((m) => m.cellule).map((m) => m.cellule)).size;
-    const paysDiaspora = new Set(data.filter((m) => m.pays !== 'Sénégal').map((m) => m.pays)).size;
+    // Nombre de cellules actives = total en base (pas ce que remontent les patriotes)
+    const cellules = cellulesActivesGlobales;
 
-    const eng = data.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+    // Pays diaspora distincts
+    const paysDiaspora = new Set(
+      data.filter((m) => m.est_senegal === false && m.pays_residence)
+          .map((m) => m.pays_residence)
+    ).size;
+
+    // Engagement complet = les 3 booléens à true
+    const eng = data.filter((m) =>
+      m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer
+    ).length;
     const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
 
     // Top régions Sénégal
     const regionsSn = {};
     data.forEach((m) => {
-      if (m.pays === 'Sénégal' && m.region) {
+      if (m.est_senegal && m.region) {
         regionsSn[m.region] = (regionsSn[m.region] || 0) + 1;
       }
     });
@@ -580,11 +553,11 @@
         percent: senegal > 0 ? Math.round((value / senegal) * 100) : 0,
       }));
 
-    // Top diaspora
+    // Top pays diaspora
     const paysD = {};
     data.forEach((m) => {
-      if (m.pays !== 'Sénégal') {
-        paysD[m.pays] = (paysD[m.pays] || 0) + 1;
+      if (!m.est_senegal && m.pays_residence) {
+        paysD[m.pays_residence] = (paysD[m.pays_residence] || 0) + 1;
       }
     });
     const topDiaspora = Object.entries(paysD)
@@ -594,7 +567,7 @@
         percent: diaspora > 0 ? Math.round((value / diaspora) * 100) : 0,
       }));
 
-    // Timeline 30j
+    // Timeline 30 jours
     const timeline = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
@@ -622,7 +595,9 @@
     };
   }
 
-  /* ===== CHARTS ===== */
+  /* ============================================
+     CHARTS
+     ============================================ */
   function renderCharts(stats) {
     // Timeline
     const ctxT = document.getElementById('chartTimeline');
@@ -674,7 +649,11 @@
           plugins: {
             legend: {
               position: 'bottom',
-              labels: { font: { size: 12, weight: 600 }, padding: 14, boxWidth: 10, boxHeight: 10, usePointStyle: true },
+              labels: {
+                font: { size: 12, weight: 600 },
+                padding: 14, boxWidth: 10, boxHeight: 10,
+                usePointStyle: true,
+              },
             },
           },
         },

@@ -10,7 +10,7 @@ const CACHE_CORE = [
   './index.html',
   './styles.css',
   './js/supabase-config.js',
-  './js/supabase-client.js',
+  './shared/supabase-client.js',
   './js/data-loader.js',
   './js/audio.js',
   './js/app-v2.js',

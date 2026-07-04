@@ -22,289 +22,126 @@
     gap: 12px;
     margin-bottom: 20px;
   }
-
   .mini-stat {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 18px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
   }
-
   .mini-stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
+    font-size: 11px; color: var(--text-muted);
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 4px;
   }
-
   .mini-stat-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--ink);
-    letter-spacing: -0.5px;
-    font-variant-numeric: tabular-nums;
+    font-size: 22px; font-weight: 800; color: var(--ink);
+    letter-spacing: -0.5px; font-variant-numeric: tabular-nums;
   }
 
-  /* Toolbar avancée */
   .filters-toolbar {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
     margin-bottom: 16px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
   }
-
   .filter-select {
-    height: 38px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 30px 0 12px;
-    font-size: 13px;
-    background: var(--card);
-    color: var(--text);
-    cursor: pointer;
-    min-width: 130px;
-    appearance: none;
+    height: 38px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0 30px 0 12px;
+    font-size: 13px; background: var(--card); color: var(--text);
+    cursor: pointer; min-width: 130px; appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 14px;
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
   }
+  .filter-select:focus { outline: none; border-color: var(--pastef-green); }
+  .result-tag { margin-left: auto; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .result-tag strong { color: var(--ink); font-weight: 800; }
 
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--pastef-green);
-  }
-
-  .result-tag {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .result-tag strong {
-    color: var(--ink);
-    font-weight: 800;
-  }
-
-  /* Table styles spécifiques */
-  .table .name-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .table .name-cell { display: flex; align-items: center; gap: 10px; }
   .name-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark));
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-
-  .name-avatar.female {
-    background: linear-gradient(135deg, var(--pastef-or), #B57607);
-  }
-
+  .name-avatar.female { background: linear-gradient(135deg, var(--pastef-or), #B57607); }
   .name-info { min-width: 0; }
   .name-primary { font-weight: 600; font-size: 13px; }
   .name-secondary { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 
-  .phone-cell {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text);
-  }
+  .phone-cell { font-family: var(--font-mono); font-size: 12px; color: var(--text); }
 
   .engagement-dots { display: flex; gap: 3px; }
-  .eng-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-  .eng-dot.on { background: var(--pastef-green); }
+  .eng-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .eng-dot.on  { background: var(--pastef-green); }
   .eng-dot.off { background: var(--border); }
 
-  .cell-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  .cell-tag-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--pastef-green);
-  }
-
+  .cell-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); }
+  .cell-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pastef-green); }
   .cell-tag.no .cell-tag-dot { background: var(--text-soft); }
 
-  /* Panel détails */
   .detail-hero {
-    text-align: center;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-light);
-    margin-bottom: 20px;
+    text-align: center; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-light); margin-bottom: 20px;
   }
-
   .detail-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
+    width: 72px; height: 72px; border-radius: 50%;
     background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark));
-    color: #fff;
-    font-size: 26px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 12px;
-    box-shadow: var(--shadow-md);
+    color: #fff; font-size: 26px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px; box-shadow: var(--shadow-md);
   }
+  .detail-avatar.female { background: linear-gradient(135deg, var(--pastef-or), #B57607); }
+  .detail-name { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .detail-meta { font-size: 12px; color: var(--text-muted); }
 
-  .detail-avatar.female {
-    background: linear-gradient(135deg, var(--pastef-or), #B57607);
-  }
-
-  .detail-name {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    margin-bottom: 4px;
-  }
-
-  .detail-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .detail-section {
-    margin-bottom: 22px;
-  }
-
+  .detail-section { margin-bottom: 22px; }
   .detail-section-title {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    margin-bottom: 10px; padding-bottom: 6px;
     border-bottom: 1px solid var(--border-light);
   }
-
   .detail-row {
-    display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 12px;
-    padding: 6px 0;
-    font-size: 13px;
-    align-items: start;
+    display: grid; grid-template-columns: 120px 1fr;
+    gap: 12px; padding: 6px 0; font-size: 13px; align-items: start;
   }
-
-  .detail-row .label {
-    color: var(--text-muted);
-    font-size: 12px;
-  }
-
-  .detail-row .value {
-    font-weight: 600;
-    text-align: right;
-    word-break: break-word;
-  }
-
-  .detail-row .value em {
-    color: var(--text-soft);
-    font-style: italic;
-    font-weight: 400;
-  }
+  .detail-row .label { color: var(--text-muted); font-size: 12px; }
+  .detail-row .value { font-weight: 600; text-align: right; word-break: break-word; }
+  .detail-row .value em { color: var(--text-soft); font-style: italic; font-weight: 400; }
 
   .engagement-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-top: 8px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; margin-top: 8px;
   }
-
   .eng-tile {
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
   }
-
   .eng-tile.yes { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
-  .eng-tile.no { background: var(--bg); color: var(--text-soft); }
+  .eng-tile.no  { background: var(--bg); color: var(--text-soft); }
 
-  .detail-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 20px;
-  }
-
+  .detail-actions { display: flex; gap: 8px; margin-top: 20px; }
   .detail-actions .btn { flex: 1; }
 
-  /* 🆕 Bloc d'affectation à une cellule */
   .assign-box {
-    margin-top: 10px;
-    padding: 12px;
-    background: var(--bg);
-    border: 1px solid var(--border-light);
+    margin-top: 10px; padding: 12px;
+    background: var(--bg); border: 1px solid var(--border-light);
     border-radius: 10px;
   }
-
   .assign-hint {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    line-height: 1.4;
+    font-size: 11px; color: var(--text-muted);
+    margin-bottom: 8px; line-height: 1.4;
   }
-
-  .assign-hint strong {
-    color: var(--pastef-green-dark);
-  }
-
+  .assign-hint strong { color: var(--pastef-green-dark); }
   .assign-select {
-    width: 100%;
-    height: 38px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 30px 0 12px;
-    font-size: 13px;
-    background: var(--card);
-    color: var(--text);
-    cursor: pointer;
-    margin-bottom: 8px;
-    appearance: none;
+    width: 100%; height: 38px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 0 30px 0 12px; font-size: 13px;
+    background: var(--card); color: var(--text);
+    cursor: pointer; margin-bottom: 8px; appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='%236B7B72' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 14px;
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
   }
-
-  .assign-select:focus {
-    outline: none;
-    border-color: var(--pastef-green);
-  }
+  .assign-select:focus { outline: none; border-color: var(--pastef-green); }
 </style>
 </head>
 <body>
@@ -347,12 +184,17 @@
 <script src="../../shared/topbar.js"></script>
 
 <script>
+// ─────────────────────────────────────────────────────────────
+// Table de lecture (vue enrichie) vs table d'écriture (base)
+// ─────────────────────────────────────────────────────────────
+const READ_VIEW  = 'v_patriotes';   // JOIN-é, expose libellés + IDs
+const WRITE_TABLE = 'patriotes';    // pour UPDATE / soft-delete
+
 let allMembers = [];
 let currentFilters = { search: '', pays: 'Tous', sexe: 'Tous', cellule: 'Tous', sort: 'recent' };
 
 (async function () {
   'use strict';
-
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
 
@@ -368,10 +210,9 @@ let currentFilters = { search: '', pays: 'Tous', sexe: 'Tous', cellule: 'Tous', 
 
 async function loadAndRender() {
   const content = document.getElementById('content');
-
   try {
     const { data, error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
+      .from(READ_VIEW)
       .select('*')
       .order('created_at', { ascending: false })
       .limit(5000);
@@ -388,7 +229,7 @@ async function loadAndRender() {
 function render() {
   const content = document.getElementById('content');
   const stats = computeStats(allMembers);
-  const paysList = [...new Set(allMembers.map((m) => m.pays).filter(Boolean))].sort();
+  const paysList = [...new Set(allMembers.map((m) => m.pays_residence).filter(Boolean))].sort();
   const cellules = [...new Set(allMembers.map((m) => m.cellule).filter(Boolean))].sort();
 
   content.innerHTML = `
@@ -397,7 +238,6 @@ function render() {
       <p class="page-subtitle">${PASTEF.utils.formatNumber(allMembers.length)} patriotes au total · Cliquez sur une ligne pour voir le détail</p>
     </div>
 
-    <!-- Stats rapides -->
     <div class="stats-row">
       <div class="mini-stat">
         <div class="mini-stat-label">Total</div>
@@ -421,7 +261,6 @@ function render() {
       </div>
     </div>
 
-    <!-- Filtres -->
     <div class="filters-toolbar">
       <div class="search-box">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -437,8 +276,8 @@ function render() {
 
       <select class="filter-select" id="sexeFilter">
         <option value="Tous">H et F</option>
-        <option value="Homme">Hommes</option>
-        <option value="Femme">Femmes</option>
+        <option value="Masculin">Hommes</option>
+        <option value="Féminin">Femmes</option>
       </select>
 
       <select class="filter-select" id="celluleFilter">
@@ -465,7 +304,6 @@ function render() {
       <span class="result-tag" id="resultCount"></span>
     </div>
 
-    <!-- Tableau -->
     <div class="table-wrap">
       <div class="table-scroll">
         <table class="table">
@@ -487,7 +325,6 @@ function render() {
     </div>
   `;
 
-  // Bind les filtres
   document.getElementById('searchInput').addEventListener('input', PASTEF.utils.debounce(applyFilters, 200));
   document.getElementById('paysFilter').addEventListener('change', applyFilters);
   document.getElementById('sexeFilter').addEventListener('change', applyFilters);
@@ -498,22 +335,22 @@ function render() {
 }
 
 function applyFilters() {
-  const search = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
-  const pays = document.getElementById('paysFilter')?.value || 'Tous';
-  const sexe = document.getElementById('sexeFilter')?.value || 'Tous';
+  const search  = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  const pays    = document.getElementById('paysFilter')?.value || 'Tous';
+  const sexe    = document.getElementById('sexeFilter')?.value || 'Tous';
   const cellule = document.getElementById('celluleFilter')?.value || 'Tous';
-  const sort = document.getElementById('sortFilter')?.value || 'recent';
+  const sort    = document.getElementById('sortFilter')?.value || 'recent';
 
   let filtered = allMembers.filter((m) => {
     if (search) {
       const haystack = `${m.prenom || ''} ${m.nom || ''} ${m.telephone || ''}`.toLowerCase();
       if (!haystack.includes(search)) return false;
     }
-    if (pays !== 'Tous' && m.pays !== pays) return false;
+    if (pays !== 'Tous' && m.pays_residence !== pays) return false;
     if (sexe !== 'Tous' && m.sexe !== sexe) return false;
 
     if (cellule !== 'Tous') {
-      const hasCell = m.appartient_cellule?.toLowerCase() === 'oui' && m.cellule;
+      const hasCell = !!m.cellule_id;
       if (cellule === '__with__' && !hasCell) return false;
       if (cellule === '__without__' && hasCell) return false;
       if (cellule !== '__with__' && cellule !== '__without__' && m.cellule !== cellule) return false;
@@ -562,11 +399,16 @@ function renderTable(list) {
   const visible = list.slice(0, limit);
 
   tbody.innerHTML = visible.map((m) => {
-    const isFemale = m.sexe === 'Femme';
+    const isFemale = m.sexe === 'Féminin';
     const inits = PASTEF.utils.initials(m.prenom, m.nom);
-    const cellDisplay = (m.appartient_cellule?.toLowerCase() === 'oui' && m.cellule)
-      ? `<span class="cell-tag"><span class="cell-tag-dot"></span>${PASTEF.utils.escapeHtml(m.cellule)}</span>`
+    const hasCellule = !!m.cellule_id;
+    const cellDisplay = hasCellule
+      ? `<span class="cell-tag"><span class="cell-tag-dot"></span>${PASTEF.utils.escapeHtml(m.cellule || '')}</span>`
       : `<span class="cell-tag no"><span class="cell-tag-dot"></span><em style="color:var(--text-soft)">Non affecté</em></span>`;
+
+    const localisation = m.est_senegal
+      ? (m.region || '—')
+      : (m.ville_diaspora || m.pays_residence || '—');
 
     return `
       <tr onclick="openDetail('${m.id}')">
@@ -575,14 +417,14 @@ function renderTable(list) {
             <div class="name-avatar ${isFemale ? 'female' : ''}">${inits}</div>
             <div class="name-info">
               <div class="name-primary">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
-              <div class="name-secondary">${m.sexe === 'Homme' ? 'Homme' : 'Femme'} · ${PASTEF.utils.computeAge(m.date_naissance) || '—'} ans</div>
+              <div class="name-secondary">${PASTEF.utils.escapeHtml(m.sexe || '—')} · ${PASTEF.utils.computeAge(m.date_naissance) || '—'} ans</div>
             </div>
           </div>
         </td>
         <td class="phone-cell">${PASTEF.utils.escapeHtml(m.telephone || '—')}</td>
         <td>
-          <div style="font-size:13px;font-weight:500">${PASTEF.utils.escapeHtml(m.pays || '—')}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${PASTEF.utils.escapeHtml(m.region || '')}</div>
+          <div style="font-size:13px;font-weight:500">${PASTEF.utils.escapeHtml(m.pays_residence || '—')}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${PASTEF.utils.escapeHtml(localisation)}</div>
         </td>
         <td style="font-size:13px">${PASTEF.utils.escapeHtml(m.profession || '—')}</td>
         <td>${cellDisplay}</td>
@@ -591,7 +433,7 @@ function renderTable(list) {
             <div class="eng-dot ${m.engagement_soutenir ? 'on' : 'off'}" title="Soutenir"></div>
             <div class="eng-dot ${m.engagement_participer ? 'on' : 'off'}" title="Participer"></div>
             <div class="eng-dot ${m.engagement_oeuvrer ? 'on' : 'off'}" title="Œuvrer"></div>
-            <div class="eng-dot ${m.certification ? 'on' : 'off'}" title="Certifié"></div>
+            <div class="eng-dot ${m.a_carte_electeur ? 'on' : 'off'}" title="Carte d'électeur"></div>
           </div>
         </td>
         <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">${PASTEF.utils.formatDate(m.created_at)}</td>
@@ -611,10 +453,13 @@ function openDetail(id) {
   if (!m) return;
 
   const body = document.getElementById('drawerBody');
-  const isFemale = m.sexe === 'Femme';
+  const isFemale = m.sexe === 'Féminin';
   const inits = PASTEF.utils.initials(m.prenom, m.nom);
   const age = PASTEF.utils.computeAge(m.date_naissance);
-  const hasCellule = m.appartient_cellule?.toLowerCase() === 'oui' && m.cellule;
+  const hasCellule = !!m.cellule_id;
+
+  const localisationLabel = m.est_senegal ? 'Commune' : 'Ville';
+  const localisationValue = m.est_senegal ? (m.commune || '—') : (m.ville_diaspora || '—');
 
   body.innerHTML = `
     <div class="detail-hero">
@@ -628,7 +473,8 @@ function openDetail(id) {
       <div class="detail-row"><span class="label">Sexe</span><span class="value">${PASTEF.utils.escapeHtml(m.sexe || '—')}</span></div>
       <div class="detail-row"><span class="label">Date naissance</span><span class="value">${PASTEF.utils.formatDate(m.date_naissance)} ${age ? `<em>(${age} ans)</em>` : ''}</span></div>
       <div class="detail-row"><span class="label">Lieu naissance</span><span class="value">${PASTEF.utils.escapeHtml(m.lieu_naissance || '—')}</span></div>
-      <div class="detail-row"><span class="label">Téléphone</span><span class="value font-mono">${PASTEF.utils.escapeHtml(m.telephone || '—')}</span></div>
+      <div class="detail-row"><span class="label">Nationalité</span><span class="value">${PASTEF.utils.escapeHtml(m.nationalite || '—')}</span></div>
+      <div class="detail-row"><span class="label">Téléphone</span><span class="value font-mono">${PASTEF.utils.escapeHtml((m.indicatif || '') + ' ' + (m.telephone || ''))}</span></div>
     </div>
 
     <div class="detail-section">
@@ -639,17 +485,27 @@ function openDetail(id) {
 
     <div class="detail-section">
       <div class="detail-section-title">Résidence</div>
-      <div class="detail-row"><span class="label">Pays</span><span class="value">${PASTEF.utils.escapeHtml(m.pays || '—')}</span></div>
-      <div class="detail-row"><span class="label">Région</span><span class="value">${PASTEF.utils.escapeHtml(m.region || '—')}</span></div>
-      <div class="detail-row"><span class="label">Département</span><span class="value">${PASTEF.utils.escapeHtml(m.departement || '—')}</span></div>
-      <div class="detail-row"><span class="label">Commune / Quartier</span><span class="value">${PASTEF.utils.escapeHtml(m.commune || m.quartier || '—')}</span></div>
+      <div class="detail-row"><span class="label">Pays</span><span class="value">${PASTEF.utils.escapeHtml(m.pays_residence || '—')}</span></div>
+      ${m.est_senegal ? `
+        <div class="detail-row"><span class="label">Région</span><span class="value">${PASTEF.utils.escapeHtml(m.region || '—')}</span></div>
+        <div class="detail-row"><span class="label">Département</span><span class="value">${PASTEF.utils.escapeHtml(m.departement || '—')}</span></div>
+      ` : ''}
+      <div class="detail-row"><span class="label">${localisationLabel}</span><span class="value">${PASTEF.utils.escapeHtml(localisationValue)}</span></div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Pièce d'identité</div>
+      <div class="detail-row"><span class="label">Type</span><span class="value">${PASTEF.utils.escapeHtml(m.type_piece || '—')}</span></div>
+      <div class="detail-row"><span class="label">Numéro</span><span class="value font-mono">${PASTEF.utils.escapeHtml(m.numero_piece || '—')}</span></div>
+      <div class="detail-row"><span class="label">Carte électeur</span><span class="value">${m.a_carte_electeur ? '<span style="color:var(--pastef-green-dark)">✓ Oui</span>' : '<em>Non</em>'}</span></div>
     </div>
 
     <div class="detail-section">
       <div class="detail-section-title">Cellule PASTEF</div>
-      <div class="detail-row"><span class="label">Appartenance</span><span class="value">${PASTEF.utils.escapeHtml(m.appartient_cellule || '—')}</span></div>
+      <div class="detail-row"><span class="label">Demande d'adhésion</span><span class="value">${m.fait_partie_cellule ? '<span style="color:var(--pastef-green-dark)">Oui</span>' : '<em>Non</em>'}</span></div>
+      <div class="detail-row"><span class="label">Statut</span><span class="value">${PASTEF.utils.escapeHtml(m.statut_cellule || '—')}</span></div>
       <div class="detail-row"><span class="label">Cellule</span><span class="value">${m.cellule ? PASTEF.utils.escapeHtml(m.cellule) : '<em>Non affecté</em>'}</span></div>
-      <div class="detail-row"><span class="label">Fonction</span><span class="value">${m.fonction_cellule ? PASTEF.utils.escapeHtml(m.fonction_cellule) : '<em>Aucune</em>'}</span></div>
+      <div class="detail-row"><span class="label">Fonction</span><span class="value">${m.fonction_parti ? PASTEF.utils.escapeHtml(m.fonction_parti) : '<em>Aucune</em>'}</span></div>
       <div id="assignCelluleBox"></div>
     </div>
 
@@ -674,11 +530,11 @@ function openDetail(id) {
           </svg>
           Œuvrer
         </div>
-        <div class="eng-tile ${m.certification ? 'yes' : 'no'}">
+        <div class="eng-tile ${m.a_carte_electeur ? 'yes' : 'no'}">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-            ${m.certification ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+            ${m.a_carte_electeur ? '<polyline points="20 6 9 17 4 12"/>' : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
           </svg>
-          Certifié
+          Carte électeur
         </div>
       </div>
     </div>
@@ -697,7 +553,6 @@ function openDetail(id) {
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 
-  // 🆕 Si l'inscrit n'a pas de cellule, propose l'affectation
   if (!hasCellule) {
     renderAssignButton(m.id);
   }
@@ -709,60 +564,47 @@ function closeDetail() {
 }
 
 // ============================================
-// 🆕 AFFECTATION À UNE CELLULE (depuis l'admin)
-// Même logique d'élargissement que le formulaire public :
-// commune → département → région → pays.
+// AFFECTATION À UNE CELLULE (via IDs)
+// Cascade : commune_id → departement_id → region_id (Sénégal)
+//           ville_id → pays_id (Diaspora)
 // ============================================
 
-function getEffectiveLocation(m) {
-  return {
-    pays: m.pays || null,
-    region: m.region || null,
-    // Les anciennes inscriptions n'ont que 'quartier' de rempli
-    // (avant l'ajout des colonnes dédiées departement/commune)
-    departement: m.departement || null,
-    commune: m.commune || m.quartier || null,
-  };
-}
-
-async function fetchCellulesForLocation(loc) {
-  if (!loc.pays) return { cellules: [], level: null };
-
+async function fetchCellulesForPatriote(m) {
   const attempts = [];
-  if (loc.commune) attempts.push({ region: loc.region, departement: loc.departement, commune: loc.commune, level: 'commune' });
-  if (loc.departement) attempts.push({ region: loc.region, departement: loc.departement, level: 'departement' });
-  if (loc.region) attempts.push({ region: loc.region, level: 'region' });
-  attempts.push({ level: 'pays' });
+
+  if (m.est_senegal) {
+    if (m.commune_id)     attempts.push({ field: 'commune_id',     value: m.commune_id,     level: 'commune',     label: m.commune });
+    if (m.departement_id) attempts.push({ field: 'departement_id', value: m.departement_id, level: 'departement', label: m.departement });
+    if (m.region_id)      attempts.push({ field: 'region_id',      value: m.region_id,      level: 'region',      label: m.region });
+  } else {
+    if (m.ville_diaspora_id) attempts.push({ field: 'ville_id', value: m.ville_diaspora_id, level: 'ville', label: m.ville_diaspora });
+    if (m.pays_residence_id) attempts.push({ field: 'pays_id',  value: m.pays_residence_id, level: 'pays',  label: m.pays_residence });
+  }
 
   for (const attempt of attempts) {
-    let q = PASTEF.supabase
+    const { data, error } = await PASTEF.supabase
       .from('cellules')
-      .select('id,nom,type,pays,region,departement,commune')
-      .ilike('pays', loc.pays.trim())
-      .eq('active', true);
-
-    if (attempt.region) q = q.eq('region', attempt.region);
-    if (attempt.departement) q = q.eq('departement', attempt.departement);
-    if (attempt.commune) q = q.eq('commune', attempt.commune);
-
-    const { data, error } = await q.order('nom', { ascending: true });
+      .select('id, nom')
+      .eq(attempt.field, attempt.value)
+      .eq('statut', 'ACTIVE')
+      .is('deleted_at', null)
+      .order('nom', { ascending: true });
 
     if (error) {
       console.error('[PASTEF Admin] Erreur chargement cellules', error);
       continue;
     }
     if (data && data.length) {
-      return { cellules: data, level: attempt.level };
+      return { cellules: data, level: attempt.level, label: attempt.label };
     }
   }
 
-  return { cellules: [], level: null };
+  return { cellules: [], level: null, label: null };
 }
 
 function renderAssignButton(id) {
   const box = document.getElementById('assignCelluleBox');
   if (!box) return;
-
   box.innerHTML = `
     <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:10px" onclick="openAssignPicker('${id}')">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -783,23 +625,23 @@ async function openAssignPicker(id) {
 
   box.innerHTML = `<div class="assign-hint" style="margin-top:10px">Recherche des cellules disponibles…</div>`;
 
-  const loc = getEffectiveLocation(m);
-  const { cellules, level } = await fetchCellulesForLocation(loc);
+  const { cellules, level, label } = await fetchCellulesForPatriote(m);
 
   if (!cellules.length) {
     box.innerHTML = `
       <div class="assign-box">
-        <div class="assign-hint" style="color:var(--pastef-red)">Aucune cellule active trouvée pour ${PASTEF.utils.escapeHtml(loc.pays || 'ce pays')}. Créez-en une dans la page Cellules avant de pouvoir affecter ce patriote.</div>
+        <div class="assign-hint" style="color:var(--pastef-red)">Aucune cellule active trouvée pour ${PASTEF.utils.escapeHtml(m.pays_residence || 'ce pays')}. Créez-en une dans la page Cellules avant de pouvoir affecter ce patriote.</div>
       </div>
     `;
     return;
   }
 
   const levelLabels = {
-    commune: `dans sa commune (${PASTEF.utils.escapeHtml(loc.commune || '')})`,
-    departement: `dans son département (${PASTEF.utils.escapeHtml(loc.departement || '')})`,
-    region: `dans sa région (${PASTEF.utils.escapeHtml(loc.region || '')})`,
-    pays: `dans son pays (${PASTEF.utils.escapeHtml(loc.pays || '')})`,
+    commune:     `dans sa commune (${PASTEF.utils.escapeHtml(label || '')})`,
+    departement: `dans son département (${PASTEF.utils.escapeHtml(label || '')})`,
+    region:      `dans sa région (${PASTEF.utils.escapeHtml(label || '')})`,
+    ville:       `dans sa ville (${PASTEF.utils.escapeHtml(label || '')})`,
+    pays:        `dans son pays (${PASTEF.utils.escapeHtml(label || '')})`,
   };
 
   box.innerHTML = `
@@ -826,23 +668,29 @@ async function confirmAssignCellule(id) {
   const box = document.getElementById('assignCelluleBox');
 
   try {
-    const { error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
-      .update({
-        cellule_id: celluleId,
-        cellule: celluleNom,
-        appartient_cellule: 'Oui',
-      })
-      .eq('id', id);
+    // Écriture sur la table de base (les vues sont read-only)
+    const { data, error } = await PASTEF.supabase
+  .from(WRITE_TABLE)
+  .update({
+    cellule_id: celluleId,
+    fait_partie_cellule: true,
+    statut_cellule: 'AFFECTE',
+  })
+  .eq('id', id)
+  .select();   // ← renvoie les lignes modifiées
 
-    if (error) throw error;
+if (error) throw error;
+if (!data || data.length === 0) {
+  throw new Error('Aucune ligne mise à jour (probablement RLS)');
+}
 
-    // Mettre à jour l'état local sans tout recharger
+    // Mettre à jour l'état local pour éviter un reload complet
     const m = allMembers.find((x) => String(x.id) === String(id));
     if (m) {
       m.cellule_id = celluleId;
       m.cellule = celluleNom;
-      m.appartient_cellule = 'Oui';
+      m.fait_partie_cellule = true;
+      m.statut_cellule = 'AFFECTE';
     }
 
     PASTEF.utils.toast('Cellule affectée', `${celluleNom} assignée avec succès`);
@@ -858,7 +706,6 @@ async function confirmAssignCellule(id) {
   }
 }
 
-// Rafraîchit uniquement les 5 mini-stats en haut de page (sans reset des filtres actifs)
 function refreshStatsOnly() {
   const stats = computeStats(allMembers);
   const map = { total: stats.total, thisMonth: stats.thisMonth, senegal: stats.senegal, diaspora: stats.diaspora, sansCellule: stats.sansCellule };
@@ -883,9 +730,11 @@ async function deleteInscrit(id) {
   }
 
   try {
+    // Soft-delete : on ne supprime pas physiquement (RGPD + audit)
+    // La vue v_patriotes filtre déjà les lignes deleted_at IS NULL
     const { error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
-      .delete()
+      .from(WRITE_TABLE)
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) throw error;
@@ -902,17 +751,22 @@ async function deleteInscrit(id) {
 function exportCSV() {
   if (!allMembers.length) return;
 
-  const headers = ['Prénom', 'Nom', 'Sexe', 'Date naissance', 'Lieu naissance', 'Téléphone',
-    'Profession', 'Domaine', 'Pays', 'Région', 'Quartier', 'Cellule', 'Fonction',
-    'Soutenir', 'Participer', 'Œuvrer', 'Certifié', 'Date inscription'];
+  const headers = ['Prénom', 'Nom', 'Sexe', 'Date naissance', 'Lieu naissance', 'Nationalité', 'Indicatif', 'Téléphone',
+    'Profession', 'Domaine', 'Pays résidence', 'Région', 'Département', 'Commune', 'Ville diaspora',
+    'Cellule', 'Statut cellule', 'Fonction parti',
+    'Type pièce', 'Numéro pièce', 'Carte électeur',
+    'Soutenir', 'Participer', 'Œuvrer', 'Date inscription'];
 
   const rows = allMembers.map((m) => [
-    m.prenom, m.nom, m.sexe, m.date_naissance, m.lieu_naissance, m.telephone,
-    m.profession, m.domaine, m.pays, m.region, m.quartier, m.cellule, m.fonction_cellule,
-    m.engagement_soutenir ? 'Oui' : 'Non',
+    m.prenom, m.nom, m.sexe, m.date_naissance, m.lieu_naissance, m.nationalite,
+    m.indicatif, m.telephone,
+    m.profession, m.domaine,
+    m.pays_residence, m.region, m.departement, m.commune, m.ville_diaspora,
+    m.cellule, m.statut_cellule, m.fonction_parti,
+    m.type_piece, m.numero_piece, m.a_carte_electeur ? 'Oui' : 'Non',
+    m.engagement_soutenir  ? 'Oui' : 'Non',
     m.engagement_participer ? 'Oui' : 'Non',
-    m.engagement_oeuvrer ? 'Oui' : 'Non',
-    m.certification ? 'Oui' : 'Non',
+    m.engagement_oeuvrer    ? 'Oui' : 'Non',
     m.created_at,
   ]);
 
@@ -937,9 +791,9 @@ function computeStats(data) {
   return {
     total: data.length,
     thisMonth: data.filter((m) => new Date(m.created_at) >= startMonth).length,
-    senegal: data.filter((m) => m.pays === 'Sénégal').length,
-    diaspora: data.filter((m) => m.pays !== 'Sénégal').length,
-    sansCellule: data.filter((m) => m.appartient_cellule?.toLowerCase() !== 'oui' || !m.cellule).length,
+    senegal: data.filter((m) => m.est_senegal === true).length,
+    diaspora: data.filter((m) => m.est_senegal === false).length,
+    sansCellule: data.filter((m) => !m.cellule_id).length,
   };
 }
 
