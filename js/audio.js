@@ -164,7 +164,15 @@
     if (patrioteError) throw new Error('Patriote audio: ' + patrioteError.message);
 
     // 2. Créer l'entrée enrolements_audio
-    const publicUrl = `${window.SUPABASE_CONFIG.url}/storage/v1/object/public/${storagePath}`;
+    const { error: audioError } = await sb
+  .from('enrolements_audio')
+  .insert({
+    patriote_id: patrioteResult.id,
+    fichier_url: '', // vide, sera généré à la demande par l'admin
+    fichier_path: storagePath,
+    duree_secondes: record.duration_sec,
+    statut: 'EN_ATTENTE',
+  });
 
     const { error: audioError } = await sb
       .from('enrolements_audio')
