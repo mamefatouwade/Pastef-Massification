@@ -35,6 +35,7 @@
       { section: 'Vue d\'ensemble' },
       { id: 'dashboard', label: 'Tableau de bord', icon: I.dashboard, page: 'dashboard' },
       { id: 'inscriptions', label: 'Inscriptions', icon: I.users, page: 'inscriptions' },
+      { id: 'audios', label: 'Enregistrements audio', icon: I.mic, page: 'audios' },
       {
         id: 'sections', label: 'Sections', icon: I.sections, type: 'group',
         children: [

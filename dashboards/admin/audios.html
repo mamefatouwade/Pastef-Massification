@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enregistrements audio — PASTEF Admin</title>
+<link rel="icon" type="image/jpeg" href="../../assets/logo.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../styles/base.css" />
+<link rel="stylesheet" href="../../styles/components.css" />
+<link rel="stylesheet" href="../../styles/sidebar.css" />
+
+<style>
+  /* ============================================
+     Audio Admin — Traitement des enregistrements
+     ============================================ */
+
+  .page-header {
+    background: linear-gradient(135deg,
+      var(--pastef-green-dark) 0%,
+      var(--pastef-green) 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    margin: 0 0 6px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 520px;
+    margin: 0;
+  }
+  .header-badge {
+    background: rgba(255, 255, 255, 0.14);
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(6px);
+  }
+  .header-badge strong { font-size: 18px; font-weight: 900; }
+
+  /* KPI grid — 4 colonnes */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .stat-icon.attente { background: var(--pastef-or-soft);   color: var(--pastef-or); }
+  .stat-icon.cours   { background: #E6F3FF;                 color: #1976D2; }
+  .stat-icon.traite  { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .stat-icon.erreur  { background: var(--pastef-red-soft);   color: var(--pastef-red-dark); }
+  .stat-value {
+    font-size: 22px; font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-header { grid-template-columns: 1fr; }
+  }
+
+  /* Filtres */
+  .filters-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: var(--radius);
+  }
+  .filter-tab {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .filter-tab:hover { color: var(--ink); }
+  .filter-tab.active {
+    background: var(--card);
+    color: var(--pastef-green-dark);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .filter-search {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+  .filter-search input {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--bg);
+  }
+  .filter-search input:focus {
+    outline: none;
+    border-color: var(--pastef-green);
+    background: var(--card);
+  }
+  .filter-search svg {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  /* Liste des audios */
+  .audio-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .audio-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    transition: border-color 0.15s;
+  }
+  .audio-card:hover { border-color: var(--pastef-green-light); }
+  .audio-card.pending  { border-left: 3px solid var(--pastef-or); }
+  .audio-card.en-cours { border-left: 3px solid #1976D2; }
+  .audio-card.traite   { border-left: 3px solid var(--pastef-green); opacity: 0.75; }
+  .audio-card.erreur   { border-left: 3px solid var(--pastef-red); }
+
+  .audio-main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+  .audio-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .audio-meta strong {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .audio-meta .separator {
+    color: var(--border);
+    user-select: none;
+  }
+
+  .audio-player-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+  }
+  .audio-player-row audio {
+    flex: 1;
+    height: 36px;
+  }
+  .audio-load-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--pastef-green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .audio-load-btn:hover { background: var(--pastef-green-dark); }
+  .audio-load-btn:disabled {
+    background: var(--border);
+    cursor: not-allowed;
+  }
+
+  .audio-coord-info {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .audio-coord-info strong {
+    color: var(--pastef-green-dark);
+    font-weight: 700;
+  }
+  .audio-coord-info.unassigned strong { color: var(--pastef-or); }
+
+  .audio-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+    min-width: 180px;
+  }
+  .audio-actions .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+
+  /* Badge statut */
+  .badge-statut {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-statut.EN_ATTENTE { background: var(--pastef-or-soft);   color: var(--pastef-or); }
+  .badge-statut.EN_COURS   { background: #E6F3FF;                 color: #1976D2; }
+  .badge-statut.TRAITE     { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
+  .badge-statut.ERREUR     { background: var(--pastef-red-soft);   color: var(--pastef-red-dark); }
+
+  /* Notes inline */
+  .audio-notes {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 6px 0;
+    border-top: 1px dashed var(--border-light);
+    margin-top: 4px;
+  }
+  .audio-notes strong { color: var(--ink); font-style: normal; }
+
+  /* Empty state */
+  .empty {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 60px 20px;
+    text-align: center;
+  }
+  .empty-icon { color: var(--text-muted); margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .empty-text { font-size: 13px; color: var(--text-muted); }
+
+  /* Modal — assignation coordinateur */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 26, 20, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay[hidden] { display: none; }
+  .modal-box {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg, 0 20px 60px rgba(0,0,0,0.25));
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-head h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    line-height: 0;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: var(--bg);
+  }
+
+  .coord-search {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  .coord-search:focus {
+    outline: none;
+    border-color: var(--pastef-green);
+  }
+  .coord-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .coord-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .coord-item:hover {
+    border-color: var(--pastef-green);
+    background: var(--pastef-green-soft);
+  }
+  .coord-item.selected {
+    border-color: var(--pastef-green);
+    background: var(--pastef-green-soft);
+  }
+  .coord-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--pastef-green);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .coord-info { flex: 1; min-width: 0; }
+  .coord-name { font-weight: 700; font-size: 13px; }
+  .coord-role {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .coord-zone {
+    font-size: 11px;
+    color: var(--pastef-green-dark);
+    margin-top: 2px;
+  }
+
+  .modal-notes {
+    width: 100%;
+    min-height: 70px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+  }
+  .modal-notes:focus { outline: none; border-color: var(--pastef-green); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    background: var(--pastef-green-dark);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 1100;
+    animation: slideUp 0.25s ease-out;
+  }
+  .toast.error   { background: var(--pastef-red-dark); }
+  .toast.warning { background: var(--pastef-or); }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .spinner-sm {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 700px) {
+    .audio-card { grid-template-columns: 1fr; }
+    .audio-actions { flex-direction: row; flex-wrap: wrap; min-width: 0; }
+    .audio-actions .btn { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+
+    <div class="content" id="content">
+      <div class="page-loader">
+        <div class="spinner"></div>
+        Chargement des enregistrements audio…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : Assigner à un coordinateur -->
+<div class="modal-overlay" id="assignModal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>Affecter l'enregistrement à un coordinateur</h2>
+      <button class="modal-close" id="assignModalClose" aria-label="Fermer">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="text" class="coord-search" id="coordSearch" placeholder="Rechercher un coordinateur (nom, zone)…" />
+      <div class="coord-list" id="coordList">
+        <!-- Coordinateurs injectés dynamiquement -->
+      </div>
+      <textarea class="modal-notes" id="assignNotes" placeholder="Notes optionnelles pour le coordinateur…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="assignCancel">Annuler</button>
+      <button class="btn btn-primary" id="assignConfirm" disabled>Affecter</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../../shared/supabase-client.js"></script>
+<script src="../../shared/utils.js"></script>
+<script src="../../shared/auth.js"></script>
+<script src="../../shared/sidebar.js"></script>
+<script src="../../shared/topbar.js"></script>
+
+<script>
+(async function () {
+  'use strict';
+
+  // ─── Configuration ──────────────────────────────────────────
+  const BUCKET = 'enrolments-audio';
+  const SIGNED_URL_TTL = 3600; // 1h de validité pour les liens signés
+
+  // ─── État global ────────────────────────────────────────────
+  const state = {
+    audios: [],
+    coordinateurs: [],
+    filter: 'EN_ATTENTE',   // valeur par défaut : les audios à traiter
+    search: '',
+    // Modal state
+    currentAudioId: null,
+    selectedCoordId: null,
+  };
+
+  // ─── Auth admin ─────────────────────────────────────────────
+  const session = await PASTEF.auth.requireAuth(['admin']);
+  if (!session) return;
+
+  PASTEF.sidebar.render(session, 'audios');
+  PASTEF.topbar.render({
+    session,
+    title: 'Enregistrements audio',
+    breadcrumb: 'Traitement et affectation',
+  });
+
+  const content = document.getElementById('content');
+
+  // ─── Chargement initial ─────────────────────────────────────
+  await loadData();
+  render();
+  attachStaticListeners();
+
+  // ============================================================
+  // DATA LAYER
+  // ============================================================
+  async function loadData() {
+    try {
+      const [audiosRes, coordsRes] = await Promise.all([
+        PASTEF.supabase
+          .from('v_audios_admin')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500),
+        PASTEF.supabase.rpc('list_coordinateurs_actifs'),
+      ]);
+
+      if (audiosRes.error) throw audiosRes.error;
+      if (coordsRes.error) console.warn('[coord list]', coordsRes.error.message);
+
+      state.audios = audiosRes.data || [];
+      state.coordinateurs = coordsRes.data || [];
+    } catch (err) {
+      console.error('[audios] loadData', err);
+      showToast('Erreur : ' + err.message, 'error');
+      state.audios = [];
+      state.coordinateurs = [];
+    }
+  }
+
+  // ============================================================
+  // COMPUTED — Filtres appliqués
+  // ============================================================
+  function getFilteredAudios() {
+    let list = state.audios;
+
+    // Filtre par statut
+    if (state.filter && state.filter !== 'TOUS') {
+      list = list.filter(a => a.statut === state.filter);
+    }
+
+    // Recherche texte
+    if (state.search) {
+      const q = state.search.toLowerCase().trim();
+      list = list.filter(a => {
+        const haystack = [
+          a.patriote_prenom, a.patriote_nom, a.patriote_telephone,
+          a.coord_prenom, a.coord_nom,
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    return list;
+  }
+
+  function computeStats() {
+    const s = { total: state.audios.length, attente: 0, cours: 0, traite: 0, erreur: 0 };
+    state.audios.forEach(a => {
+      if (a.statut === 'EN_ATTENTE') s.attente++;
+      else if (a.statut === 'EN_COURS') s.cours++;
+      else if (a.statut === 'TRAITE') s.traite++;
+      else if (a.statut === 'ERREUR') s.erreur++;
+    });
+    return s;
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    const stats = computeStats();
+    const audios = getFilteredAudios();
+
+    content.innerHTML = `
+      <!-- Header -->
+      <section class="page-header">
+        <div>
+          <h1>Enregistrements audio</h1>
+          <p>Écoutez les enrôlements vocaux, affectez-les aux coordinateurs responsables, et suivez le traitement.</p>
+        </div>
+        <div class="header-badge">
+          <strong>${PASTEF.utils.formatNumber(stats.attente)}</strong> à traiter
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <div class="stat-grid">
+        ${statCard('attente', stats.attente, 'En attente', iconClock())}
+        ${statCard('cours',   stats.cours,   'En cours',   iconLoader())}
+        ${statCard('traite',  stats.traite,  'Traités',    iconCheck())}
+        ${statCard('erreur',  stats.erreur,  'Erreurs',    iconAlert())}
+      </div>
+
+      <!-- Filtres -->
+      <div class="filters-bar">
+        <div class="filter-tabs" role="tablist">
+          ${filterTab('EN_ATTENTE', 'À traiter',   stats.attente)}
+          ${filterTab('EN_COURS',   'En cours',    stats.cours)}
+          ${filterTab('TRAITE',     'Traités',     stats.traite)}
+          ${filterTab('ERREUR',     'Erreurs',     stats.erreur)}
+          ${filterTab('TOUS',       'Tous',        stats.total)}
+        </div>
+        <div class="filter-search">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Rechercher par nom, téléphone…" value="${PASTEF.utils.escapeHtml(state.search)}" />
+        </div>
+      </div>
+
+      <!-- Liste -->
+      <div class="audio-list" id="audioList">
+        ${audios.length === 0 ? emptyState() : audios.map(renderAudioCard).join('')}
+      </div>
+    `;
+
+    attachDynamicListeners();
+  }
+
+  function statCard(cls, val, label, icon) {
+    return `
+      <div class="stat">
+        <div class="stat-icon ${cls}">${icon}</div>
+        <div>
+          <div class="stat-value">${PASTEF.utils.formatNumber(val)}</div>
+          <div class="stat-label">${label}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function filterTab(value, label, count) {
+    const active = state.filter === value ? 'active' : '';
+    return `<button class="filter-tab ${active}" data-filter="${value}">${label} (${count})</button>`;
+  }
+
+  function renderAudioCard(a) {
+    const cls = a.statut.toLowerCase().replace('_', '-');
+    const isPlaceholder = a.patriote_nom === 'À transcrire' || !a.patriote_nom;
+    const displayName = isPlaceholder
+      ? '<em style="color:var(--pastef-or)">Nom à transcrire</em>'
+      : `${PASTEF.utils.escapeHtml(a.patriote_prenom || '')} ${PASTEF.utils.escapeHtml(a.patriote_nom || '')}`;
+
+    const phone = a.patriote_telephone
+      ? `${a.patriote_indicatif || ''} ${a.patriote_telephone}`
+      : '—';
+
+    const durationStr = a.duree_secondes
+      ? `${Math.floor(a.duree_secondes / 60)}:${String(a.duree_secondes % 60).padStart(2, '0')}`
+      : '—';
+
+    const coordBlock = a.coord_id
+      ? `<div class="audio-coord-info">Assigné à <strong>${PASTEF.utils.escapeHtml(a.coord_prenom + ' ' + a.coord_nom)}</strong> · ${PASTEF.utils.escapeHtml(a.coord_role_libelle || '')}</div>`
+      : `<div class="audio-coord-info unassigned"><strong>Aucun coordinateur assigné</strong></div>`;
+
+    const notesBlock = a.notes_traitement
+      ? `<div class="audio-notes"><strong>Note :</strong> ${PASTEF.utils.escapeHtml(a.notes_traitement)}</div>`
+      : '';
+
+    // Actions selon statut
+    let actions = '';
+    if (a.statut === 'EN_ATTENTE') {
+      actions = `
+        <button class="btn btn-primary btn-sm" data-action="assign" data-id="${a.id}">Affecter</button>
+        <button class="btn btn-ghost btn-sm" data-action="mark-error" data-id="${a.id}">Signaler erreur</button>
+      `;
+    } else if (a.statut === 'EN_COURS') {
+      actions = `
+        <button class="btn btn-primary btn-sm" data-action="assign" data-id="${a.id}">Réaffecter</button>
+        <button class="btn btn-ghost btn-sm" data-action="mark-done" data-id="${a.id}">Marquer traité</button>
+        <button class="btn btn-ghost btn-sm" data-action="mark-error" data-id="${a.id}">Signaler erreur</button>
+      `;
+    } else if (a.statut === 'TRAITE') {
+      actions = `<button class="btn btn-ghost btn-sm" data-action="reopen" data-id="${a.id}">Rouvrir</button>`;
+    } else if (a.statut === 'ERREUR') {
+      actions = `
+        <button class="btn btn-primary btn-sm" data-action="assign" data-id="${a.id}">Réaffecter</button>
+        <button class="btn btn-ghost btn-sm" data-action="reopen" data-id="${a.id}">Remettre en attente</button>
+      `;
+    }
+
+    return `
+      <div class="audio-card ${cls}" data-id="${a.id}">
+        <div class="audio-main">
+          <div class="audio-meta">
+            <strong>${displayName}</strong>
+            <span class="separator">•</span>
+            <span>${PASTEF.utils.escapeHtml(phone)}</span>
+            <span class="separator">•</span>
+            <span>${durationStr}</span>
+            <span class="separator">•</span>
+            <span>${PASTEF.utils.formatDateTime(a.created_at)}</span>
+            <span class="badge-statut ${a.statut}">${statutLabel(a.statut)}</span>
+          </div>
+
+          <div class="audio-player-row" data-path="${PASTEF.utils.escapeHtml(a.fichier_path || '')}">
+            <button class="audio-load-btn" data-action="load-audio" data-id="${a.id}">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              Charger l'audio
+            </button>
+          </div>
+
+          ${coordBlock}
+          ${notesBlock}
+        </div>
+
+        <div class="audio-actions">${actions}</div>
+      </div>
+    `;
+  }
+
+  function emptyState() {
+    return `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </div>
+        <div class="empty-title">Aucun enregistrement dans cette catégorie</div>
+        <div class="empty-text">Les nouveaux audios arriveront ici dès leur envoi par les patriotes.</div>
+      </div>
+    `;
+  }
+
+  function statutLabel(s) {
+    return { EN_ATTENTE: 'En attente', EN_COURS: 'En cours', TRAITE: 'Traité', ERREUR: 'Erreur' }[s] || s;
+  }
+
+  // ============================================================
+  // ICONS
+  // ============================================================
+  function iconClock() {
+    return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>`;
+  }
+  function iconLoader() {
+    return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+    </svg>`;
+  }
+  function iconCheck() {
+    return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>`;
+  }
+  function iconAlert() {
+    return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>`;
+  }
+
+  // ============================================================
+  // LISTENERS
+  // ============================================================
+  function attachStaticListeners() {
+    // Modal
+    document.getElementById('assignModalClose').addEventListener('click', closeAssignModal);
+    document.getElementById('assignCancel').addEventListener('click', closeAssignModal);
+    document.getElementById('assignConfirm').addEventListener('click', confirmAssign);
+    document.getElementById('coordSearch').addEventListener('input', filterCoordList);
+    document.getElementById('assignModal').addEventListener('click', (e) => {
+      if (e.target.id === 'assignModal') closeAssignModal();
+    });
+  }
+
+  function attachDynamicListeners() {
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.filter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    // Search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      let searchTimer;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          state.search = e.target.value;
+          render();
+          // Refocus input après re-render
+          const newInput = document.getElementById('searchInput');
+          if (newInput) {
+            newInput.focus();
+            newInput.setSelectionRange(newInput.value.length, newInput.value.length);
+          }
+        }, 250);
+      });
+    }
+
+    // Actions par bouton
+    document.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', handleAction);
+    });
+  }
+
+  async function handleAction(e) {
+    const btn = e.currentTarget;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+
+    switch (action) {
+      case 'load-audio':
+        await loadAudioForPlayback(id, btn);
+        break;
+      case 'assign':
+        openAssignModal(id);
+        break;
+      case 'mark-done':
+        await updateStatut(id, 'TRAITE', 'Marquer comme traité ?');
+        break;
+      case 'mark-error':
+        await updateStatut(id, 'ERREUR', 'Signaler cet audio comme non exploitable ?');
+        break;
+      case 'reopen':
+        await updateStatut(id, 'EN_ATTENTE', 'Remettre en attente ?');
+        break;
+    }
+  }
+
+  // ============================================================
+  // AUDIO PLAYBACK — génère une URL signée à la demande
+  // ============================================================
+  async function loadAudioForPlayback(audioId, btn) {
+    const audio = state.audios.find(a => a.id === audioId);
+    if (!audio || !audio.fichier_path) {
+      showToast('Fichier introuvable', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span> Chargement…';
+
+    try {
+      // Retire le préfixe du bucket si présent
+      let path = audio.fichier_path;
+      if (path.startsWith(BUCKET + '/')) path = path.slice(BUCKET.length + 1);
+
+      const { data, error } = await PASTEF.supabase
+        .storage
+        .from(BUCKET)
+        .createSignedUrl(path, SIGNED_URL_TTL);
+
+      if (error) throw error;
+
+      // Remplace le bouton par un vrai lecteur audio
+      const row = btn.closest('.audio-player-row');
+      row.innerHTML = `
+        <audio controls preload="metadata" style="width:100%; height:36px;">
+          <source src="${data.signedUrl}" />
+          Votre navigateur ne supporte pas la lecture audio.
+        </audio>
+      `;
+    } catch (err) {
+      console.error('[audio] signedUrl', err);
+      showToast('Impossible de charger l\'audio : ' + err.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Réessayer`;
+    }
+  }
+
+  // ============================================================
+  // STATUT — RPC changer_statut_audio
+  // ============================================================
+  async function updateStatut(audioId, nouveauStatut, confirmMsg) {
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const { error } = await PASTEF.supabase.rpc('changer_statut_audio', {
+        p_audio_id: audioId,
+        p_nouveau_statut: nouveauStatut,
+      });
+
+      if (error) throw error;
+
+      // Update local
+      const audio = state.audios.find(a => a.id === audioId);
+      if (audio) {
+        audio.statut = nouveauStatut;
+        audio.updated_at = new Date().toISOString();
+      }
+
+      showToast('Statut mis à jour ✓', 'success');
+      render();
+    } catch (err) {
+      console.error('[statut]', err);
+      showToast('Erreur : ' + err.message, 'error');
+    }
+  }
+
+  // ============================================================
+  // MODAL — Assignation coordinateur
+  // ============================================================
+  function openAssignModal(audioId) {
+    state.currentAudioId = audioId;
+    state.selectedCoordId = null;
+
+    const audio = state.audios.find(a => a.id === audioId);
+    // Si déjà assigné, pré-sélectionner ce coordinateur
+    if (audio && audio.coord_id) {
+      state.selectedCoordId = audio.coord_id;
+    }
+
+    document.getElementById('assignNotes').value = audio && audio.notes_traitement || '';
+    document.getElementById('coordSearch').value = '';
+    renderCoordList('');
+    updateConfirmButton();
+
+    document.getElementById('assignModal').hidden = false;
+    setTimeout(() => document.getElementById('coordSearch').focus(), 50);
+  }
+
+  function closeAssignModal() {
+    document.getElementById('assignModal').hidden = true;
+    state.currentAudioId = null;
+    state.selectedCoordId = null;
+  }
+
+  function filterCoordList(e) {
+    renderCoordList(e.target.value);
+  }
+
+  function renderCoordList(query) {
+    const q = (query || '').toLowerCase().trim();
+    const filtered = state.coordinateurs.filter(c => {
+      if (!q) return true;
+      const hay = [c.prenom, c.nom, c.telephone, c.role_libelle, c.zone]
+        .filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+    const container = document.getElementById('coordList');
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-text" style="padding:20px 0;text-align:center">Aucun coordinateur trouvé.</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(c => {
+      const initials = ((c.prenom || '')[0] || '') + ((c.nom || '')[0] || '');
+      const selected = state.selectedCoordId === c.id ? 'selected' : '';
+      return `
+        <div class="coord-item ${selected}" data-coord-id="${c.id}">
+          <div class="coord-avatar">${initials.toUpperCase()}</div>
+          <div class="coord-info">
+            <div class="coord-name">${PASTEF.utils.escapeHtml(c.prenom || '')} ${PASTEF.utils.escapeHtml(c.nom || '')}</div>
+            <div class="coord-role">${PASTEF.utils.escapeHtml(c.role_libelle || '')}</div>
+            <div class="coord-zone">📍 ${PASTEF.utils.escapeHtml(c.zone || 'National')}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Click handlers
+    container.querySelectorAll('.coord-item').forEach(item => {
+      item.addEventListener('click', () => {
+        state.selectedCoordId = item.dataset.coordId;
+        container.querySelectorAll('.coord-item').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        updateConfirmButton();
+      });
+    });
+  }
+
+  function updateConfirmButton() {
+    const btn = document.getElementById('assignConfirm');
+    btn.disabled = !state.selectedCoordId;
+  }
+
+  async function confirmAssign() {
+    if (!state.currentAudioId || !state.selectedCoordId) return;
+
+    const btn = document.getElementById('assignConfirm');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span> Affectation…';
+
+    try {
+      const notes = document.getElementById('assignNotes').value.trim() || null;
+
+      const { error } = await PASTEF.supabase.rpc('affecter_audio_coordinateur', {
+        p_audio_id: state.currentAudioId,
+        p_coordinateur_id: state.selectedCoordId,
+        p_notes: notes,
+      });
+
+      if (error) throw error;
+
+      // Recharger les données (le join a bougé)
+      await loadData();
+      closeAssignModal();
+      showToast('Audio affecté au coordinateur ✓', 'success');
+      render();
+    } catch (err) {
+      console.error('[assign]', err);
+      showToast('Erreur : ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Affecter';
+    }
+  }
+
+  // ============================================================
+  // TOAST
+  // ============================================================
+  function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type || '');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.3s';
+      setTimeout(() => t.remove(), 300);
+    }, 3000);
+  }
+
+})();
+</script>
+
+</body>
+</html>
