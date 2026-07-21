@@ -140,7 +140,6 @@
     .selector-row { grid-template-columns: 1fr; }
   }
 
-  /* Stats principales d'une section */
   .section-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -191,7 +190,6 @@
   .icon-red { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
   .icon-ink { background: var(--bg); color: var(--ink); }
 
-  /* Coordinator card */
   .coord-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -253,7 +251,6 @@
 
   .coord-empty svg { opacity: 0.3; margin-bottom: 8px; }
 
-  /* Membres récents */
   .recent-list {
     display: flex;
     flex-direction: column;
@@ -286,7 +283,6 @@
   .recent-name { font-size: 13px; font-weight: 600; }
   .recent-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-  /* Pas de sélection */
   .placeholder {
     background: var(--card);
     border: 2px dashed var(--border);
@@ -321,7 +317,6 @@
     margin: 0 auto;
   }
 
-  /* Section title */
   .section-title {
     font-size: 13px;
     font-weight: 700;
@@ -342,7 +337,6 @@
     border-radius: 2px;
   }
 
-  /* Actions header */
   .section-actions {
     display: flex;
     justify-content: space-between;
@@ -350,7 +344,6 @@
     margin-bottom: 16px;
   }
 
-  /* Chart container */
   .chart-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -360,7 +353,6 @@
 
   .chart-wrap { height: 240px; position: relative; }
 
-  /* Activités placeholder (en attendant la table activites) */
   .info-strip {
     background: var(--pastef-or-soft);
     border-left: 3px solid var(--pastef-or);
@@ -402,22 +394,36 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../../shared/supabase-client.js"></script>
+<script src="../../js/data-loader.js"></script>
 <script src="../../shared/utils.js"></script>
 <script src="../../shared/auth.js"></script>
 <script src="../../shared/sidebar.js"></script>
 <script src="../../shared/topbar.js"></script>
 
 <script>
+/* ============================================
+   Sections Communales — v3 (schéma normalisé)
+   Utilise v_patriotes + ref.* via PASTEF_DATA
+   ============================================ */
+
 let allMembers = [];
-let allCommunesRows = [];   // 🆕 référentiel officiel, depuis la table `communes`
-let regroupements = {};     // clé: "region::departement::commune"
-let orphanMembers = [];     // 🆕 patriotes du Sénégal qu'on n'a pas pu rattacher précisément
+let communeRefs = [];       // [{id, nom, dept_id, dept_nom, region_id, region_nom}]
+let regroupements = {};     // clé: commune_id → {region, departement, commune, commune_id, members[]}
+let orphanMembers = [];
+
+// Lookups construits au chargement
+let regionMap = {};         // id → {id, nom}
+let deptMap = {};           // id → {id, nom, region_id}
+let communeMap = {};        // id → {id, nom, departement_id, dept_nom, region_nom}
 
 (async function () {
   'use strict';
 
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
+
+  // ── Charger les données de référence ──
+  await window.PASTEF_DATA.init();
 
   PASTEF.sidebar.render(session, 'sec-communales');
   PASTEF.topbar.render({
@@ -427,24 +433,57 @@ let orphanMembers = [];     // 🆕 patriotes du Sénégal qu'on n'a pas pu ratt
   });
 
   try {
-    // 🆕 On charge en parallèle les inscrits ET le référentiel officiel
-    // des communes (région → département → commune), pour afficher
-    // TOUTES les communes du Sénégal — pas seulement celles qui ont déjà
-    // au moins un inscrit.
-    const [membersRes, communesRes] = await Promise.all([
-      PASTEF.supabase.from(PASTEF.TABLE).select('*').order('created_at', { ascending: false }).limit(5000),
-      PASTEF.supabase.from('communes').select('region,departement,commune').eq('active', true),
-    ]);
+    // ── 1. Construire le référentiel complet : Régions → Départements → Communes ──
+    const regions = window.PASTEF_DATA.getRegions() || [];
+    regionMap = Object.fromEntries(regions.map(r => [r.id, r]));
 
-    if (membersRes.error) throw membersRes.error;
-    allMembers = membersRes.data || [];
+    // Charger TOUS les départements (en parallèle par région)
+    const deptArrays = await Promise.all(
+      regions.map(r => window.PASTEF_DATA.getDepartements(r.id))
+    );
+    const allDepts = [];
+    deptArrays.forEach((depts, i) => {
+      depts.forEach(d => {
+        const enriched = { ...d, region_id: regions[i].id, region_nom: regions[i].nom };
+        allDepts.push(enriched);
+        deptMap[d.id] = enriched;
+      });
+    });
 
-    if (communesRes.error) {
-      console.warn('[PASTEF] Table communes indisponible, repli sur regroupement par quartier', communesRes.error);
-      allCommunesRows = [];
-    } else {
-      allCommunesRows = communesRes.data || [];
-    }
+    // Charger TOUTES les communes (en parallèle par département)
+    const commArrays = await Promise.all(
+      allDepts.map(d => window.PASTEF_DATA.getCommunes(d.id))
+    );
+    communeRefs = [];
+    commArrays.forEach((comms, i) => {
+      comms.forEach(c => {
+        const ref = {
+          id: c.id,
+          nom: c.nom,
+          dept_id: allDepts[i].id,
+          dept_nom: allDepts[i].nom,
+          region_id: allDepts[i].region_id,
+          region_nom: allDepts[i].region_nom,
+        };
+        communeRefs.push(ref);
+        communeMap[c.id] = ref;
+      });
+    });
+
+    console.log(`[Sections] Référentiel chargé : ${regions.length} régions, ${allDepts.length} départements, ${communeRefs.length} communes`);
+
+    // ── 2. Charger les patriotes depuis v_patriotes ──
+    const { data: membersData, error: membersErr } = await PASTEF.supabase
+      .from('v_patriotes')
+      .select('*')
+      .eq('est_senegal', true)
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    if (membersErr) throw membersErr;
+    allMembers = membersData || [];
+
+    console.log(`[Sections] ${allMembers.length} patriotes chargés`);
 
     buildRegroupements();
     buildPage();
@@ -460,72 +499,99 @@ let orphanMembers = [];     // 🆕 patriotes du Sénégal qu'on n'a pas pu ratt
 })();
 
 // ============================================
-// 🆕 REGROUPEMENT — basé sur la table `communes` (source de vérité),
-// avec repli sur l'ancienne méthode (région + quartier) si la table
-// est inaccessible.
+// NORMALISATION — texte accents insensible
+// ============================================
+function norm(v) {
+  return (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+// ============================================
+// REGROUPEMENT — basé sur le référentiel ref.*
+// + rattachement des patriotes via commune_id
+// ou fallback par nom de commune
 // ============================================
 function buildRegroupements() {
   regroupements = {};
   orphanMembers = [];
 
-  if (allCommunesRows.length) {
-    // 1) Toutes les communes officielles d'abord (même à 0 patriote)
-    allCommunesRows.forEach((c) => {
-      const key = `${c.region}::${c.departement}::${c.commune}`;
-      regroupements[key] = { region: c.region, departement: c.departement, commune: c.commune, members: [] };
-    });
+  // 1. Créer un slot pour chaque commune officielle (même à 0 patriote)
+  communeRefs.forEach(c => {
+    regroupements[c.id] = {
+      commune_id: c.id,
+      region: c.region_nom,
+      departement: c.dept_nom,
+      commune: c.nom,
+      members: [],
+    };
+  });
 
-    // Index de secours région+commune (pour les inscriptions historiques
-    // qui n'ont pas encore de département renseigné)
-    const byRegionCommune = {};
-    Object.values(regroupements).forEach((r) => {
-      const k2 = `${r.region}::${r.commune}`;
-      (byRegionCommune[k2] = byRegionCommune[k2] || []).push(r);
-    });
+  // Index par nom pour le fallback
+  const byName = {};
+  communeRefs.forEach(c => {
+    const key = norm(c.region_nom) + '::' + norm(c.nom);
+    (byName[key] = byName[key] || []).push(c);
+  });
 
-    // 2) On rattache chaque patriote à SA commune officielle
-    allMembers
-      .filter((m) => m.pays === 'Sénégal')
-      .forEach((m) => {
-        const commune = m.commune || m.quartier;
-        if (!m.region || !commune) { orphanMembers.push(m); return; }
+  // 2. Rattacher chaque patriote à sa commune
+  allMembers.forEach(m => {
+    // v_patriotes peut fournir commune_id directement ou des noms texte
+    // Essayer d'abord par commune_id
+    if (m.commune_id && regroupements[m.commune_id]) {
+      regroupements[m.commune_id].members.push(m);
+      return;
+    }
 
-        const exactKey = `${m.region}::${m.departement}::${commune}`;
-        if (m.departement && regroupements[exactKey]) {
-          regroupements[exactKey].members.push(m);
-          return;
-        }
+    // Fallback par noms texte (champs résolus par la vue v_patriotes)
+    const communeName = m.commune || m.quartier;
+    const regionName = m.region;
+    if (!regionName || !communeName) {
+      orphanMembers.push(m);
+      return;
+    }
 
-        const candidates = byRegionCommune[`${m.region}::${commune}`];
-        if (candidates && candidates.length === 1) {
-          candidates[0].members.push(m);
-          return;
-        }
+    const key = norm(regionName) + '::' + norm(communeName);
+    const candidates = byName[key];
+    if (candidates && candidates.length === 1) {
+      regroupements[candidates[0].id].members.push(m);
+      return;
+    }
 
-        // Nom de commune introuvable dans le référentiel officiel, ou
-        // ambigu (existe dans plusieurs départements de la région) —
-        // on ne devine pas, on le compte à part.
-        orphanMembers.push(m);
-      });
-  } else {
-    // Repli : ancien comportement si `communes` est inaccessible
-    allMembers
-      .filter((m) => m.pays === 'Sénégal' && m.region && (m.commune || m.quartier))
-      .forEach((m) => {
-        const commune = m.commune || m.quartier;
-        const key = `${m.region}::__::${commune}`;
-        if (!regroupements[key]) regroupements[key] = { region: m.region, departement: null, commune, members: [] };
-        regroupements[key].members.push(m);
-      });
-  }
+    // Ambigu ou introuvable
+    orphanMembers.push(m);
+  });
+}
+
+// ============================================
+// HELPER — accès aux champs de v_patriotes
+// (la vue peut nommer les colonnes différemment)
+// ============================================
+function getMemberSexe(m) {
+  return m.sexe || m.sexe_libelle || '';
+}
+
+function isFemme(m) {
+  const s = getMemberSexe(m).toLowerCase();
+  return s === 'femme' || s === 'féminin' || s === 'f';
+}
+
+function getMemberCellule(m) {
+  return m.cellule || m.cellule_nom || m.nom_cellule || '';
+}
+
+function getMemberFonction(m) {
+  return m.fonction_parti || m.fonction_cellule || m.fonction || '';
+}
+
+function hasCellule(m) {
+  return m.fait_partie_cellule === true || !!getMemberCellule(m);
 }
 
 // ============================================
 // SÉLECTEUR — 3 niveaux : Région → Département → Commune
 // ============================================
 function buildPage() {
-  const regions = [...new Set(Object.values(regroupements).map((r) => r.region))].sort();
-  const communesCount = Object.keys(regroupements).length;
+  const regions = [...new Set(communeRefs.map(c => c.region_nom))].sort();
+  const communesCount = communeRefs.length;
 
   document.getElementById('content').innerHTML = `
     <!-- SÉLECTEUR -->
@@ -543,7 +609,7 @@ function buildPage() {
           <label>Région</label>
           <select class="selector-select" id="regionFilter">
             <option value="">Toutes régions</option>
-            ${regions.map((r) => `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`).join('')}
+            ${regions.map(r => `<option value="${PASTEF.utils.escapeHtml(r)}">${PASTEF.utils.escapeHtml(r)}</option>`).join('')}
           </select>
         </div>
 
@@ -605,11 +671,11 @@ function onRegionChange(e) {
   }
 
   const departements = [...new Set(
-    Object.values(regroupements).filter((r) => r.region === region).map((r) => r.departement).filter(Boolean)
+    communeRefs.filter(c => c.region_nom === region).map(c => c.dept_nom).filter(Boolean)
   )].sort();
 
   depSel.innerHTML = `<option value="">Tous départements</option>` +
-    departements.map((d) => `<option value="${PASTEF.utils.escapeHtml(d)}">${PASTEF.utils.escapeHtml(d)}</option>`).join('');
+    departements.map(d => `<option value="${PASTEF.utils.escapeHtml(d)}">${PASTEF.utils.escapeHtml(d)}</option>`).join('');
   depSel.disabled = false;
 
   populateCommunesForFilter(region, '');
@@ -647,37 +713,62 @@ async function showCommune() {
   const data = regroupements[key];
   const members = data.members;
   const stats = computeSectionStats(members);
-  const coord = findCoordinator(members);
+  const coord = findCoordinator(data);
 
   document.getElementById('communeDetail').innerHTML = renderCommuneDetail(data, stats, coord);
   renderGenreChart(stats);
 
-  // 🆕 Cellules réellement enregistrées en base pour CETTE commune
-  // exactement (pas d'élargissement ici : c'est une vue de reporting,
-  // pas un outil d'affectation — on veut voir ce qui existe vraiment,
-  // pas des cellules voisines).
+  // Cellules réellement enregistrées en base pour CETTE commune
   const cellulesDB = await fetchCellulesForCommune(data);
   updateCellulesBlock(cellulesDB, members);
 }
 
+window.showCommune = showCommune;
+
 async function fetchCellulesForCommune(data) {
   try {
+    // Requête avec UUID commune_id (pas de texte)
     let q = PASTEF.supabase
       .from('cellules')
-      .select('id,nom,type')
-      .ilike('pays', 'Sénégal')
-      .eq('active', true)
-      .eq('commune', data.commune);
+      .select('id, nom, type_cellule_id, statut')
+      .eq('statut', 'ACTIVE')
+      .is('deleted_at', null);
 
-    if (data.region) q = q.eq('region', data.region);
-    if (data.departement) q = q.eq('departement', data.departement);
+    if (data.commune_id) {
+      q = q.eq('commune_id', data.commune_id);
+    } else {
+      // Pas de commune_id — pas de résultat fiable
+      return [];
+    }
 
     const { data: rows, error } = await q.order('nom', { ascending: true });
-    if (error) { console.error('[PASTEF] Erreur chargement cellules commune', error); return []; }
+    if (error) { console.error('[Sections] Erreur chargement cellules', error); return []; }
     return rows || [];
   } catch (err) {
     console.error(err);
     return [];
+  }
+}
+
+// Chercher le coordinateur communal de cette commune dans la table coordinateurs
+async function findCoordinator(data) {
+  if (!data.commune_id) return null;
+
+  try {
+    const communalRoleId = 'c149d628-6e4f-41ab-b097-19f25603f2ed';
+    const { data: coord, error } = await PASTEF.supabase
+      .from('coordinateurs')
+      .select('id, prenom, nom, telephone, email')
+      .eq('commune_id', data.commune_id)
+      .eq('role_id', communalRoleId)
+      .eq('statut', 'ACTIF')
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error) { console.warn('[Sections] Lookup coord:', error.message); return null; }
+    return coord;
+  } catch {
+    return null;
   }
 }
 
@@ -748,12 +839,12 @@ function renderCommuneDetail(data, stats, coord) {
       </div>
     </div>
 
-    <!-- Layout 2 colonnes : Coordinateur + Démographie | Cellules + Récents -->
+    <!-- Layout 2 colonnes -->
     <div class="grid grid-1-2">
       <div>
-        <div class="coord-card">
+        <div class="coord-card" id="coordCard">
           <div class="coord-eyebrow">Coordinateur communal</div>
-          ${renderCoordinator(coord)}
+          <div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:13px">Chargement…</div>
         </div>
 
         <div class="chart-card" style="margin-top:16px">
@@ -772,7 +863,7 @@ function renderCommuneDetail(data, stats, coord) {
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
-          <span><strong>Activités menées</strong> — Les activités saisies par le coordinateur communal apparaîtront ici. Module en cours d'intégration avec la nouvelle base de données.</span>
+          <span><strong>Activités menées</strong> — Les activités saisies par le coordinateur communal apparaîtront ici. Module en cours d'intégration.</span>
         </div>
 
         <div class="chart-card">
@@ -795,14 +886,14 @@ function renderCommuneDetail(data, stats, coord) {
             </div>
           </div>
           <div class="recent-list">
-            ${data.members.slice(0, 6).map((m) => `
+            ${data.members.slice(0, 6).map(m => `
               <div class="recent-item">
-                <div class="recent-avatar ${m.sexe === 'Femme' ? 'female' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
+                <div class="recent-avatar ${isFemme(m) ? 'female' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
                 <div style="flex:1;min-width:0">
                   <div class="recent-name">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
                   <div class="recent-meta">${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.formatDate(m.created_at)}</div>
                 </div>
-                ${m.cellule ? `<span class="badge badge-green">${PASTEF.utils.escapeHtml(m.cellule)}</span>` : `<span class="badge badge-neutral">Sans</span>`}
+                ${getMemberCellule(m) ? `<span class="badge badge-green">${PASTEF.utils.escapeHtml(getMemberCellule(m))}</span>` : `<span class="badge badge-neutral">Sans</span>`}
               </div>
             `).join('') || '<div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:13px">Aucun patriote inscrit pour le moment.</div>'}
           </div>
@@ -810,16 +901,27 @@ function renderCommuneDetail(data, stats, coord) {
       </div>
     </div>
   `;
+
+  // Charger le coordinateur de manière async puis mettre à jour la carte
+  loadAndRenderCoordinator(data);
 }
 
-// 🆕 Met à jour le bloc Cellules une fois la requête Supabase terminée
-// (fusionne les cellules officiellement enregistrées avec les mentions
-// libres des patriotes, pour ne rien perdre)
+async function loadAndRenderCoordinator(data) {
+  const coord = await findCoordinator(data);
+  const cardEl = document.getElementById('coordCard');
+  if (!cardEl) return;
+
+  cardEl.innerHTML = `
+    <div class="coord-eyebrow">Coordinateur communal</div>
+    ${renderCoordinator(coord)}
+  `;
+}
+
 function updateCellulesBlock(cellulesDB, members) {
   const kpiEl = document.getElementById('kpiCellules');
   const subEl = document.getElementById('cellulesSub');
   const boxEl = document.getElementById('cellulesListBox');
-  if (!boxEl) return; // l'utilisateur a changé de commune entre-temps
+  if (!boxEl) return;
 
   if (kpiEl) kpiEl.textContent = PASTEF.utils.formatNumber(cellulesDB.length);
 
@@ -834,30 +936,23 @@ function updateCellulesBlock(cellulesDB, members) {
 
 function mergeCellules(cellulesDB, members) {
   const countByName = {};
-  members.forEach((m) => { if (m.cellule) countByName[m.cellule] = (countByName[m.cellule] || 0) + 1; });
+  members.forEach(m => {
+    const cellName = getMemberCellule(m);
+    if (cellName) countByName[cellName] = (countByName[cellName] || 0) + 1;
+  });
 
   const known = new Set();
-  const list = cellulesDB.map((c) => {
+  const list = cellulesDB.map(c => {
     known.add(c.nom);
     return { name: c.nom, count: countByName[c.nom] || 0, official: true };
   });
 
-  // Mentions de cellule mentionnées par des patriotes mais absentes de la
-  // table `cellules` (texte libre "Autre cellule (préciser)" par ex.) —
-  // on les affiche quand même pour ne perdre aucune donnée.
   Object.entries(countByName).forEach(([name, count]) => {
     if (!known.has(name)) list.push({ name, count, official: false });
   });
 
   list.sort((a, b) => b.count - a.count);
   return list;
-}
-
-function findCoordinator(members) {
-  // 🆕 Les libellés exacts viennent maintenant de la table fonctions_cellule
-  // ("Coordinateur / Coordinatrice", pas juste "Coordinateur")
-  return members.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
-      || members.find((m) => m.fonction_cellule?.startsWith('Coordinateur'));
 }
 
 function renderCoordinator(coord) {
@@ -868,7 +963,7 @@ function renderCoordinator(coord) {
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
         <div style="font-weight:600;color:var(--text);margin-bottom:4px">Aucun coordinateur</div>
-        <div style="font-size:12px">Aucune personne n'est désignée comme coordinateur dans cette commune.</div>
+        <div style="font-size:12px">Aucune personne n'est désignée comme coordinateur communal dans cette commune.</div>
       </div>
     `;
   }
@@ -876,7 +971,7 @@ function renderCoordinator(coord) {
   return `
     <div class="coord-avatar">${PASTEF.utils.initials(coord.prenom, coord.nom)}</div>
     <div class="coord-name">${PASTEF.utils.escapeHtml(coord.prenom || '')} ${PASTEF.utils.escapeHtml(coord.nom || '')}</div>
-    <div class="coord-fn">${PASTEF.utils.escapeHtml(coord.fonction_cellule || 'Coordinateur')}</div>
+    <div class="coord-fn">Coordinateur communal</div>
 
     <div class="coord-contact">
       <div class="coord-contact-row">
@@ -885,12 +980,14 @@ function renderCoordinator(coord) {
         </svg>
         <span class="font-mono">${PASTEF.utils.escapeHtml(coord.telephone || '—')}</span>
       </div>
+      ${coord.email ? `
       <div class="coord-contact-row">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
         </svg>
-        <span>${PASTEF.utils.escapeHtml(coord.commune || coord.quartier || coord.region || '—')}</span>
+        <span>${PASTEF.utils.escapeHtml(coord.email)}</span>
       </div>
+      ` : ''}
     </div>
   `;
 }
@@ -900,11 +997,11 @@ function renderCellulesList(cellules) {
     return `<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Aucune cellule recensée dans cette commune.</div>`;
   }
 
-  const max = Math.max(...cellules.map((c) => c.count), 1);
+  const max = Math.max(...cellules.map(c => c.count), 1);
 
   return `
     <div style="display:flex;flex-direction:column;gap:10px">
-      ${cellules.slice(0, 8).map((c) => {
+      ${cellules.slice(0, 8).map(c => {
         const pct = Math.round((c.count / max) * 100);
         return `
           <div>
@@ -924,16 +1021,16 @@ function renderCellulesList(cellules) {
 
 function computeSectionStats(members) {
   const total = members.length;
-  const hommes = members.filter((m) => m.sexe === 'Homme').length;
+  const hommes = members.filter(m => !isFemme(m)).length;
   const femmes = total - hommes;
 
   const now = new Date();
   const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
+  const thisMonth = members.filter(m => new Date(m.created_at) >= startMonth).length;
 
-  const sansCellule = members.filter((m) => m.appartient_cellule?.toLowerCase() !== 'oui' || !m.cellule).length;
+  const sansCellule = members.filter(m => !hasCellule(m)).length;
 
-  const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+  const eng = members.filter(m => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
   const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
 
   return { total, hommes, femmes, thisMonth, sansCellule, engagementMoyen };
@@ -966,14 +1063,13 @@ function renderGenreChart(stats) {
   });
 }
 
-function downloadReport(commune, format) {
+window.downloadReport = function (commune, format) {
   PASTEF.utils.toast(
     `Rapport ${format.toUpperCase()} bientôt disponible`,
     'Module de génération en cours de développement',
     { color: 'var(--pastef-or)' }
   );
-  // À implémenter en Phase 5 : génération PDF/Excel
-}
+};
 </script>
 
 </body>

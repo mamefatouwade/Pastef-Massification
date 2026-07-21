@@ -1348,16 +1348,31 @@ $$('input[name="possedeCartePastef"]').forEach(radio => {
     $('#modalCloseBtn').addEventListener('click', closeSuccessModal);
 
     window.addEventListener('online', () => {
-      isOnline = true;
-      updateNetworkBanner();
-      const n = getPending().length;
-      PASTEF_AUDIO.countRecordings().then(a => { if (n + a > 0) syncPending(); });
-    });
-    window.addEventListener('offline', () => { isOnline = false; updateNetworkBanner(); });
+  isOnline = true;
+  updateNetworkBanner();
+  const n = getPending().length;
+  
+  if (window.PASTEF_AUDIO) {
+    PASTEF_AUDIO.countRecordings()
+      .then(a => { if (n + a > 0) syncPending(); })
+      .catch(err => {
+        console.warn('[PASTEF] Erreur countRecordings:', err);
+        if (n > 0) syncPending();
+      });
+  } else {
+    console.warn('[PASTEF] Module audio non disponible');
+    if (n > 0) syncPending();
+  }
+});
 
-    const today = new Date().toISOString().split('T')[0];
-    $('#dateNaissance').setAttribute('max', today);
-    $('#dateNaissance').setAttribute('min', '1900-01-01');
+window.addEventListener('offline', () => { 
+  isOnline = false; 
+  updateNetworkBanner(); 
+});
+
+const today = new Date().toISOString().split('T')[0];
+$('#dateNaissance').setAttribute('max', today);
+$('#dateNaissance').setAttribute('min', '1900-01-01');
 
     console.log('[PASTEF] Formulaire initialisé — v3 (schéma normalisé)');
   }

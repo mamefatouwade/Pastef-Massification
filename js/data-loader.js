@@ -69,6 +69,7 @@ async function fetchAndCache(key, table, params) {
       fetchAndCache('types_usage',        'ref.types_usage',         { order: 'rang.asc' }),
       fetchAndCache('modes_enrolement',   'ref.modes_enrolement',    { order: 'code.asc' }),
       fetchAndCache('regions',            'ref.regions',             { order: 'nom.asc' }),
+      fetchAndCache('roles_coordinateur', 'ref.roles_coordinateur', { order: 'niveau.asc' }),
     ];
 
     await Promise.allSettled(promises);
@@ -298,7 +299,9 @@ async function fetchAndCache(key, table, params) {
     { code: '+34',  name: 'Espagne',  iso2: 'ES', flag: '🇪🇸' },
     { code: '+1',   name: 'USA',      iso2: 'US', flag: '🇺🇸' },
   ];
-
+function getRolesCoordinateur() {
+  return _cache.roles_coordinateur || [];
+}
   // ============================================
   // EXPORT
   // ============================================
@@ -322,6 +325,7 @@ async function fetchAndCache(key, table, params) {
     getDialCodes,
     getIndicatifByPaysId,
     getModeEnrolementId,
+    getRolesCoordinateur,
 
     // Getters asynchrones (cascading — fetch si pas en cache)
     getDepartements,

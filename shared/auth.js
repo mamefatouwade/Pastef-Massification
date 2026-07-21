@@ -1,5 +1,6 @@
 /* ============================================
-   PASTEF — Authentification & Rôles
+   PASTEF — Authentification & Rôles (v2)
+   Adapté au schéma normalisé
    ============================================ */
 
 (function () {
@@ -7,10 +8,22 @@
 
   const PASTEF = window.PASTEF || (window.PASTEF = {});
 
-  /**
-   * Récupère la session courante.
-   * @returns {Promise<{user, session, role} | null>}
-   */
+  // Mapping codes DB → codes frontend (utilisés pour le routing)
+  const ROLE_CODE_MAP = {
+    'ADMIN_PRINCIPAL': 'admin',
+    'DEPARTEMENTAL':   'departemental',
+    'COMMUNAL':        'communal',
+    'DIASPORA':        'diaspora',
+  };
+
+  // Mapping inverse : frontend → DB
+  const ROLE_CODE_MAP_REVERSE = {
+    'admin':          'ADMIN_PRINCIPAL',
+    'departemental':  'DEPARTEMENTAL',
+    'communal':       'COMMUNAL',
+    'diaspora':       'DIASPORA',
+  };
+
   async function getCurrentSession() {
     if (!PASTEF.supabase) return null;
 
@@ -18,26 +31,37 @@
       const { data: { session } } = await PASTEF.supabase.auth.getSession();
       if (!session?.user) return null;
 
-      // Récupère le rôle depuis coordinator_accounts (si la table existe)
-      // Sinon fallback : si email = admin principal, role = 'admin'
-      let role = 'admin'; // par défaut pour la phase actuelle
+      let role = null;
       let coordinator = null;
 
       try {
         const { data, error } = await PASTEF.supabase
-          .from('coordinator_accounts')
-          .select('*, cellule:cellule_id(*)')
-          .eq('id', session.user.id)
-          .eq('active', true)
+          .from('coordinateurs')
+          .select('id, auth_user_id, prenom, nom, email, telephone, statut, role_id, region_id, departement_id, commune_id, pays_id, ville_id')
+          .eq('auth_user_id', session.user.id)
+          .eq('statut', 'ACTIF')
           .maybeSingle();
 
         if (!error && data) {
-          role = data.role;
           coordinator = data;
+
+          // Résoudre le rôle depuis le UUID role_id
+          const ROLE_UUID_MAP = {
+            'fec76acc-f42a-4def-ab2f-b09aefbfcb60': 'admin',
+            'd9da9308-ec62-4301-a1c2-284ebd4c6fd2': 'departemental',
+            'c149d628-6e4f-41ab-b097-19f25603f2ed': 'communal',
+            '5d2109e3-f559-489a-aeba-68184f0d745e': 'diaspora',
+          };
+          role = ROLE_UUID_MAP[data.role_id] || null;
+        } else if (error) {
+          console.warn('[PASTEF Auth] Lookup coord error:', error.message);
         }
       } catch (e) {
-        // Table pas encore créée — on garde admin par défaut
+        console.warn('[PASTEF Auth] Exception lookup:', e.message);
       }
+
+      // Si aucun coordinateur trouvé mais session valide → admin par défaut (fallback initial setup)
+      if (!role) role = 'admin';
 
       return { user: session.user, session, role, coordinator };
     } catch (e) {
@@ -46,60 +70,40 @@
     }
   }
 
-  /**
-   * Connecte un utilisateur avec email/mot de passe.
-   */
   async function signIn(email, password) {
     if (!PASTEF.supabase) throw new Error('Supabase non disponible');
-
     const { data, error } = await PASTEF.supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
-
     if (error) {
       if (error.message?.includes('Invalid login')) {
         throw new Error('Email ou mot de passe incorrect');
       }
       throw error;
     }
-
     return data;
   }
 
-  /**
-   * Déconnecte l'utilisateur courant.
-   */
   async function signOut() {
     if (!PASTEF.supabase) return;
     await PASTEF.supabase.auth.signOut();
     sessionStorage.clear();
   }
 
-  /**
-   * Protège une page : redirige vers admin.html si non connecté
-   * ou si le rôle n'est pas autorisé.
-   */
   async function requireAuth(allowedRoles = null) {
     const session = await getCurrentSession();
-
     if (!session) {
       window.location.href = resolveAdminPath();
       return null;
     }
-
     if (allowedRoles && !allowedRoles.includes(session.role)) {
-      // Rôle non autorisé → redirige vers son dashboard
       window.location.href = getDashboardPath(session.role);
       return null;
     }
-
     return session;
   }
 
-  /**
-   * Retourne le chemin du dashboard selon le rôle.
-   */
   function getDashboardPath(role) {
     const base = getBasePath();
     const map = {
@@ -111,28 +115,18 @@
     return map[role] || map.admin;
   }
 
-  /**
-   * Détermine la racine du site (utile pour GitHub Pages avec sous-dossier).
-   */
   function getBasePath() {
     const path = window.location.pathname;
     const idx = path.indexOf('/dashboards/');
     if (idx !== -1) return path.substring(0, idx + 1);
-    // Sinon, on suppose qu'on est à la racine ou sur admin.html
     const lastSlash = path.lastIndexOf('/');
     return path.substring(0, lastSlash + 1);
   }
 
-  /**
-   * Chemin vers admin.html (page login).
-   */
   function resolveAdminPath() {
     return `${getBasePath()}admin.html`;
   }
 
-  /**
-   * Libellé humain du rôle.
-   */
   function getRoleLabel(role) {
     const labels = {
       admin: 'Admin Principal',
@@ -143,7 +137,15 @@
     return labels[role] || role;
   }
 
-  // Expose
+  function getRoleIdByCode(code) {
+    // Utilisé au moment de créer un coordinateur : convertit 'communal' → UUID
+    // Cache local rempli par PASTEF_DATA (à condition qu'il ait chargé roles_coordinateur)
+    const roles = window.PASTEF_DATA?.getRolesCoordinateur?.() || [];
+    const dbCode = ROLE_CODE_MAP_REVERSE[code] || code.toUpperCase();
+    const found = roles.find(r => r.code === dbCode);
+    return found ? found.id : null;
+  }
+
   PASTEF.auth = {
     getCurrentSession,
     signIn,
@@ -153,5 +155,8 @@
     getBasePath,
     resolveAdminPath,
     getRoleLabel,
+    getRoleIdByCode,
+    ROLE_CODE_MAP,
+    ROLE_CODE_MAP_REVERSE,
   };
 })();

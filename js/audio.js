@@ -95,15 +95,13 @@
 
   // ─── Upload Storage ───
   async function uploadAudioToStorage(blob, filename) {
-    const cfg = window.SUPABASE_CONFIG;
-    if (!cfg || cfg.url.includes('VOTRE-PROJET')) throw new Error('Config Supabase manquante');
-
-    const sizeMB = blob.size / (1024 * 1024);
-    if (sizeMB > MAX_BLOB_SIZE_MB) throw new Error(`Fichier trop volumineux (${sizeMB.toFixed(1)} Mo)`);
-
-    const bucket = cfg.audioBucket || 'enrolments-audio';
-    const path = `${bucket}/${filename}`;
-    const url = `${cfg.url}/storage/v1/object/${path}`;
+  // ─── 2. Construire l'URL publique ───
+const cfg = window.SUPABASE_CONFIG;
+const bucket = cfg.audioBucket || 'enrolments-audio';
+const cleanPath = storagePath.startsWith(bucket + '/')
+  ? storagePath.slice(bucket.length + 1)
+  : storagePath;
+const fichierUrl = `${cfg.url}/storage/v1/object/public/${bucket}/${cleanPath}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -125,69 +123,75 @@
   }
 
   // ─── Création patriote minimal + enrolements_audio ───
-  async function createAudioEnrolment(record, storagePath) {
-    const sb = window.PASTEF?.supabase;
-    if (!sb) throw new Error('Client Supabase non initialisé');
+  // ─── Création patriote minimal + enrolements_audio ───
+async function createAudioEnrolment(record, storagePath) {
+  const sb = window.PASTEF?.supabase;
+  if (!sb) throw new Error('Client Supabase non initialisé');
 
-    // Récupérer l'ID du mode AUDIO
-    const modeAudioId = PASTEF_DATA.getModeEnrolementId('AUDIO');
-    // Récupérer un sexe par défaut (sera mis à jour après transcription)
-    const sexes = PASTEF_DATA.getSexes();
-    const sexeDefaut = sexes.length > 0 ? sexes[0].id : null;
-    // Pays Sénégal par défaut
-    const senegal = PASTEF_DATA.getPaysSenegal();
-    const senegalId = senegal ? senegal.id : null;
+  // ─── Récupération des IDs de référence ───
+  const modeAudioId = PASTEF_DATA.getModeEnrolementId('AUDIO');
+  if (!modeAudioId) throw new Error('Mode AUDIO introuvable dans ref.modes_enrolement');
 
-    // 1. Créer un patriote minimal
-    const { data: patrioteResult, error: patrioteError } = await sb
-      .from('patriotes')
-      .insert({
-        prenom: (record.nom || '').trim() || 'À transcrire',
-        nom: 'À transcrire',
-        date_naissance: '1900-01-01',
-        sexe_id: sexeDefaut,
-        lieu_naissance: 'À transcrire',
-        nationalite_id: senegalId,
-        pays_residence_id: senegalId,
-        indicatif: record.telephone_indicatif || '+221',
-        telephone: record.telephone_local || '000000000',
-        fait_partie_cellule: false,
-        statut_cellule: 'EN_ATTENTE',
-        engagement_soutenir: false,
-        engagement_participer: false,
-        engagement_oeuvrer: false,
-        mode_enrolement_id: modeAudioId,
-      })
-      .select('id')
-      .single();
+  const sexes = PASTEF_DATA.getSexes();
+  const sexeDefaut = sexes.length > 0 ? sexes[0].id : null;
+  if (!sexeDefaut) throw new Error('Aucun sexe en référence');
 
-    if (patrioteError) throw new Error('Patriote audio: ' + patrioteError.message);
+  const senegal = PASTEF_DATA.getPaysSenegal();
+  const senegalId = senegal ? senegal.id : null;
+  if (!senegalId) throw new Error('Sénégal introuvable dans ref.pays');
 
-    // 2. Créer l'entrée enrolements_audio
-    const { error: audioError } = await sb
-  .from('enrolements_audio')
-  .insert({
-    patriote_id: patrioteResult.id,
-    fichier_url: '', // vide, sera généré à la demande par l'admin
-    fichier_path: storagePath,
-    duree_secondes: record.duration_sec,
-    statut: 'EN_ATTENTE',
-  });
+  // ─── 1. Créer un patriote minimal ───
+  // ⚠️ Ne PAS définir commune_id ni ville_diaspora_id 
+  //     (contrainte chk_patriote_residence : les deux peuvent être NULL)
+  const { data: patrioteResult, error: patrioteError } = await sb
+    .from('patriotes')
+    .insert({
+      prenom: (record.nom || '').trim() || 'À transcrire',
+      nom: 'À transcrire',
+      date_naissance: '1900-01-01',
+      sexe_id: sexeDefaut,
+      lieu_naissance: 'À transcrire',
+      nationalite_id: senegalId,
+      pays_residence_id: senegalId,
+      indicatif: record.telephone_indicatif || '+221',
+      telephone: record.telephone_local || '000000000',
+      fait_partie_cellule: false,
+      statut_cellule: 'EN_ATTENTE',
+      engagement_soutenir: false,
+      engagement_participer: false,
+      engagement_oeuvrer: false,
+      mode_enrolement_id: modeAudioId,
+    })
+    .select('id')
+    .single();
 
-    const { error: audioError } = await sb
-      .from('enrolements_audio')
-      .insert({
-        patriote_id: patrioteResult.id,
-        fichier_url: publicUrl,
-        fichier_path: storagePath,
-        duree_secondes: record.duration_sec,
-        statut: 'EN_ATTENTE',
-      });
+  if (patrioteError) throw new Error('Patriote audio: ' + patrioteError.message);
 
-    if (audioError) throw new Error('Audio record: ' + audioError.message);
+  // ─── 2. Construire l'URL de référence (bucket privé) ───
+  // Le bucket est privé → on stocke le chemin interne comme fichier_url.
+  // Le back-office générera une signed URL au moment de la lecture.
+  const cfg = window.SUPABASE_CONFIG;
+  const bucket = cfg.audioBucket || 'enrolments-audio';
+  const cleanPath = storagePath.startsWith(bucket + '/')
+    ? storagePath.slice(bucket.length + 1)
+    : storagePath;
+  const fichierUrl = `${cfg.url}/storage/v1/object/${bucket}/${cleanPath}`;
 
-    return true;
-  }
+  // ─── 3. Créer l'entrée enrolements_audio ───
+  const { error: audioError } = await sb
+    .from('enrolements_audio')
+    .insert({
+      patriote_id: patrioteResult.id,
+      fichier_url: fichierUrl,      // ✅ URL interne (privée, à signer par l'admin)
+      fichier_path: cleanPath,      // ✅ chemin nu, sans le bucket
+      duree_secondes: record.duration_sec,
+      statut: 'EN_ATTENTE',
+    });
+
+  if (audioError) throw new Error('Audio record: ' + audioError.message);
+
+  return true;
+}
 
   // ─── Sync ───
   async function syncAllAudio() {

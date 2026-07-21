@@ -19,7 +19,6 @@
      Coordinateurs — Styles spécifiques
      ============================================ */
 
-  /* KPI strip */
   .kpi-strip {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
@@ -37,75 +36,28 @@
   .kpi-value { font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1; letter-spacing: -0.5px; }
   .kpi-sub   { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
-  /* Header actions */
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .page-header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .page-header-left { display: flex; align-items: center; gap: 10px; }
 
   .search-box {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 12px;
-    height: 38px;
-    min-width: 240px;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0 12px; height: 38px; min-width: 240px;
   }
-
   .search-box svg { flex-shrink: 0; color: var(--text-muted); }
-
-  .search-box input {
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 13px;
-    color: var(--text);
-    width: 100%;
-  }
-
-  .search-box:focus-within {
-    border-color: var(--pastef-green);
-    box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
-  }
+  .search-box input { border: none; outline: none; background: transparent; font-size: 13px; color: var(--text); width: 100%; }
+  .search-box:focus-within { border-color: var(--pastef-green); box-shadow: 0 0 0 3px rgba(27,124,61,0.08); }
 
   .btn-designate {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 38px;
-    padding: 0 18px;
-    background: var(--pastef-green);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 38px; padding: 0 18px;
+    background: var(--pastef-green); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
   }
-
   .btn-designate:hover { background: var(--pastef-green-dark); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 
-  /* Table coordinateurs */
-  .coord-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
+  .coord-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .coord-table thead tr { border-bottom: 1px solid var(--border); background: var(--bg-soft); }
   .coord-table th { padding: 11px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
   .coord-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
@@ -117,33 +69,21 @@
   .coord-lieu  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
   .coord-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 12px;
-    flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
   }
-
   .avatar-green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
   .avatar-or    { background: var(--pastef-or-soft); color: var(--pastef-or); }
   .avatar-ink   { background: var(--bg); color: var(--text-muted); }
 
-  .coord-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .coord-cell { display: flex; align-items: center; gap: 10px; }
 
   .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
   .badge-green  { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
   .badge-or     { background: var(--pastef-or-soft); color: var(--pastef-or); }
   .badge-red    { background: var(--pastef-red-soft); color: var(--pastef-red); }
   .badge-neutral { background: var(--bg); color: var(--text-muted); }
-
   .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .coord-actions { display: flex; gap: 4px; }
@@ -157,49 +97,27 @@
 
   .last-login { font-size: 11px; color: var(--text-muted); }
 
-  /* ── MODAL OVERLAY ── */
   .modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2000;
-    background: rgba(15,26,20,0.45);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(15,26,20,0.45); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none;
     transition: opacity 0.2s;
   }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
 
   .modal {
-    background: var(--card);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    transform: translateY(12px);
-    transition: transform 0.2s;
+    background: var(--card); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); width: 100%;
+    max-width: 560px; max-height: 90vh; overflow-y: auto;
+    transform: translateY(12px); transition: transform 0.2s;
   }
-
   .modal-overlay.open .modal { transform: translateY(0); }
 
   .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border-light);
   }
-
   .modal-title { font-size: 16px; font-weight: 700; color: var(--ink); }
   .modal-close {
     width: 32px; height: 32px; border-radius: 8px;
@@ -209,166 +127,79 @@
   .modal-close:hover { background: var(--bg); color: var(--ink); }
 
   .modal-body { padding: 20px 24px; }
-
   .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 16px 24px 20px;
-    border-top: 1px solid var(--border-light);
+    display: flex; justify-content: flex-end; gap: 8px;
+    padding: 16px 24px 20px; border-top: 1px solid var(--border-light);
   }
 
-  /* Steps indicator */
   .steps { display: flex; gap: 4px; margin-bottom: 24px; }
-
-  .step {
-    flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border-light);
-    transition: background 0.3s;
-  }
-
+  .step { flex: 1; height: 4px; border-radius: 2px; background: var(--border-light); transition: background 0.3s; }
   .step.done { background: var(--pastef-green); }
   .step.active { background: var(--pastef-green-light); }
 
-  /* Form fields */
   .field { margin-bottom: 18px; }
   .field-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
   .field-hint  { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
   .field-input, .field-select {
-    width: 100%;
-    height: 40px;
-    padding: 0 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    color: var(--text);
-    background: var(--card);
+    width: 100%; height: 40px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text); background: var(--card);
     transition: border-color 0.15s;
   }
-
   .field-input:focus, .field-select:focus {
-    outline: none;
-    border-color: var(--pastef-green);
+    outline: none; border-color: var(--pastef-green);
     box-shadow: 0 0 0 3px rgba(27,124,61,0.08);
   }
-
-  .field-select { appearance: none; cursor: pointer;
+  .field-select {
+    appearance: none; cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7B72' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 12px center;
     padding-right: 30px;
   }
 
-  /* Radio cards */
   .radio-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-
   .radio-card {
-    position: relative;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 14px 12px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
+    position: relative; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 12px;
+    cursor: pointer; text-align: center; transition: all 0.15s;
   }
-
   .radio-card:hover { border-color: var(--pastef-green); }
-
-  .radio-card.selected {
-    border-color: var(--pastef-green);
-    background: var(--pastef-green-soft);
-  }
-
+  .radio-card.selected { border-color: var(--pastef-green); background: var(--pastef-green-soft); }
   .radio-card input { position: absolute; opacity: 0; pointer-events: none; }
-
   .radio-card-icon { font-size: 20px; margin-bottom: 4px; }
   .radio-card-label { font-size: 12px; font-weight: 600; color: var(--ink); }
   .radio-card-desc  { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
-  /* Search results */
-  .search-results {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    max-height: 200px;
-    overflow-y: auto;
-    margin-top: 6px;
-  }
-
-  .search-result-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: background 0.1s;
-    border-bottom: 1px solid var(--border-light);
-  }
-
-  .search-result-item:last-child { border-bottom: none; }
-  .search-result-item:hover { background: var(--pastef-green-soft); }
-  .search-result-item.selected { background: var(--pastef-green-soft); border-left: 3px solid var(--pastef-green); }
-
-  .search-result-name  { font-size: 13px; font-weight: 600; color: var(--ink); }
-  .search-result-info  { font-size: 11px; color: var(--text-muted); }
-
-  /* Credentials card */
   .creds-card {
-    background: var(--pastef-green-soft);
-    border: 1.5px solid var(--pastef-green);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
+    background: var(--pastef-green-soft); border: 1.5px solid var(--pastef-green);
+    border-radius: var(--radius); padding: 20px; text-align: center;
   }
-
   .creds-icon { font-size: 32px; margin-bottom: 8px; }
   .creds-title { font-size: 15px; font-weight: 700; color: var(--pastef-green-dark); margin-bottom: 16px; }
-
   .creds-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 8px;
   }
-
   .creds-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
   .creds-value { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--ink); user-select: all; }
-
   .creds-copy {
     width: 28px; height: 28px; border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     color: var(--pastef-green); transition: all 0.15s;
   }
   .creds-copy:hover { background: var(--pastef-green-soft); }
+  .creds-warning { font-size: 11px; color: var(--pastef-red); margin-top: 12px; font-weight: 500; }
 
-  .creds-warning {
-    font-size: 11px;
-    color: var(--pastef-red);
-    margin-top: 12px;
-    font-weight: 500;
-  }
+  .empty-search { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
 
-  /* Empty state */
-  .empty-search {
-    text-align: center;
-    padding: 20px;
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  /* Responsive */
   @media (max-width: 768px) {
     .radio-cards { grid-template-columns: 1fr; }
     .modal { max-width: 100%; margin: 10px; }
     .search-box { min-width: 160px; }
     .page-header { flex-direction: column; align-items: stretch; }
   }
-
   @media (max-width: 480px) {
     .kpi-strip { grid-template-columns: 1fr 1fr; }
   }
@@ -401,10 +232,19 @@
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+     Ordre important :
+     1. supabase-config.js — config
+     2. supabase-js (CDN) — client
+     3. supabase-client.js — init de PASTEF.supabase
+     4. data-loader.js — charge ref.* (dépend de PASTEF.supabase)
+     5. utils.js, auth.js, sidebar.js, topbar.js
+     ═══════════════════════════════════════════ -->
 <script src="../../js/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="../../js/data.js"></script>
 <script src="../../shared/supabase-client.js"></script>
+<script src="../../js/data-loader.js"></script>
 <script src="../../shared/utils.js"></script>
 <script src="../../shared/auth.js"></script>
 <script src="../../shared/sidebar.js"></script>
@@ -414,8 +254,12 @@
 (async function () {
   'use strict';
 
+  // ─── Auth ───
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
+
+  // ─── Charger les données de référence (ref.regions, ref.pays, ref.roles_coordinateur, etc.) ───
+  await window.PASTEF_DATA.init();
 
   PASTEF.sidebar.render(session, 'coordinateurs');
   PASTEF.topbar.render({ session, title: 'Coordinateurs', breadcrumb: 'Gestion des coordinateurs' });
@@ -426,17 +270,45 @@
   /* ============================================
      CHARGEMENT DEPUIS SUPABASE
   ============================================ */
-  async function loadCoordinators() {
+async function loadCoordinators() {
     const { data, error } = await PASTEF.supabase
-      .from('coordinator_accounts')
-      .select(`
-        *,
-        enrolment:enrolment_id ( prenom, nom, telephone )
-      `)
+      .from('coordinateurs')
+      .select('id, auth_user_id, prenom, nom, email, telephone, statut, created_at, updated_at, role_id, region_id, departement_id, commune_id, pays_id, ville_id')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeCoord);
   }
+
+  function normalizeCoord(c) {
+    const ROLE_UUID_MAP = {
+      'fec76acc-f42a-4def-ab2f-b09aefbfcb60': 'admin',
+      'd9da9308-ec62-4301-a1c2-284ebd4c6fd2': 'departemental',
+      'c149d628-6e4f-41ab-b097-19f25603f2ed': 'communal',
+      '5d2109e3-f559-489a-aeba-68184f0d745e': 'diaspora',
+    };
+
+    const regions = window.PASTEF_DATA?.getRegions?.() || [];
+    const paysList = window.PASTEF_DATA?.getPays?.() || [];
+    const regionObj = regions.find(r => r.id === c.region_id);
+    const paysObj = paysList.find(p => p.id === c.pays_id);
+
+    return {
+      ...c,
+      role: ROLE_UUID_MAP[c.role_id] || 'admin',
+      active: c.statut === 'ACTIF',
+      region: regionObj?.nom || null,
+      departement: null,
+      commune: null,
+      pays: paysObj?.nom_fr || null,
+      ville: null,
+      last_login: null,
+      enrolment: { prenom: c.prenom, nom: c.nom, telephone: c.telephone },
+    };
+  }
+
+
+
 
   try {
     allCoordinators = await loadCoordinators();
@@ -452,26 +324,21 @@
   function roleLabel(role) {
     return { departemental: 'Départemental', communal: 'Communal', diaspora: 'Diaspora', admin: 'Admin' }[role] || role;
   }
-
   function roleBadge(role) {
     const cls = { departemental: 'badge-green', communal: 'badge-or', diaspora: 'badge-neutral', admin: 'badge-green' }[role] || 'badge-neutral';
     return `<span class="badge ${cls}">${roleLabel(role)}</span>`;
   }
-
   function avatarCls(role) {
     return { departemental: 'avatar-green', communal: 'avatar-or', diaspora: 'avatar-ink' }[role] || 'avatar-ink';
   }
-
   function displayName(c) {
     if (c.enrolment?.prenom || c.enrolment?.nom) return `${c.enrolment.prenom || ''} ${c.enrolment.nom || ''}`.trim();
     return c.email || '—';
   }
-
   function displayLieu(c) {
     const parts = [c.commune, c.departement, c.region, c.pays].filter(Boolean);
     return parts.join(' · ') || '—';
   }
-
   function timeAgo(dateStr) {
     if (!dateStr) return 'Jamais';
     const d = new Date(dateStr);
@@ -482,7 +349,6 @@
     if (diff < 30) return `Il y a ${Math.floor(diff / 7)} sem.`;
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
-
   function computeStats(list) {
     return {
       total: list.length,
@@ -601,10 +467,8 @@
      FILTRES
   ============================================ */
   let currentFilter = '', currentRole = '';
-
   window.filterCoords = function (q) { currentFilter = q.toLowerCase(); applyFilters(); };
   window.filterRole = function (role) { currentRole = role; applyFilters(); };
-
   function applyFilters() {
     let data = allCoordinators;
     if (currentRole) data = data.filter(c => c.role === currentRole);
@@ -627,13 +491,15 @@
     if (!c) return;
     if (!confirm(`Voulez-vous ${c.active ? 'désactiver' : 'réactiver'} ${displayName(c)} ?`)) return;
 
+    const newStatut = c.active ? 'INACTIF' : 'ACTIF';
     try {
       const { error } = await PASTEF.supabase
-        .from('coordinator_accounts')
-        .update({ active: !c.active })
+        .from('coordinateurs')
+        .update({ statut: newStatut, updated_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
       c.active = !c.active;
+      c.statut = newStatut;
       applyFilters();
       PASTEF.utils.toast(c.active ? 'Coordinateur réactivé' : 'Coordinateur désactivé', displayName(c));
     } catch (err) {
@@ -643,17 +509,18 @@
 
   /* ============================================
      MODAL DÉSIGNATION
-     Étape 1 : Choisir le rôle
-     Étape 2 : Choisir la zone (Région → Département → Commune pour Sénégal)
-     Étape 3 : Choisir le patriote parmi ceux de cette zone
+     Étape 1 : Rôle
+     Étape 2 : Zone géographique (dynamique depuis ref.*)
+     Étape 3 : Patriote de la zone
      Étape 4 : Email + confirmation
-     Étape 5 : Résultat avec identifiants
+     Étape 5 : Résultat
   ============================================ */
   const overlay = document.getElementById('modalOverlay');
   const mBody  = document.getElementById('modalBody');
   const mFooter = document.getElementById('modalFooter');
   const mTitle  = document.getElementById('modalTitle');
 
+  // Groupement des pays diaspora par continent (hardcodé — pas dans la BDD)
   const CONTINENTS = {
     'Afrique': ['Algérie','Bénin','Burkina Faso','Cameroun','Cap-Vert',"Côte d'Ivoire",'Gabon','Gambie','Ghana','Guinée','Guinée-Bissau','Mali','Maroc','Mauritanie','Niger','Nigéria','Tunisie'],
     'Amérique': ['Canada','États-Unis'],
@@ -715,13 +582,12 @@
     `;
   }
 
-  /* ── ÉTAPE 2 : Zone géographique ── */
-  function renderStep2() {
+  /* ── ÉTAPE 2 : Zone géographique (async, depuis ref.*) ── */
+  async function renderStep2() {
     const s = designState;
     mTitle.textContent = 'Étape 2 — Zone géographique';
 
     if (s.role === 'diaspora') {
-      // Continent → Pays
       const continents = Object.keys(CONTINENTS).sort();
       const paysList = s.continent ? (CONTINENTS[s.continent] || []).sort() : [];
       mBody.innerHTML = stepsHtml(2) + `
@@ -741,12 +607,15 @@
         </div>
       `;
     } else {
-      // Sénégal : Région → Département (→ Commune si communal)
-      const DATA = window.PASTEF_DATA;
-      const regions = DATA.regions['Sénégal'] || [];
-      const departements = s.region ? Object.keys(DATA.senegalStructure[s.region] || {}).sort() : [];
-      const communes = (s.role === 'communal' && s.departement && s.region)
-        ? (DATA.senegalStructure[s.region]?.[s.departement] || [])
+      // Sénégal — depuis PASTEF_DATA (dynamique)
+      const regions = window.PASTEF_DATA.getRegions() || [];
+      const selectedRegion = regions.find(r => r.nom === s.region);
+      const departements = selectedRegion
+        ? await window.PASTEF_DATA.getDepartements(selectedRegion.id)
+        : [];
+      const selectedDept = departements.find(d => d.nom === s.departement);
+      const communes = (s.role === 'communal' && selectedDept)
+        ? await window.PASTEF_DATA.getCommunes(selectedDept.id)
         : [];
 
       mBody.innerHTML = stepsHtml(2) + `
@@ -754,14 +623,14 @@
           <label class="field-label">Région</label>
           <select class="field-select" onchange="onRegionPick(this.value)">
             <option value="">Sélectionner une région</option>
-            ${regions.map(r => `<option value="${r}" ${s.region === r ? 'selected' : ''}>${r}</option>`).join('')}
+            ${regions.map(r => `<option value="${r.nom}" ${s.region === r.nom ? 'selected' : ''}>${r.nom}</option>`).join('')}
           </select>
         </div>
         <div class="field">
           <label class="field-label">Département</label>
           <select class="field-select" ${!s.region ? 'disabled' : ''} onchange="onDepartementPick(this.value)">
             <option value="">Sélectionner un département</option>
-            ${departements.map(d => `<option value="${d}" ${s.departement === d ? 'selected' : ''}>${d}</option>`).join('')}
+            ${departements.map(d => `<option value="${d.nom}" ${s.departement === d.nom ? 'selected' : ''}>${d.nom}</option>`).join('')}
           </select>
         </div>
         ${s.role === 'communal' ? `
@@ -769,7 +638,7 @@
           <label class="field-label">Commune</label>
           <select class="field-select" ${!s.departement ? 'disabled' : ''} onchange="designState.commune = this.value">
             <option value="">Sélectionner une commune</option>
-            ${communes.map(c => `<option value="${c}" ${s.commune === c ? 'selected' : ''}>${c}</option>`).join('')}
+            ${communes.map(c => `<option value="${c.nom}" ${s.commune === c.nom ? 'selected' : ''}>${c.nom}</option>`).join('')}
           </select>
         </div>
         ` : ''}
@@ -782,7 +651,7 @@
     `;
   }
 
-  /* ── ÉTAPE 3 : Patriote de la zone ── */
+  /* ── ÉTAPE 3 : Patriote ── */
   async function renderStep3() {
     const s = designState;
     mTitle.textContent = 'Étape 3 — Choisir le patriote';
@@ -804,7 +673,6 @@
       <button class="btn btn-secondary btn-sm" onclick="goStep(2)">Retour</button>
       <button class="btn btn-primary btn-sm" onclick="goStep(4)" ${!s.inscrit ? 'disabled' : ''} id="btnStep3Next">Suivant</button>
     `;
-
     await chargerPatriotes();
   }
 
@@ -815,41 +683,35 @@
 
     try {
       let query = PASTEF.supabase
-        .from('enrolments')
-        .select('id, prenom, nom, telephone, date_naissance, region, departement, commune, quartier, pays')
+        .from('v_patriotes')
+        .select('id, prenom, nom, telephone, date_naissance, region, departement, commune, pays_residence, ville_diaspora, est_senegal')
         .order('nom', { ascending: true })
         .limit(500);
 
       if (s.role === 'diaspora') {
-        query = query.ilike('pays', s.pays);
+        query = query.ilike('pays_residence', s.pays);
       } else {
-        query = query.eq('pays', 'Sénégal').ilike('region', s.region);
+        query = query.eq('est_senegal', true).ilike('region', s.region);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filtrage en mémoire (insensible casse + accents)
       const normalize = v => (v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
       let filtered = data || [];
       if (s.role === 'communal' && s.commune) {
         const target = normalize(s.commune);
-        filtered = filtered.filter(r => normalize(r.commune) === target || normalize(r.quartier) === target);
+        filtered = filtered.filter(r => normalize(r.commune) === target);
       } else if (s.role === 'departemental' && s.departement) {
         const targetDept = normalize(s.departement);
-        const communesDuDept = (window.PASTEF_DATA.senegalStructure[s.region]?.[s.departement] || []).map(normalize);
-        filtered = filtered.filter(r =>
-          normalize(r.departement) === targetDept ||
-          communesDuDept.includes(normalize(r.commune)) ||
-          communesDuDept.includes(normalize(r.quartier))
-        );
+        filtered = filtered.filter(r => normalize(r.departement) === targetDept);
       }
 
       patriotesCache = filtered;
 
       if (!filtered.length) {
-        box.innerHTML = '<div class="empty-search">Aucun patriote inscrit dans cette zone. Vérifiez que des patriotes ont bien rempli le formulaire pour cette zone.</div>';
+        box.innerHTML = '<div class="empty-search">Aucun patriote inscrit dans cette zone.</div>';
         return;
       }
 
@@ -858,7 +720,7 @@
         <select class="field-select" onchange="onPatriotePick(this.value)">
           <option value="">— Sélectionner un patriote —</option>
           ${filtered.map(r => {
-            const age = PASTEF.utils.computeAge(r.date_naissance);
+            const age = PASTEF.utils.computeAge?.(r.date_naissance);
             return `<option value="${r.id}" ${s.inscrit?.id === r.id ? 'selected' : ''}>
               ${PASTEF.utils.escapeHtml(r.prenom || '')} ${PASTEF.utils.escapeHtml(r.nom || '')} — ${PASTEF.utils.escapeHtml(r.telephone || '—')}${age ? ` (${age} ans)` : ''}
             </option>`;
@@ -875,7 +737,7 @@
     const s = designState;
     mTitle.textContent = 'Étape 4 — Confirmation';
     mBody.innerHTML = stepsHtml(4) + `
-      ${s.error ? `<div class="form-error">${PASTEF.utils.escapeHtml(s.error)}</div>` : ''}
+      ${s.error ? `<div class="form-error" style="background:var(--pastef-red-soft);color:var(--pastef-red);padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;">${PASTEF.utils.escapeHtml(s.error)}</div>` : ''}
       <div style="padding:14px;background:var(--bg-soft);border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;">
         <div style="font-weight:700;color:var(--ink);margin-bottom:8px;">Récapitulatif</div>
         <div style="display:grid;grid-template-columns:110px 1fr;gap:4px 12px;color:var(--text-muted);">
@@ -889,7 +751,7 @@
         <label class="field-label">Email du coordinateur</label>
         <input class="field-input" type="email" id="emailCoord" placeholder="prenom.nom@email.com"
           value="${PASTEF.utils.escapeHtml(s.email)}" oninput="designState.email = this.value" />
-        <div class="field-hint">Un compte de connexion sera créé et les identifiants envoyés par email</div>
+        <div class="field-hint">Cet email servira de login. Créez ensuite le compte auth dans Supabase Dashboard.</div>
       </div>
     `;
     mFooter.innerHTML = `
@@ -909,7 +771,7 @@
 
     const emailBanner = r.emailSent
       ? `<div style="background:var(--pastef-green-soft);color:var(--pastef-green-dark);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">✅ Email envoyé à ${PASTEF.utils.escapeHtml(r.email)}</div>`
-      : `<div style="background:var(--pastef-or-soft);color:var(--pastef-or);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">⚠️ Email non envoyé (${PASTEF.utils.escapeHtml(r.emailError || 'erreur inconnue')}) — transmettez les identifiants manuellement.</div>`;
+      : `<div style="background:var(--pastef-or-soft);color:var(--pastef-or);border-radius:8px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">⚠️ ${PASTEF.utils.escapeHtml(r.emailError || 'Compte Auth à créer manuellement dans Supabase Dashboard')}</div>`;
 
     mBody.innerHTML = emailBanner + `
       <div class="creds-card">
@@ -921,34 +783,36 @@
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
+        ${r.password ? `
         <div class="creds-row">
-          <div><div class="creds-label">Mot de passe temporaire</div><div class="creds-value">${r.password}</div></div>
+          <div><div class="creds-label">Mot de passe temporaire</div><div class="creds-value">${PASTEF.utils.escapeHtml(r.password)}</div></div>
           <button class="creds-copy" onclick="copyText('${r.password}')">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
+        ` : ''}
         <div class="creds-row">
           <div><div class="creds-label">Zone</div><div class="creds-value" style="font-family:inherit;">${PASTEF.utils.escapeHtml(localisationLabel(s))}</div></div>
         </div>
-        <div class="creds-warning">⚠️ Conservez ce mot de passe : il ne sera plus affiché après fermeture.</div>
+        <div class="creds-warning">⚠️ Créez le compte auth dans Supabase Dashboard → Auth → Add user, puis récupérez le auth_user_id et liez-le à ce coordinateur.</div>
       </div>
     `;
     mFooter.innerHTML = `<button class="btn btn-primary btn-sm" onclick="closeModal()">Fermer</button>`;
   }
 
-  /* ── NAVIGATION ── */
-  function renderStep() {
+  /* ── NAVIGATION (toutes async pour supporter step2 dynamique) ── */
+  async function renderStep() {
     const step = designState.step;
     if (step === 1) renderStep1();
-    else if (step === 2) renderStep2();
-    else if (step === 3) renderStep3();
+    else if (step === 2) await renderStep2();
+    else if (step === 3) await renderStep3();
     else if (step === 4) renderStep4();
     else if (step === 5) renderStep5();
   }
 
-  window.goStep = function (n) {
+  window.goStep = async function (n) {
     designState.step = n;
-    renderStep();
+    await renderStep();
   };
 
   window.selectRole = function (role) {
@@ -956,42 +820,40 @@
     renderStep1();
   };
 
-  window.onContinentPick = function (continent) {
+  window.onContinentPick = async function (continent) {
     designState.continent = continent;
     designState.pays = '';
-    renderStep2();
+    await renderStep2();
   };
 
-  window.onRegionPick = function (region) {
+  window.onRegionPick = async function (region) {
     designState.region = region;
     designState.departement = '';
     designState.commune = '';
-    renderStep2();
+    await renderStep2();
   };
 
-  window.onDepartementPick = function (departement) {
+  window.onDepartementPick = async function (departement) {
     designState.departement = departement;
     designState.commune = '';
-    renderStep2();
+    await renderStep2();
   };
 
   window.onPatriotePick = function (id) {
     const found = patriotesCache.find(p => p.id === id);
     if (!found) return;
     designState.inscrit = found;
-    // Activer le bouton Suivant
     const btn = document.getElementById('btnStep3Next');
     if (btn) btn.disabled = false;
-    // Afficher la sélection
     renderStep3();
   };
 
-  window.validateStep2 = function () {
+  window.validateStep2 = async function () {
     const s = designState;
     if (s.role === 'diaspora' && !s.pays) return alert('Choisissez un pays');
     if (s.role === 'departemental' && !s.departement) return alert('Choisissez une région et un département');
     if (s.role === 'communal' && !s.commune) return alert('Choisissez une région, un département et une commune');
-    goStep(3);
+    await window.goStep(3);
   };
 
   /* ── EXÉCUTION ── */
@@ -1009,22 +871,65 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Création en cours…'; }
 
     try {
-      const { data, error } = await PASTEF.supabase.functions.invoke('create-coordinator', {
-        body: {
+      // 1. Résoudre le UUID du rôle
+      const roleId = PASTEF.auth.getRoleIdByCode(s.role);
+      if (!roleId) throw new Error('Rôle introuvable : ' + s.role);
+
+      // 2. Résoudre les UUID géographiques
+      let region_id = null, departement_id = null, commune_id = null, pays_id = null;
+
+      if (s.role === 'diaspora' && s.pays) {
+        const pays = window.PASTEF_DATA.getPays().find(p => p.nom_fr === s.pays);
+        pays_id = pays?.id || null;
+      } else {
+        if (s.region) {
+          const reg = window.PASTEF_DATA.getRegions().find(r => r.nom === s.region);
+          region_id = reg?.id || null;
+        }
+        if (s.departement && region_id) {
+          const depts = await window.PASTEF_DATA.getDepartements(region_id);
+          const dep = depts.find(d => d.nom === s.departement);
+          departement_id = dep?.id || null;
+        }
+        if (s.commune && departement_id) {
+          const comms = await window.PASTEF_DATA.getCommunes(departement_id);
+          const com = comms.find(c => c.nom === s.commune);
+          commune_id = com?.id || null;
+        }
+        const senegal = window.PASTEF_DATA.getPaysSenegal();
+        pays_id = senegal?.id || null;
+      }
+
+      // 3. Insertion directe dans coordinateurs (test rapide, sans compte auth)
+      const { data, error } = await PASTEF.supabase
+        .from('coordinateurs')
+        .insert({
+          prenom: s.inscrit.prenom,
+          nom: s.inscrit.nom,
           email: s.email.trim(),
-          role: s.role,
-          enrolment_id: s.inscrit.id,
-          region: s.region || null,
-          departement: s.departement || null,
-          commune: s.commune || null,
-          pays: s.pays || null,
-        },
-      });
+          telephone: s.inscrit.telephone || '000000000',
+          role_id: roleId,
+          region_id,
+          departement_id,
+          commune_id,
+          pays_id,
+          statut: 'ACTIF',
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
-      s.result = data;
+      s.result = {
+        id: data.id,
+        prenom: s.inscrit.prenom,
+        nom: s.inscrit.nom,
+        email: s.email,
+        password: null,
+        emailSent: false,
+        emailError: 'Compte Auth non créé automatiquement : créez-le dans Supabase Dashboard puis liez le auth_user_id.',
+      };
+
       s.step = 5;
       renderStep5();
 
@@ -1036,14 +941,17 @@
       renderStep4();
     } finally {
       const btnAgain = document.getElementById('btnConfirm');
-      if (btnAgain) { btnAgain.disabled = false; btnAgain.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Confirmer la désignation'; }
+      if (btnAgain) {
+        btnAgain.disabled = false;
+        btnAgain.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Confirmer la désignation';
+      }
     }
   };
 
   /* ── MODAL OPEN/CLOSE ── */
-  window.openDesignation = function () {
+  window.openDesignation = async function () {
     initState();
-    renderStep();
+    await renderStep();
     overlay.classList.add('open');
   };
 

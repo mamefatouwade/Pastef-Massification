@@ -20,6 +20,7 @@ const SUPABASE_CONFIG = {
     cellules:           'cellules',
     affectations:       'affectations',
     enrolements_audio:  'enrolements_audio',
+    coordinateurs:      'coordinateurs', 
     presence_numerique: 'presence_numerique',
     patriote_reseaux:   'patriote_reseaux',
   },
