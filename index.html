@@ -332,7 +332,53 @@
           <input type="text" id="numeroCartElecteur" name="numeroCartElecteur" placeholder="Entrez votre numéro" autocomplete="off" maxlength="30">
         </div>
       </section>
+<!-- ═══════════════════════════════════════════
+     SECTION 6bis : CARTE PASTEF
+     ═══════════════════════════════════════════ -->
+    <section class="card" id="cartePastefSection" hidden>
+      <div class="card-header">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
+            <circle cx="9" cy="10" r="2"/>
+            <path d="M15 8h3"/>
+            <path d="M15 12h3"/>
+            <path d="M7 16h10"/>
+          </svg>
+        </div>
+        <h2 class="card-title">Carte PASTEF</h2>
+      </div>
 
+      <div class="field">
+        <p class="field-question">Possédez-vous une carte PASTEF ?</p>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="possedeCartePastef" value="Oui">
+            <span>Oui</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="possedeCartePastef" value="Non">
+            <span>Non</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="cartePastefField" hidden>
+        <label for="numeroCartePastef">Numéro de carte PASTEF <span class="req">*</span></label>
+        <input 
+          type="text" 
+          id="numeroCartePastef" 
+          name="numeroCartePastef" 
+          placeholder="Ex : D5Z8B3" 
+          autocomplete="off" 
+          maxlength="6"
+          minlength="6"
+          pattern="[A-Z0-9]{6}"
+          inputmode="text"
+          style="text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">
+        <span class="hint" id="cartePastefHint">6 caractères — lettres (A-Z) et chiffres (0-9) uniquement</span>
+      </div>
+    </section>
       <!-- ═══════════════════════════════════════════
            SECTION 7 : PROFESSION
            ═══════════════════════════════════════════ -->

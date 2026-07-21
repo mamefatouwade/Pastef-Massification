@@ -253,13 +253,47 @@
     $('#contactSection').hidden = false;
     $('#pieceSection').hidden = false;
     $('#electeurSection').hidden = false;
+    $('#cartePastefSection').hidden = false;
     $('#professionSection').hidden = false;
     $('#engagementSection').hidden = false;
     $('#numeriqueSection').hidden = false;
     $('#submitSection').hidden = false;
     $('#securityNotice').hidden = false;
   }
+// ============================================
+// VALIDATION CARTE PASTEF (6 caractères alphanumériques)
+// ============================================
+function validateCartePastef(value) {
+  const cleaned = value.trim().toUpperCase();
+  
+  if (cleaned.length !== 6) {
+    return { valid: false, error: `Le numéro doit contenir exactement 6 caractères (${cleaned.length}/6)` };
+  }
+  if (!/^[A-Z0-9]{6}$/.test(cleaned)) {
+    return { valid: false, error: 'Seules les lettres (A-Z) et chiffres (0-9) sont autorisés' };
+  }
+  return { valid: true };
+}
 
+function showCartePastefError(message) {
+  const hint = $('#cartePastefHint');
+  const input = $('#numeroCartePastef');
+  if (hint) {
+    hint.textContent = '⚠️ ' + message;
+    hint.style.color = '#e74c3c';
+  }
+  if (input) input.classList.add('error-input');
+}
+
+function clearCartePastefError() {
+  const hint = $('#cartePastefHint');
+  const input = $('#numeroCartePastef');
+  if (hint) {
+    hint.textContent = '6 caractères — lettres (A-Z) et chiffres (0-9) uniquement';
+    hint.style.color = '';
+  }
+  if (input) input.classList.remove('error-input');
+}
   // ============================================
   // LOGIQUE CONDITIONNELLE
   // ============================================
@@ -523,6 +557,50 @@
         $('#carteElecteurField').hidden = e.target.value !== 'Oui';
       });
     });
+        // ─── CARTE PASTEF ───
+  // ─── CARTE PASTEF ───
+$$('input[name="possedeCartePastef"]').forEach(radio => {
+  radio.addEventListener('change', e => {
+    const field = $('#cartePastefField');
+    const input = $('#numeroCartePastef');
+    if (e.target.value === 'Oui') {
+      field.hidden = false;
+      input.required = true;
+    } else {
+      field.hidden = true;
+      input.required = false;
+      input.value = '';
+      clearCartePastefError();
+    }
+  });
+});
+
+    // ─── VALIDATION NUMÉRO CARTE PASTEF ───
+    const cartePastefInput = $('#numeroCartePastef');
+    if (cartePastefInput) {
+      // Auto-majuscules + filtrage en temps réel
+      cartePastefInput.addEventListener('input', (e) => {
+        // Force majuscules et supprime tout ce qui n'est pas alphanumérique
+        const cleaned = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (e.target.value !== cleaned) {
+          e.target.value = cleaned;
+        }
+        clearCartePastefError();
+      });
+
+      // Validation au blur (quand l'utilisateur quitte le champ)
+      cartePastefInput.addEventListener('blur', (e) => {
+        const val = e.target.value.trim();
+        if (!val) return; // vide = pas d'erreur ici (géré par required)
+        
+        const validation = validateCartePastef(val);
+        if (!validation.valid) {
+          showCartePastefError(validation.error);
+        } else {
+          clearCartePastefError();
+        }
+      });
+    }
 
     // ─── DATE DE NAISSANCE → ÂGE ───
     $('#dateNaissance').addEventListener('change', e => {
@@ -706,8 +784,7 @@
       valid = false;
       if (!firstError) firstError = $('#dateNaissance');
     }
-
-    // Validation téléphone
+// Validation téléphone
     const dialCode = $('#dialCode').value;
     const tel = $('#telephone').value.trim();
     if (tel && dialCode) {
@@ -721,6 +798,23 @@
       }
     }
 
+    // ✅ Validation carte PASTEF (AVANT le scroll)
+    const possedeCartePastef = document.querySelector('input[name="possedeCartePastef"]:checked');
+    if (possedeCartePastef && possedeCartePastef.value === 'Oui') {
+      const cartePastefVal = $('#numeroCartePastef').value.trim();
+      if (cartePastefVal) {
+        const v = validateCartePastef(cartePastefVal);
+        if (!v.valid) {
+          const field = $('#numeroCartePastef').closest('.field');
+          if (field) field.classList.add('has-error');
+          showCartePastefError(v.error);
+          valid = false;
+          if (!firstError) firstError = $('#numeroCartePastef');
+        }
+      }
+    }
+
+    // ✅ Scroll vers la première erreur (APRÈS toutes les validations)
     if (firstError) {
       firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => firstError.focus(), 300);
@@ -813,6 +907,9 @@
 
       a_carte_electeur: fd.get('possedeCarte') === 'Oui',
       numero_carte_electeur: fd.get('numeroCartElecteur')?.trim() || null,
+
+      a_carte_pastef: fd.get('possedeCartePastef') === 'Oui',
+      numero_carte_pastef: fd.get('numeroCartePastef')?.trim().toUpperCase() || null,
 
       profession: fd.get('profession') === 'Autre'
         ? fd.get('professionAutre')?.trim()
@@ -1002,11 +1099,12 @@
 
     // Masquer sections conditionnelles
     ['celluleOuiBlock', 'celluleNonBlock', 'residenceSection', 'contactSection',
-      'pieceSection', 'electeurSection', 'professionSection', 'engagementSection',
-      'numeriqueSection', 'submitSection', 'securityNotice', 'senegalFields',
-      'etrangerFields', 'professionAutreWrap', 'domaineAutreWrap',
-      'celluleAutreWrap', 'carteElecteurField', 'villeDiasporaAutreWrap'
-    ].forEach(id => { const el = $('#' + id); if (el) el.hidden = true; });
+    'pieceSection', 'electeurSection', 'cartePastefSection', 'professionSection',  // ✅ AJOUT
+    'engagementSection', 'numeriqueSection', 'submitSection', 'securityNotice',
+    'senegalFields', 'etrangerFields', 'professionAutreWrap', 'domaineAutreWrap',
+    'celluleAutreWrap', 'carteElecteurField', 'cartePastefField',  // ✅ AJOUT
+    'villeDiasporaAutreWrap'
+  ].forEach(id => { const el = $('#' + id); if (el) el.hidden = true; });
 
     $('#ageHint').textContent = '';
     if ($('#expirationHint')) $('#expirationHint').textContent = '';
