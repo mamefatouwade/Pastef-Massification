@@ -1,6 +1,7 @@
 /* ============================================
-   PASTEF — Authentification & Rôles (v2)
-   Adapté au schéma normalisé
+   PASTEF — Authentification & Rôles (v3)
+   Adapté au schéma normalisé — SANS embedded
+   selects cross-schema (ref.*)
    ============================================ */
 
 (function () {
@@ -24,6 +25,15 @@
     'diaspora':       'DIASPORA',
   };
 
+  // Mapping UUID role_id → code frontend
+  // (évite l'embedded select cross-schema ref.roles_coordinateur)
+  const ROLE_UUID_MAP = {
+    'fec76acc-f42a-4def-ab2f-b09aefbfcb60': 'admin',
+    'd9da9308-ec62-4301-a1c2-284ebd4c6fd2': 'departemental',
+    'c149d628-6e4f-41ab-b097-19f25603f2ed': 'communal',
+    '5d2109e3-f559-489a-aeba-68184f0d745e': 'diaspora',
+  };
+
   async function getCurrentSession() {
     if (!PASTEF.supabase) return null;
 
@@ -35,6 +45,7 @@
       let coordinator = null;
 
       try {
+        // ── Requête PLATE — pas d'embedded select cross-schema ──
         const { data, error } = await PASTEF.supabase
           .from('coordinateurs')
           .select('id, auth_user_id, prenom, nom, email, telephone, statut, role_id, region_id, departement_id, commune_id, pays_id, ville_id')
@@ -44,14 +55,7 @@
 
         if (!error && data) {
           coordinator = data;
-
-          // Résoudre le rôle depuis le UUID role_id
-          const ROLE_UUID_MAP = {
-            'fec76acc-f42a-4def-ab2f-b09aefbfcb60': 'admin',
-            'd9da9308-ec62-4301-a1c2-284ebd4c6fd2': 'departemental',
-            'c149d628-6e4f-41ab-b097-19f25603f2ed': 'communal',
-            '5d2109e3-f559-489a-aeba-68184f0d745e': 'diaspora',
-          };
+          // Résoudre le rôle depuis le UUID
           role = ROLE_UUID_MAP[data.role_id] || null;
         } else if (error) {
           console.warn('[PASTEF Auth] Lookup coord error:', error.message);
@@ -139,7 +143,6 @@
 
   function getRoleIdByCode(code) {
     // Utilisé au moment de créer un coordinateur : convertit 'communal' → UUID
-    // Cache local rempli par PASTEF_DATA (à condition qu'il ait chargé roles_coordinateur)
     const roles = window.PASTEF_DATA?.getRolesCoordinateur?.() || [];
     const dbCode = ROLE_CODE_MAP_REVERSE[code] || code.toUpperCase();
     const found = roles.find(r => r.code === dbCode);
@@ -158,5 +161,6 @@
     getRoleIdByCode,
     ROLE_CODE_MAP,
     ROLE_CODE_MAP_REVERSE,
+    ROLE_UUID_MAP,
   };
 })();

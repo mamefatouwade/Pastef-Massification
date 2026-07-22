@@ -15,340 +15,108 @@
 <link rel="stylesheet" href="../../styles/sidebar.css" />
 
 <style>
-  /* Hero sélecteur — couleurs diaspora (or + ink) */
   .selector-card {
     background:
       linear-gradient(120deg, rgba(15,26,20,0.95), rgba(212,144,10,0.78)),
       url('../../assets/couverture.png') center/cover;
-    color: #fff;
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    margin-bottom: 24px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
+    color: #fff; border-radius: var(--radius-lg); padding: 28px 32px;
+    margin-bottom: 24px; position: relative; overflow: hidden; box-shadow: var(--shadow-md);
   }
-
   .selector-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 4px; height: 100%;
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
     background: linear-gradient(to bottom,
       var(--pastef-green-light) 0%, var(--pastef-green-light) 33%,
       var(--pastef-or) 33%, var(--pastef-or) 66%,
       var(--pastef-red) 66%, var(--pastef-red) 100%);
   }
-
-  .selector-eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--pastef-or-light);
-    margin-bottom: 8px;
-  }
-
-  .selector-title {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    margin-bottom: 6px;
-  }
-
-  .selector-sub {
-    font-size: 13px;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 18px;
-  }
-
-  .selector-row {
-    display: grid;
-    grid-template-columns: 200px 1fr auto;
-    gap: 10px;
-    align-items: end;
-  }
-
-  .selector-field label {
-    display: block;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 6px;
-  }
-
+  .selector-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pastef-or-light); margin-bottom: 8px; }
+  .selector-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .selector-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+  .selector-row { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; align-items: end; }
+  .selector-field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
   .selector-select {
-    width: 100%;
-    height: 44px;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: var(--radius-sm);
-    padding: 0 36px 0 14px;
-    font-size: 14px;
-    font-weight: 500;
-    appearance: none;
-    cursor: pointer;
+    width: 100%; height: 44px; background: rgba(255,255,255,0.1); color: #fff;
+    border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm);
+    padding: 0 36px 0 14px; font-size: 14px; font-weight: 500; appearance: none; cursor: pointer;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg fill='none' stroke='white' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 16px;
   }
-
-  .selector-select:focus {
-    outline: none;
-    border-color: var(--pastef-or-light);
-    background-color: rgba(255,255,255,0.15);
-  }
-
+  .selector-select:focus { outline: none; border-color: var(--pastef-or-light); background-color: rgba(255,255,255,0.15); }
   .selector-select option { background: var(--ink); color: #fff; }
-
   .selector-btn {
-    height: 44px;
-    padding: 0 22px;
-    background: var(--pastef-or);
-    color: var(--ink);
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.15s;
+    height: 44px; padding: 0 22px; background: var(--pastef-or); color: var(--ink);
+    border-radius: var(--radius-sm); font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; gap: 8px; transition: all 0.15s;
   }
-
   .selector-btn:hover { background: var(--pastef-or-light); transform: translateY(-1px); }
 
-  /* Continent quick filters */
-  .continent-pills {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-  }
-
+  .continent-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
   .continent-pill {
-    padding: 6px 14px;
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.7);
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid transparent;
+    padding: 6px 14px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+    border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; border: 1px solid transparent;
   }
-
   .continent-pill:hover { background: rgba(255,255,255,0.14); color: #fff; }
-  .continent-pill.active {
-    background: var(--pastef-or);
-    color: var(--ink);
-    border-color: var(--pastef-or-light);
-  }
+  .continent-pill.active { background: var(--pastef-or); color: var(--ink); border-color: var(--pastef-or-light); }
 
-  @media (max-width: 768px) {
-    .selector-row { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 768px) { .selector-row { grid-template-columns: 1fr; } }
 
-  /* KPIs */
-  .section-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
-    margin-bottom: 20px;
-  }
-
-  .section-kpi {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    position: relative;
-  }
-
-  .section-kpi-label {
-    font-size: 11px; color: var(--text-muted); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
-  }
-
-  .section-kpi-value {
-    font-size: 26px; font-weight: 800; color: var(--ink);
-    letter-spacing: -0.6px; line-height: 1; font-variant-numeric: tabular-nums;
-  }
-
-  .section-kpi-icon {
-    position: absolute; top: 14px; right: 14px;
-    width: 32px; height: 32px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
+  .section-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .section-kpi { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; position: relative; }
+  .section-kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .section-kpi-value { font-size: 26px; font-weight: 800; color: var(--ink); letter-spacing: -0.6px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .section-kpi-icon { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
   .icon-green { background: var(--pastef-green-soft); color: var(--pastef-green-dark); }
   .icon-or { background: var(--pastef-or-soft); color: var(--pastef-or); }
   .icon-red { background: var(--pastef-red-soft); color: var(--pastef-red-dark); }
   .icon-ink { background: var(--bg); color: var(--ink); }
 
-  /* Flag badge */
-  .country-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--pastef-or-soft);
-    color: var(--pastef-or);
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
+  .country-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--pastef-or-soft); color: var(--pastef-or); padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
 
-  /* Coordinator card */
-  .coord-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    text-align: center;
-  }
-
-  .coord-eyebrow {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--pastef-or); margin-bottom: 14px;
-  }
-
-  .coord-avatar {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--pastef-or), #B57607);
-    color: #fff; font-size: 24px; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 12px; box-shadow: var(--shadow-sm);
-  }
-
+  .coord-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; text-align: center; }
+  .coord-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--pastef-or); margin-bottom: 14px; }
+  .coord-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--pastef-or), #B57607); color: #fff; font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; box-shadow: var(--shadow-sm); }
   .coord-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
   .coord-fn { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-
-  .coord-contact {
-    display: flex; flex-direction: column; gap: 8px;
-    margin-top: 16px; padding-top: 16px;
-    border-top: 1px solid var(--border-light);
-    font-size: 12px; color: var(--text-muted);
-  }
-
-  .coord-contact-row {
-    display: flex; align-items: center; gap: 8px; justify-content: center;
-  }
-
+  .coord-contact { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 12px; color: var(--text-muted); }
+  .coord-contact-row { display: flex; align-items: center; gap: 8px; justify-content: center; }
   .coord-empty { padding: 32px 16px; text-align: center; color: var(--text-muted); }
   .coord-empty svg { opacity: 0.3; margin-bottom: 8px; }
 
-  /* Cities (villes dans le pays) */
-  .city-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-light);
-  }
+  .city-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
   .city-bar:last-child { border-bottom: none; }
   .city-name { font-size: 13px; font-weight: 600; }
   .city-count { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-  .cellule-unofficial {
-    font-size: 10px;
-    font-style: italic;
-    color: var(--text-soft);
-    margin-left: 6px;
-  }
+  .cellule-unofficial { font-size: 10px; font-style: italic; color: var(--text-soft); margin-left: 6px; }
 
-  /* Recent list */
   .recent-list { display: flex; flex-direction: column; }
-
-  .recent-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-light);
-  }
+  .recent-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
   .recent-item:last-child { border-bottom: none; }
-
-  .recent-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--pastef-or), #B57607);
-    color: #fff; font-size: 11px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
+  .recent-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--pastef-or), #B57607); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .recent-avatar.male { background: linear-gradient(135deg, var(--pastef-green), var(--pastef-green-dark)); }
-
   .recent-name { font-size: 13px; font-weight: 600; }
   .recent-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-  /* Placeholder */
-  .placeholder {
-    background: var(--card);
-    border: 2px dashed var(--border);
-    border-radius: var(--radius-lg);
-    padding: 80px 24px;
-    text-align: center;
-  }
-
-  .placeholder-icon {
-    width: 64px; height: 64px;
-    margin: 0 auto 16px;
-    border-radius: 50%;
-    background: var(--pastef-or-soft);
-    color: var(--pastef-or);
-    display: flex; align-items: center; justify-content: center;
-  }
-
+  .placeholder { background: var(--card); border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 80px 24px; text-align: center; }
+  .placeholder-icon { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--pastef-or-soft); color: var(--pastef-or); display: flex; align-items: center; justify-content: center; }
   .placeholder-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
   .placeholder-text { font-size: 13px; color: var(--text-muted); max-width: 360px; margin: 0 auto; }
 
-  /* Section actions */
-  .section-actions {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
-    flex-wrap: wrap; gap: 12px;
-  }
-
-  /* Chart */
-  .chart-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-  }
+  .section-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
   .chart-wrap { height: 240px; position: relative; }
-
-  .info-strip {
-    background: var(--pastef-or-soft);
-    border-left: 3px solid var(--pastef-or);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--ink);
-    display: flex;
-    align-items: start;
-    gap: 10px;
-  }
+  .info-strip { background: var(--pastef-or-soft); border-left: 3px solid var(--pastef-or); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--ink); display: flex; align-items: start; gap: 10px; }
 </style>
 </head>
 <body>
 
 <div class="app">
   <aside class="sidebar" id="sidebar"></aside>
-
   <div class="main">
     <header class="topbar" id="topbar"></header>
-
     <div class="content" id="content">
-      <div class="page-loader">
-        <div class="spinner"></div>
-        Chargement…
-      </div>
+      <div class="page-loader"><div class="spinner"></div>Chargement…</div>
     </div>
   </div>
 </div>
@@ -357,17 +125,30 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../../shared/supabase-client.js"></script>
+<script src="../../js/data-loader.js"></script>
 <script src="../../shared/utils.js"></script>
 <script src="../../shared/auth.js"></script>
 <script src="../../shared/sidebar.js"></script>
 <script src="../../shared/topbar.js"></script>
 
 <script>
+/* ============================================
+   Cellules Diaspora — v3 (schéma normalisé)
+   Utilise v_patriotes + ref.pays via PASTEF_DATA
+   ============================================ */
+
 let allMembers = [];
-let cellulesParPays = {};
+let cellulesParPays = {};   // pays_residence → {pays, pays_id, continent, members[]}
+let paysMap = {};            // id → {id, nom_fr, code_iso2, ...}
 let currentContinent = 'all';
 
-// Mapping pays → continent
+// Helpers
+function getMemberSexe(m) { return m.sexe || m.sexe_libelle || ''; }
+function isHomme(m) { const s = getMemberSexe(m).toLowerCase(); return s === 'homme' || s === 'masculin' || s === 'm'; }
+function getMemberCellule(m) { return m.cellule || m.cellule_nom || m.nom_cellule || ''; }
+function getMemberVille(m) { return m.ville_diaspora || m.ville || ''; }
+function getMemberFonction(m) { return m.fonction_parti || m.fonction_cellule || m.fonction || ''; }
+
 const CONTINENTS = {
   'Europe': ['France', 'Italie', 'Espagne', 'Belgique', 'Allemagne', 'Royaume-Uni', 'Suisse', 'Portugal', 'Pays-Bas'],
   'Amérique': ['États-Unis', 'Canada', 'Brésil', 'Argentine', 'Mexique'],
@@ -390,6 +171,8 @@ function getContinent(country) {
   const session = await PASTEF.auth.requireAuth(['admin']);
   if (!session) return;
 
+  await window.PASTEF_DATA.init();
+
   PASTEF.sidebar.render(session, 'sec-diaspora');
   PASTEF.topbar.render({
     session,
@@ -397,11 +180,16 @@ function getContinent(country) {
     breadcrumb: 'Patriotes à l\'international',
   });
 
+  // Construire la map des pays
+  const paysList = window.PASTEF_DATA.getPays() || [];
+  paysList.forEach(p => { paysMap[p.id] = p; });
+
   try {
+    // Charger les patriotes diaspora depuis v_patriotes
     const { data, error } = await PASTEF.supabase
-      .from(PASTEF.TABLE)
+      .from('v_patriotes')
       .select('*')
-      .neq('pays', 'Sénégal')
+      .eq('est_senegal', false)
       .order('created_at', { ascending: false })
       .limit(5000);
     if (error) throw error;
@@ -413,20 +201,28 @@ function getContinent(country) {
       <div class="empty">
         <div class="empty-title">Erreur de chargement</div>
         <div class="empty-text">${PASTEF.utils.escapeHtml(err.message)}</div>
-      </div>
-    `;
+      </div>`;
   }
 })();
 
 function buildPage() {
-  // Regroupement par pays (= cellule diaspora)
   cellulesParPays = {};
-  allMembers.forEach((m) => {
-    if (!m.pays) return;
-    if (!cellulesParPays[m.pays]) {
-      cellulesParPays[m.pays] = { pays: m.pays, continent: getContinent(m.pays), members: [] };
+  allMembers.forEach(m => {
+    // v_patriotes fournit pays_residence (texte) ou pays_residence_id (uuid)
+    const paysName = m.pays_residence || (m.pays_residence_id ? (paysMap[m.pays_residence_id]?.nom_fr) : null) || m.pays;
+    if (!paysName) return;
+
+    if (!cellulesParPays[paysName]) {
+      // Trouver le pays_id correspondant
+      const paysObj = Object.values(paysMap).find(p => p.nom_fr === paysName);
+      cellulesParPays[paysName] = {
+        pays: paysName,
+        pays_id: paysObj?.id || m.pays_residence_id || null,
+        continent: getContinent(paysName),
+        members: [],
+      };
     }
-    cellulesParPays[m.pays].members.push(m);
+    cellulesParPays[paysName].members.push(m);
   });
 
   renderSelector();
@@ -435,84 +231,57 @@ function buildPage() {
 function renderSelector() {
   const filtered = currentContinent === 'all'
     ? Object.keys(cellulesParPays)
-    : Object.keys(cellulesParPays).filter((c) => cellulesParPays[c].continent === currentContinent);
+    : Object.keys(cellulesParPays).filter(c => cellulesParPays[c].continent === currentContinent);
 
   const sorted = filtered.sort();
-  const availableContinents = [...new Set(Object.values(cellulesParPays).map((c) => c.continent))].sort();
+  const availableContinents = [...new Set(Object.values(cellulesParPays).map(c => c.continent))].sort();
 
   document.getElementById('content').innerHTML = `
-    <!-- SÉLECTEUR -->
     <div class="selector-card">
       <div class="selector-eyebrow">Vue internationale</div>
       <h1 class="selector-title">Cellules de la diaspora</h1>
       <p class="selector-sub">${Object.keys(cellulesParPays).length} pays · ${PASTEF.utils.formatNumber(allMembers.length)} patriotes à l'international</p>
-
       <div class="selector-row">
         <div class="selector-field">
           <label>Continent</label>
           <select class="selector-select" id="continentSelect" onchange="filterByContinent()">
             <option value="all">Tous les continents</option>
-            ${availableContinents.map((c) =>
-              `<option value="${c}" ${c === currentContinent ? 'selected' : ''}>${c}</option>`
-            ).join('')}
+            ${availableContinents.map(c => `<option value="${c}" ${c === currentContinent ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
         </div>
-
         <div class="selector-field">
           <label>Cellule (pays)</label>
           <select class="selector-select" id="celluleSelect">
             <option value="">— Choisir un pays —</option>
-            ${sorted.map((p) => `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)} · ${cellulesParPays[p].members.length} patriotes</option>`).join('')}
+            ${sorted.map(p => `<option value="${PASTEF.utils.escapeHtml(p)}">${PASTEF.utils.escapeHtml(p)} · ${cellulesParPays[p].members.length} patriotes</option>`).join('')}
           </select>
         </div>
-
         <button class="selector-btn" onclick="showCellule()">
           Voir
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
-
       <div class="continent-pills">
-        <div class="continent-pill ${currentContinent === 'all' ? 'active' : ''}" onclick="setContinent('all')">
-          Tous (${Object.keys(cellulesParPays).length})
-        </div>
-        ${availableContinents.map((c) => {
-          const count = Object.values(cellulesParPays).filter((x) => x.continent === c).length;
-          return `<div class="continent-pill ${currentContinent === c ? 'active' : ''}" onclick="setContinent('${c}')">
-            ${c} (${count})
-          </div>`;
+        <div class="continent-pill ${currentContinent === 'all' ? 'active' : ''}" onclick="setContinent('all')">Tous (${Object.keys(cellulesParPays).length})</div>
+        ${availableContinents.map(c => {
+          const count = Object.values(cellulesParPays).filter(x => x.continent === c).length;
+          return `<div class="continent-pill ${currentContinent === c ? 'active' : ''}" onclick="setContinent('${c}')">${c} (${count})</div>`;
         }).join('')}
       </div>
     </div>
-
-    <!-- ZONE DE DÉTAIL -->
     <div id="celluleDetail">
       <div class="placeholder">
         <div class="placeholder-icon">
-          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
         <div class="placeholder-title">Sélectionnez une cellule diaspora</div>
         <div class="placeholder-text">Choisissez un pays dans la liste ci-dessus pour visualiser sa cellule diaspora, ses patriotes et son coordinateur.</div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-function setContinent(continent) {
-  currentContinent = continent;
-  renderSelector();
-}
-
-function filterByContinent() {
-  const continent = document.getElementById('continentSelect').value;
-  setContinent(continent);
-}
+window.setContinent = function (continent) { currentContinent = continent; renderSelector(); };
+window.filterByContinent = function () { setContinent(document.getElementById('continentSelect').value); };
 
 async function showCellule() {
   const pays = document.getElementById('celluleSelect').value;
@@ -524,38 +293,64 @@ async function showCellule() {
   const data = cellulesParPays[pays];
   const members = data.members;
   const stats = computeStats(members);
-  const coord = findCoordinator(members);
 
-  document.getElementById('celluleDetail').innerHTML = renderCelluleDetail(data, stats, coord);
+  document.getElementById('celluleDetail').innerHTML = renderCelluleDetail(data, stats);
   renderGenreChart(stats);
 
-  // 🆕 Cellules réellement enregistrées en base pour ce pays
-  const cellulesDB = await fetchCellulesForPays(pays);
+  // Charger coordinateur + cellules en parallèle
+  const [coord, cellulesDB] = await Promise.all([
+    findCoordinator(data),
+    fetchCellulesForPays(data),
+  ]);
+
+  updateCoordCard(coord, pays);
   updateCellulesBlock(cellulesDB, members);
 }
 
-async function fetchCellulesForPays(pays) {
+window.showCellule = showCellule;
+
+async function findCoordinator(data) {
+  if (!data.pays_id) return null;
+  try {
+    const diasporaRoleId = '5d2109e3-f559-489a-aeba-68184f0d745e';
+    const { data: coord, error } = await PASTEF.supabase
+      .from('coordinateurs')
+      .select('id, prenom, nom, telephone, email')
+      .eq('pays_id', data.pays_id)
+      .eq('role_id', diasporaRoleId)
+      .eq('statut', 'ACTIF')
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error) { console.warn('[Diaspora] Lookup coord:', error.message); return null; }
+    return coord;
+  } catch { return null; }
+}
+
+async function fetchCellulesForPays(data) {
+  if (!data.pays_id) return [];
   try {
     const { data: rows, error } = await PASTEF.supabase
       .from('cellules')
-      .select('id,nom,type,ville_diaspora')
-      .ilike('pays', pays.trim())
-      .eq('active', true)
+      .select('id, nom, ville_id, statut')
+      .eq('pays_id', data.pays_id)
+      .eq('statut', 'ACTIVE')
+      .is('deleted_at', null)
       .order('nom', { ascending: true });
-
-    if (error) { console.error('[PASTEF] Erreur chargement cellules diaspora', error); return []; }
+    if (error) { console.error('[Diaspora] Erreur cellules', error); return []; }
     return rows || [];
-  } catch (err) {
-    console.error(err);
-    return [];
-  }
+  } catch { return []; }
+}
+
+function updateCoordCard(coord, pays) {
+  const el = document.getElementById('coordCardBody');
+  if (el) el.innerHTML = renderCoordinator(coord, pays);
 }
 
 function updateCellulesBlock(cellulesDB, members) {
   const kpiEl = document.getElementById('kpiCellulesDiaspora');
   const subEl = document.getElementById('cellulesDiasporaSub');
   const boxEl = document.getElementById('cellulesDiasporaBox');
-  if (!boxEl) return; // l'utilisateur a changé de pays entre-temps
+  if (!boxEl) return;
 
   if (kpiEl) kpiEl.textContent = PASTEF.utils.formatNumber(cellulesDB.length);
   if (subEl) subEl.textContent = `${cellulesDB.length} cellule${cellulesDB.length > 1 ? 's' : ''} enregistrée${cellulesDB.length > 1 ? 's' : ''} en base`;
@@ -566,10 +361,13 @@ function updateCellulesBlock(cellulesDB, members) {
 
 function mergeCellules(cellulesDB, members) {
   const countByName = {};
-  members.forEach((m) => { if (m.cellule) countByName[m.cellule] = (countByName[m.cellule] || 0) + 1; });
+  members.forEach(m => {
+    const n = getMemberCellule(m);
+    if (n) countByName[n] = (countByName[n] || 0) + 1;
+  });
 
   const known = new Set();
-  const list = cellulesDB.map((c) => {
+  const list = cellulesDB.map(c => {
     known.add(c.nom);
     return { name: c.nom, count: countByName[c.nom] || 0, official: true };
   });
@@ -583,114 +381,84 @@ function mergeCellules(cellulesDB, members) {
 }
 
 function renderCellulesList(cellules) {
-  if (!cellules.length) {
-    return `<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Aucune cellule enregistrée pour ce pays.</div>`;
-  }
-
-  const max = Math.max(...cellules.map((c) => c.count), 1);
-
-  return `
-    <div style="display:flex;flex-direction:column;gap:10px">
-      ${cellules.slice(0, 10).map((c) => {
-        const pct = Math.round((c.count / max) * 100);
-        return `
-          <div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-              <span style="font-weight:600">${PASTEF.utils.escapeHtml(c.name)}${!c.official ? '<span class="cellule-unofficial">(non enregistrée)</span>' : ''}</span>
-              <span class="text-muted">${c.count} membre${c.count > 1 ? 's' : ''}</span>
-            </div>
-            <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),#B57607);border-radius:3px"></div>
-            </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+  if (!cellules.length) return `<div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Aucune cellule enregistrée pour ce pays.</div>`;
+  const max = Math.max(...cellules.map(c => c.count), 1);
+  return `<div style="display:flex;flex-direction:column;gap:10px">
+    ${cellules.slice(0, 10).map(c => {
+      const pct = Math.round((c.count / max) * 100);
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span style="font-weight:600">${PASTEF.utils.escapeHtml(c.name)}${!c.official ? '<span class="cellule-unofficial">(non enregistrée)</span>' : ''}</span>
+          <span class="text-muted">${c.count} membre${c.count > 1 ? 's' : ''}</span>
+        </div>
+        <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--pastef-or),#B57607);border-radius:3px"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
-function renderCelluleDetail(data, stats, coord) {
+function renderCelluleDetail(data, stats) {
   return `
     <div class="section-actions">
       <div>
         <span class="country-badge">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           ${PASTEF.utils.escapeHtml(data.continent)}
         </span>
         <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">Cellule ${PASTEF.utils.escapeHtml(data.pays)}</h2>
-        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">${PASTEF.utils.formatNumber(stats.total)} patriote${stats.total > 1 ? 's' : ''} · ${stats.cities} ville${stats.cities > 1 ? 's' : ''} couverte${stats.cities > 1 ? 's' : ''}</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:2px">${PASTEF.utils.formatNumber(stats.total)} patriote${stats.total > 1 ? 's' : ''} · ${stats.cities} ville${stats.cities > 1 ? 's' : ''}</p>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-secondary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.pays)}', 'excel')">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Excel
         </button>
         <button class="btn btn-primary" onclick="downloadReport('${PASTEF.utils.escapeHtml(data.pays)}', 'pdf')">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Rapport PDF
         </button>
       </div>
     </div>
 
-    <!-- KPIs -->
     <div class="section-kpis">
       <div class="section-kpi">
-        <div class="section-kpi-icon icon-or">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>
-        </div>
+        <div class="section-kpi-icon icon-or"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg></div>
         <div class="section-kpi-label">Patriotes</div>
         <div class="section-kpi-value">${PASTEF.utils.formatNumber(stats.total)}</div>
       </div>
       <div class="section-kpi">
-        <div class="section-kpi-icon icon-ink">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        </div>
+        <div class="section-kpi-icon icon-ink"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <div class="section-kpi-label">Villes couvertes</div>
         <div class="section-kpi-value">${stats.cities}</div>
       </div>
       <div class="section-kpi">
-        <div class="section-kpi-icon icon-or">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
-        </div>
+        <div class="section-kpi-icon icon-or"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></div>
         <div class="section-kpi-label">Cellules</div>
         <div class="section-kpi-value" id="kpiCellulesDiaspora">…</div>
       </div>
       <div class="section-kpi">
-        <div class="section-kpi-icon icon-green">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
+        <div class="section-kpi-icon icon-green"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
         <div class="section-kpi-label">Nouveaux ce mois</div>
         <div class="section-kpi-value text-green">+${PASTEF.utils.formatNumber(stats.thisMonth)}</div>
       </div>
       <div class="section-kpi">
-        <div class="section-kpi-icon icon-red">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        </div>
-        <div class="section-kpi-label">Sans fonction</div>
-        <div class="section-kpi-value">${PASTEF.utils.formatNumber(stats.sansFonction)}</div>
+        <div class="section-kpi-icon icon-red"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+        <div class="section-kpi-label">Sans cellule</div>
+        <div class="section-kpi-value">${PASTEF.utils.formatNumber(stats.sansCellule)}</div>
       </div>
     </div>
 
-    <!-- Layout principal -->
     <div class="grid grid-1-2">
       <div>
         <div class="coord-card">
           <div class="coord-eyebrow">Coordinateur diaspora</div>
-          ${renderCoordinator(coord, data.pays)}
+          <div id="coordCardBody"><div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:13px">Chargement…</div></div>
         </div>
-
         <div class="chart-card" style="margin-top:16px">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
-            <div>
-              <div class="card-title">Répartition par genre</div>
-              <div class="card-sub">${stats.hommes} H · ${stats.femmes} F</div>
-            </div>
+            <div><div class="card-title">Répartition par genre</div><div class="card-sub">${stats.hommes} H · ${stats.femmes} F</div></div>
           </div>
           <div class="chart-wrap"><canvas id="chartGenre"></canvas></div>
         </div>
@@ -698,147 +466,93 @@ function renderCelluleDetail(data, stats, coord) {
 
       <div>
         <div class="info-strip" style="margin-bottom:16px">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <span><strong>Activités diaspora</strong> — Les activités saisies par le coordinateur de cette cellule diaspora apparaîtront ici. Module en cours d'intégration.</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span><strong>Activités diaspora</strong> — Module en cours d'intégration.</span>
         </div>
 
-        <!-- 🆕 Cellules réellement enregistrées en base -->
         <div class="chart-card" style="margin-bottom:16px">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
-            <div>
-              <div class="card-title">Cellules enregistrées</div>
-              <div class="card-sub" id="cellulesDiasporaSub">Chargement…</div>
-            </div>
+            <div><div class="card-title">Cellules enregistrées</div><div class="card-sub" id="cellulesDiasporaSub">Chargement…</div></div>
           </div>
-          <div id="cellulesDiasporaBox">
-            <div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Chargement des cellules…</div>
-          </div>
+          <div id="cellulesDiasporaBox"><div style="text-align:center;color:var(--text-muted);padding:24px;font-size:13px">Chargement…</div></div>
         </div>
 
         <div class="chart-card">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
-            <div>
-              <div class="card-title">Répartition par ville (déclarative)</div>
-              <div class="card-sub">${stats.citiesList.length} ville${stats.citiesList.length > 1 ? 's' : ''}</div>
-            </div>
+            <div><div class="card-title">Répartition par ville</div><div class="card-sub">${stats.citiesList.length} ville${stats.citiesList.length > 1 ? 's' : ''}</div></div>
           </div>
-          ${stats.citiesList.length > 0 ? `
-            <div>
-              ${stats.citiesList.slice(0, 10).map((c) => `
-                <div class="city-bar">
-                  <span class="city-name">${PASTEF.utils.escapeHtml(c.name)}</span>
-                  <span class="city-count">${c.count} patriote${c.count > 1 ? 's' : ''}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : `<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">Aucune ville renseignée.</div>`}
+          ${stats.citiesList.length > 0 ? `<div>${stats.citiesList.slice(0, 10).map(c => `
+            <div class="city-bar">
+              <span class="city-name">${PASTEF.utils.escapeHtml(c.name)}</span>
+              <span class="city-count">${c.count} patriote${c.count > 1 ? 's' : ''}</span>
+            </div>`).join('')}</div>` : `<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px">Aucune ville renseignée.</div>`}
         </div>
 
         <div class="chart-card" style="margin-top:16px">
           <div class="card-header" style="border:none;padding:0;margin-bottom:14px">
-            <div>
-              <div class="card-title">Derniers patriotes inscrits</div>
-              <div class="card-sub">${data.members.length > 6 ? '6 plus récents' : 'Tous'}</div>
-            </div>
+            <div><div class="card-title">Derniers patriotes inscrits</div><div class="card-sub">${data.members.length > 6 ? '6 plus récents' : 'Tous'}</div></div>
           </div>
           <div class="recent-list">
-            ${data.members.slice(0, 6).map((m) => `
+            ${data.members.slice(0, 6).map(m => `
               <div class="recent-item">
-                <div class="recent-avatar ${m.sexe === 'Homme' ? 'male' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
+                <div class="recent-avatar ${isHomme(m) ? 'male' : ''}">${PASTEF.utils.initials(m.prenom, m.nom)}</div>
                 <div style="flex:1;min-width:0">
                   <div class="recent-name">${PASTEF.utils.escapeHtml(m.prenom || '')} ${PASTEF.utils.escapeHtml(m.nom || '')}</div>
-                  <div class="recent-meta">${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(m.region || m.quartier || '')} · ${PASTEF.utils.formatDate(m.created_at)}</div>
+                  <div class="recent-meta">${PASTEF.utils.escapeHtml(m.profession || '—')} · ${PASTEF.utils.escapeHtml(getMemberVille(m) || '')} · ${PASTEF.utils.formatDate(m.created_at)}</div>
                 </div>
-                ${m.fonction_cellule && m.fonction_cellule !== 'Membre simple' ? `<span class="badge badge-or">${PASTEF.utils.escapeHtml(m.fonction_cellule)}</span>` : ''}
+                ${getMemberFonction(m) && getMemberFonction(m) !== 'Membre simple' ? `<span class="badge badge-or">${PASTEF.utils.escapeHtml(getMemberFonction(m))}</span>` : ''}
               </div>
             `).join('')}
           </div>
         </div>
       </div>
-    </div>
-  `;
-}
-
-function findCoordinator(members) {
-  // 🆕 Les libellés exacts viennent maintenant de fonctions_cellule
-  // ("Coordinateur / Coordinatrice", pas juste "Coordinateur")
-  return members.find((m) => m.fonction_cellule === 'Coordinateur / Coordinatrice')
-      || members.find((m) => m.fonction_cellule?.startsWith('Coordinateur'));
+    </div>`;
 }
 
 function renderCoordinator(coord, pays) {
   if (!coord) {
     return `
       <div class="coord-empty">
-        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <div style="font-weight:600;color:var(--text);margin-bottom:4px">Aucun coordinateur</div>
-        <div style="font-size:12px">Aucun coordinateur n'est désigné pour ${PASTEF.utils.escapeHtml(pays)}.</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="window.location.href='coordinateurs.html'">
-          Désigner un coordinateur
-        </button>
-      </div>
-    `;
+        <div style="font-size:12px">Aucun coordinateur désigné pour ${PASTEF.utils.escapeHtml(pays || 'ce pays')}.</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="window.location.href='coordinateurs.html'">Désigner un coordinateur</button>
+      </div>`;
   }
-
   return `
     <div class="coord-avatar">${PASTEF.utils.initials(coord.prenom, coord.nom)}</div>
     <div class="coord-name">${PASTEF.utils.escapeHtml(coord.prenom || '')} ${PASTEF.utils.escapeHtml(coord.nom || '')}</div>
-    <div class="coord-fn">${PASTEF.utils.escapeHtml(coord.fonction_cellule || 'Coordinateur diaspora')}</div>
-
+    <div class="coord-fn">Coordinateur diaspora</div>
     <div class="coord-contact">
       <div class="coord-contact-row">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-        </svg>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span class="font-mono">${PASTEF.utils.escapeHtml(coord.telephone || '—')}</span>
       </div>
-      <div class="coord-contact-row">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-        </svg>
-        <span>${PASTEF.utils.escapeHtml(coord.quartier || coord.region || coord.pays || '—')}</span>
-      </div>
-    </div>
-  `;
+      ${coord.email ? `<div class="coord-contact-row"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span>${PASTEF.utils.escapeHtml(coord.email)}</span></div>` : ''}
+    </div>`;
 }
 
 function computeStats(members) {
   const total = members.length;
-  const hommes = members.filter((m) => m.sexe === 'Homme').length;
+  const hommes = members.filter(m => isHomme(m)).length;
   const femmes = total - hommes;
 
   const now = new Date();
   const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonth = members.filter((m) => new Date(m.created_at) >= startMonth).length;
+  const thisMonth = members.filter(m => new Date(m.created_at) >= startMonth).length;
 
-  // Villes : reste déclaratif (texte libre saisi par le patriote), la
-  // diaspora n'a pas de référentiel officiel de villes comme le Sénégal
   const cityMap = {};
-  members.forEach((m) => {
-    const city = m.region || m.quartier;
+  members.forEach(m => {
+    const city = getMemberVille(m);
     if (city) cityMap[city] = (cityMap[city] || 0) + 1;
   });
+  const citiesList = Object.entries(cityMap).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
 
-  const citiesList = Object.entries(cityMap)
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({ name, count }));
-
-  const sansFonction = members.filter((m) => !m.fonction_cellule || m.fonction_cellule === 'Membre simple').length;
-
-  const eng = members.filter((m) => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
+  const sansCellule = members.filter(m => !getMemberCellule(m)).length;
+  const eng = members.filter(m => m.engagement_soutenir && m.engagement_participer && m.engagement_oeuvrer).length;
   const engagementMoyen = total > 0 ? Math.round((eng / total) * 100) : 0;
 
-  return {
-    total, hommes, femmes, thisMonth,
-    cities: citiesList.length,
-    citiesList,
-    sansFonction,
-    engagementMoyen,
-  };
+  return { total, hommes, femmes, thisMonth, cities: citiesList.length, citiesList, sansCellule, engagementMoyen };
 }
 
 function renderGenreChart(stats) {
@@ -848,34 +562,18 @@ function renderGenreChart(stats) {
     type: 'doughnut',
     data: {
       labels: ['Hommes', 'Femmes'],
-      datasets: [{
-        data: [stats.hommes, stats.femmes],
-        backgroundColor: ['#1B7C3D', '#D4900A'],
-        borderWidth: 0,
-        cutout: '68%',
-      }],
+      datasets: [{ data: [stats.hommes, stats.femmes], backgroundColor: ['#1B7C3D', '#D4900A'], borderWidth: 0, cutout: '68%' }],
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { font: { size: 12, weight: 600 }, padding: 12, boxWidth: 10, boxHeight: 10, usePointStyle: true },
-        },
-      },
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: 600 }, padding: 12, boxWidth: 10, boxHeight: 10, usePointStyle: true } } },
     },
   });
 }
 
-function downloadReport(pays, format) {
-  PASTEF.utils.toast(
-    `Rapport ${format.toUpperCase()} bientôt disponible`,
-    'Module de génération en cours de développement',
-    { color: 'var(--pastef-or)' }
-  );
-}
+window.downloadReport = function (pays, format) {
+  PASTEF.utils.toast(`Rapport ${format.toUpperCase()} bientôt disponible`, 'Module en cours de développement', { color: 'var(--pastef-or)' });
+};
 </script>
-
 </body>
 </html>
